@@ -18,6 +18,9 @@ pub struct ChunkLocation {
 }
 
 impl ChunkLocation {
+    /// Create a new ChunkLocation.
+    /// The coordinates are not bound checked and undefined behaviour
+    /// will occur if any are >= CHUNK_SIZE.
     pub fn new(x: u32, y: u32, z: u32) -> ChunkLocation {
         ChunkLocation {
             index: (CHUNK_SIZE * CHUNK_SIZE * x + CHUNK_SIZE * y + z) as usize,
@@ -85,6 +88,8 @@ impl Chunk {
     }
 
     /// Sets the voxel at the given location to the given type.
+    /// The location is not bound-checked and the function will either panic or
+    /// set an undefined voxel if the location is out of bounds.
     pub fn set_voxel_type_unchecked(&mut self, loc: ChunkLocation, voxel_type: VoxelType) {
         if let Chunk::SingleType(single_type) = self {
             if voxel_type != *single_type {
