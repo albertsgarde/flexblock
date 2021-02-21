@@ -68,7 +68,7 @@ impl Terrain {
     /// # Arguments
     ///
     /// * `loc` - Will find the object of the voxel at this location.
-    pub fn voxel_object(&self, loc: Location) -> Option<&Box<dyn Voxel>> {
+    pub fn voxel_object(&self, loc: Location) -> Option<&dyn Voxel> {
         let (chunk_index, chunk_location) = location_to_chunk_index_and_location(loc);
         match self.chunks.get(&chunk_index) {
             Some(chunk) => chunk.voxel_object(chunk_location),
@@ -83,7 +83,7 @@ impl Terrain {
     /// # Arguments
     ///
     /// * `loc` - Will find the type and object of the voxel at this location.
-    pub fn voxel(&self, loc: Location) -> (VoxelType, Option<&Box<dyn Voxel>>) {
+    pub fn voxel(&self, loc: Location) -> (VoxelType, Option<&dyn Voxel>) {
         let (chunk_index, chunk_location) = location_to_chunk_index_and_location(loc);
         match self.chunks.get(&chunk_index) {
             Some(chunk) => chunk.voxel_unchecked(chunk_location),

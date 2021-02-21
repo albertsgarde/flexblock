@@ -59,10 +59,12 @@ impl Chunk {
     /// # Arguments
     ///
     /// * `loc` - Will find the object of the voxel at this location in the chunk.
-    pub fn voxel_object(&self, loc: ChunkLocation) -> Option<&Box<dyn Voxel>> {
+    pub fn voxel_object(&self, loc: ChunkLocation) -> Option<&dyn Voxel> {
         match self {
             Chunk::SingleType(_) => None,
-            Chunk::MultiType(_, voxel_map) => voxel_map.get(&loc),
+            // `voxel` is a reference to a box. To get a reference to the contents, we
+            // dereference the reference, dereference the box and then reference the result.
+            Chunk::MultiType(_, voxel_map) => voxel_map.get(&loc).map(|voxel| &**voxel),
         }
     }
 
@@ -73,10 +75,12 @@ impl Chunk {
     /// # Arguments
     ///
     /// * `loc` - Will find the type of the voxel at this location in the chunk.
-    pub fn voxel_unchecked(&self, loc: ChunkLocation) -> (VoxelType, Option<&Box<dyn Voxel>>) {
+    pub fn voxel_unchecked(&self, loc: ChunkLocation) -> (VoxelType, Option<&dyn Voxel>) {
         match self {
             Chunk::SingleType(voxel_type) => (*voxel_type, None),
-            Chunk::MultiType(array, voxel_map) => (array[loc.index], voxel_map.get(&loc)),
+            Chunk::MultiType(array, voxel_map) => {
+                (array[loc.index], voxel_map.get(&loc).map(|voxel| &**voxel))
+            }
         }
     }
 
