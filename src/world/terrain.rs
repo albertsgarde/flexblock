@@ -47,6 +47,7 @@ fn location_to_chunk_index_and_location(loc: Location) -> ((i32, i32, i32), Chun
 }
 
 impl Terrain {
+    /// Creates a new Terrain with all voxels set to default type.
     pub fn new() -> Terrain {
         Terrain {
             chunks: HashMap::new(),
