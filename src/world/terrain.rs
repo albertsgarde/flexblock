@@ -73,7 +73,7 @@ impl Terrain {
         let (chunk_index, chunk_location) = location_to_chunk_index_and_location(loc);
         match self.chunks.get(&chunk_index) {
             Some(chunk) => chunk.voxel_unchecked(chunk_location),
-            _ => (DEFAULT_VOXEL, None)
+            _ => (voxel::DEFAULT_TYPE, None)
         }
     }
 }
