@@ -110,4 +110,9 @@ impl Terrain {
             self.chunks.insert(chunk_index, chunk);
         }
     }
+
+    /// Returns the current number of chunks in the Terrain.
+    pub fn num_chunks(&self) -> usize {
+        self.chunks.len()
+    }
 }
