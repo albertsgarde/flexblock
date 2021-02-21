@@ -1,4 +1,7 @@
-use crate::{world::{*, voxel::{Voxel, VoxelType}}};
+use crate::world::{
+    voxel::{Voxel, VoxelType},
+    *,
+};
 use hashbrown::hash_map::HashMap;
 
 /// The side length of a chunk.
@@ -6,7 +9,7 @@ use hashbrown::hash_map::HashMap;
 pub const CHUNK_SIZE: u32 = 16;
 
 /// The number of elements in a chunk's voxel vector.
-const CHUNK_LENGTH: usize = (CHUNK_SIZE*CHUNK_SIZE*CHUNK_SIZE) as usize;
+const CHUNK_LENGTH: usize = (CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE) as usize;
 
 /// Represents a voxel location in a chunk.
 #[derive(PartialEq, Eq, Hash)]
@@ -14,10 +17,11 @@ pub struct ChunkLocation {
     index: usize,
 }
 
-
 impl ChunkLocation {
     pub fn new(x: u32, y: u32, z: u32) -> ChunkLocation {
-        ChunkLocation{index: (CHUNK_SIZE*CHUNK_SIZE*x+CHUNK_SIZE*y+z) as usize}
+        ChunkLocation {
+            index: (CHUNK_SIZE * CHUNK_SIZE * x + CHUNK_SIZE * y + z) as usize,
+        }
     }
 }
 
@@ -34,26 +38,26 @@ impl Chunk {
     }
 
     /// Returns the type of the voxel at the specified location within the chunk.
-    /// The location is not bound-checked and the function will either panic or 
+    /// The location is not bound-checked and the function will either panic or
     /// return an arbitrary voxel if the location is out of bounds.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `loc` - Will find the type of the voxel at this location in the chunk.
     pub fn voxel_type_unchecked(&self, loc: ChunkLocation) -> VoxelType {
         match self {
             Chunk::SingleType(voxel_type) => *voxel_type,
-            Chunk::MultiType(array, _) => array[loc.index]
+            Chunk::MultiType(array, _) => array[loc.index],
         }
     }
 
-    /// Returns the object of the voxel at the specified location within the chunk or None 
+    /// Returns the object of the voxel at the specified location within the chunk or None
     /// if the voxel has no object.
-    /// The location is not bound-checked and the function will return None if 
+    /// The location is not bound-checked and the function will return None if
     /// the location is out of bounds.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `loc` - Will find the object of the voxel at this location in the chunk.
     pub fn voxel_object(&self, loc: ChunkLocation) -> Option<&Box<dyn Voxel>> {
         match self {
@@ -62,19 +66,17 @@ impl Chunk {
         }
     }
 
-    
-
     /// Returns a tuple of the type and object of the voxel at the specified location within the chunk.
-    /// The location is not bound-checked and the function will either panic or 
+    /// The location is not bound-checked and the function will either panic or
     /// return an undefined voxel if the location is out of bounds.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `loc` - Will find the type of the voxel at this location in the chunk.
     pub fn voxel_unchecked(&self, loc: ChunkLocation) -> (VoxelType, Option<&Box<dyn Voxel>>) {
         match self {
             Chunk::SingleType(voxel_type) => (*voxel_type, None),
-            Chunk::MultiType(array, voxel_map) => (array[loc.index], voxel_map.get(&loc))
+            Chunk::MultiType(array, voxel_map) => (array[loc.index], voxel_map.get(&loc)),
         }
     }
 
@@ -97,7 +99,10 @@ impl Chunk {
         if let Chunk::MultiType(voxel_vec, voxel_map) = self {
             if voxel_map.is_empty() {
                 let single_type = voxel_vec[0];
-                if voxel_vec.iter().all( |voxel_type| *voxel_type == single_type ) {
+                if voxel_vec
+                    .iter()
+                    .all(|voxel_type| *voxel_type == single_type)
+                {
                     *self = Chunk::SingleType(single_type);
                 }
             }
