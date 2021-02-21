@@ -47,6 +47,12 @@ fn location_to_chunk_index_and_location(loc: Location) -> ((i32, i32, i32), Chun
 }
 
 impl Terrain {
+    pub fn new() -> Terrain {
+        Terrain {
+            chunks: HashMap::new(),
+        }
+    }
+
     /// Returns the type of voxel at the specified location.
     /// If a location outside of all chunks is specified, the default voxel type is returned.
     ///
@@ -88,6 +94,19 @@ impl Terrain {
         match self.chunks.get(&chunk_index) {
             Some(chunk) => chunk.voxel_unchecked(chunk_location),
             _ => (voxel::DEFAULT_TYPE, None),
+        }
+    }
+
+    /// Sets the voxel type for the voxel at the given location.
+    /// If the location is outside of all chunks, a new chunk is created.
+    pub fn set_voxel_type(&mut self, loc: Location, voxel_type: VoxelType) {
+        let (chunk_index, chunk_location) = location_to_chunk_index_and_location(loc);
+        if let Some(chunk) = self.chunks.get_mut(&chunk_index) {
+            chunk.set_voxel_type_unchecked(chunk_location, voxel_type);
+        } else {
+            let mut chunk = Chunk::new();
+            chunk.set_voxel_type_unchecked(chunk_location, voxel_type);
+            self.chunks.insert(chunk_index, chunk);
         }
     }
 }
