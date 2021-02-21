@@ -115,4 +115,12 @@ impl Terrain {
     pub fn num_chunks(&self) -> usize {
         self.chunks.len()
     }
+
+    /// Removes chunks that contain only the default voxel type and no voxel objects.
+    pub fn clean(&mut self) {
+        for chunk in self.chunks.values_mut() {
+            chunk.single_type();
+        }
+        self.chunks.retain(|_, chunk| !matches!(chunk, Chunk::SingleType(voxel_type) if *voxel_type == voxel::DEFAULT_TYPE));
+    }
 }
