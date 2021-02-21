@@ -97,7 +97,8 @@ impl Chunk {
                 voxel_vec[loc.index] = voxel_type;
                 *self = Chunk::MultiType(voxel_vec, HashMap::new());
             }
-        } else if let Chunk::MultiType(voxel_vec, _) = self {
+        } else if let Chunk::MultiType(voxel_vec, voxel_map) = self {
+            voxel_map.remove(&loc);
             voxel_vec[loc.index] = voxel_type;
         }
     }
