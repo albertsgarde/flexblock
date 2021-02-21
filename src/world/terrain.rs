@@ -1,7 +1,6 @@
-use crate::world::{Location, chunk::{Chunk, ChunkLocation}, voxel::{VoxelType, Voxel}};
+use crate::world::{*, Location, chunk::{Chunk, ChunkLocation}, voxel::{VoxelType, Voxel}};
 use hashbrown::hash_map::HashMap;
 
-const DEFAULT_VOXEL: VoxelType = VoxelType(0);
 const CHUNK_SIZE: i32 = crate::world::chunk::CHUNK_SIZE as i32;
 
 /// Struct that stores all voxels in the world.
@@ -44,7 +43,7 @@ impl Terrain {
         let (chunk_index, chunk_location) = location_to_chunk_index_and_location(loc);
         match self.chunks.get(&chunk_index) {
             Some(chunk) => chunk.voxel_type_unchecked(chunk_location),
-            _ => DEFAULT_VOXEL,
+            _ => voxel::DEFAULT_TYPE,
         }
     }
 
