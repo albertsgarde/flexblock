@@ -1,3 +1,5 @@
+pub mod ray;
+
 /// Finds the mathematical modulus.
 /// That is, the modulus is always positive.
 pub fn modulus(lhs: i32, rhs: i32) -> u32 {
