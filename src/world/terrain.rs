@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::world::{
     chunk::{Chunk, ChunkLocation},
     voxel::{Voxel, VoxelType},
@@ -6,11 +8,6 @@ use crate::world::{
 use hashbrown::hash_map::HashMap;
 
 const CHUNK_SIZE: i32 = crate::world::chunk::CHUNK_SIZE as i32;
-
-/// Struct that stores all voxels in the world.
-pub struct Terrain {
-    chunks: HashMap<(i32, i32, i32), Chunk>,
-}
 
 fn modulus(lhs: i32, rhs: i32) -> u32 {
     if lhs < 0 {
@@ -26,6 +23,12 @@ fn integer_division(lhs: i32, rhs: i32) -> i32 {
     } else {
         lhs / rhs
     }
+}
+
+/// Struct that stores all voxels in the world.
+#[derive(Serialize, Deserialize)]
+pub struct Terrain {
+    chunks: HashMap<(i32, i32, i32), Chunk>,
 }
 
 /// Transforms a world location into a chunck index and a chunk location.
