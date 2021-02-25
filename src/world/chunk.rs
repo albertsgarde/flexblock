@@ -3,6 +3,7 @@ use crate::world::{
     *,
 };
 use hashbrown::hash_map::HashMap;
+use serde::{Deserialize, Serialize};
 
 /// The side length of a chunk.
 /// The number of voxels per chunk is this value to the third power.
@@ -12,7 +13,7 @@ pub const CHUNK_SIZE: u32 = 16;
 const CHUNK_LENGTH: usize = (CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE) as usize;
 
 /// Represents a voxel location in a chunk.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct ChunkLocation {
     index: usize,
 }
@@ -29,6 +30,7 @@ impl ChunkLocation {
 }
 
 /// Represents a cube-shaped block of voxels.
+#[derive(Serialize, Deserialize)]
 pub enum Chunk {
     SingleType(VoxelType),
     MultiType(Vec<VoxelType>, HashMap<ChunkLocation, Box<dyn Voxel>>),
