@@ -127,3 +127,46 @@ impl Terrain {
         self.chunks.retain(|_, chunk| !matches!(chunk, Chunk::SingleType(voxel_type) if *voxel_type == voxel::DEFAULT_TYPE));
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::world::*;
+    use std::fs::File;
+    use std::io::{BufWriter, BufReader};
+    #[test]
+    fn negative_numbers() {
+        // Create a terrain and add two voxels.
+        let mut terrain = terrain::Terrain::new();
+        terrain.set_voxel_type(Location::new(0,-3,0), voxel::VoxelType(1));
+        terrain.set_voxel_type(Location::new(25,0,0), voxel::VoxelType(1));
+        
+        assert_eq!(terrain.voxel_type(Location::new(0,-3,0)), voxel::VoxelType(1));
+        assert_eq!(terrain.voxel_type(Location::new(0,-2,0)), voxel::VoxelType(0));
+        assert_eq!(terrain.voxel_type(Location::new(0,-4,0)), voxel::VoxelType(0));
+        assert_eq!(terrain.voxel_type(Location::new(0,1,0)), voxel::VoxelType(0));
+        assert_eq!(terrain.voxel_type(Location::new(25,0,0)), voxel::VoxelType(1));
+        assert_eq!(terrain.voxel_type(Location::new(25,1,0)), voxel::VoxelType(0));
+    }
+
+    #[test]
+    fn write_read() {
+        // Create a terrain and add two voxels.
+        let mut terrain = terrain::Terrain::new();
+        terrain.set_voxel_type(Location::new(0,0,0), voxel::VoxelType(1));
+        terrain.set_voxel_type(Location::new(25,0,0), voxel::VoxelType(1));
+        
+        // Write terrain to file in bincode format.
+        {
+            let mut file = BufWriter::new(File::create("save.flex").unwrap());
+            bincode::serialize_into(&mut file, &terrain).unwrap();
+        }
+        // Read terrain back from file.
+        let file = BufReader::new(File::open("save.flex").unwrap());
+        let terrain: terrain::Terrain = bincode::deserialize_from(file).unwrap();
+        std::fs::remove_file("save.flex").unwrap();
+        assert_eq!(terrain.voxel_type(Location::new(0,0,0)), voxel::VoxelType(1));
+        assert_eq!(terrain.voxel_type(Location::new(0,1,0)), voxel::VoxelType(0));
+        assert_eq!(terrain.voxel_type(Location::new(25,0,0)), voxel::VoxelType(1));
+        assert_eq!(terrain.voxel_type(Location::new(25,1,0)), voxel::VoxelType(0));
+    }
+}
