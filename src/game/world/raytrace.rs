@@ -1,5 +1,11 @@
+use crate::game::world::voxel;
 use cgmath::Vector3;
 use std::mem::swap;
+
+/// Whether to ignore the specified voxel type when tracing.
+pub fn ignore_voxel_type(voxel_type: voxel::VoxelType) -> bool {
+    voxel_type == voxel::DEFAULT_TYPE
+}
 
 pub struct Ray {
     origin: Vector3<f32>,
