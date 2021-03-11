@@ -27,14 +27,24 @@ impl Location {
 
 impl From<Vector3<f32>> for Location {
     fn from(position: Vector3<f32>) -> Location {
-        let chunk = position.map( |x| maths::integer_division(x.floor() as i32, chunk::CHUNK_SIZE as i32));
-        let position = position.map( |x| maths::modulus(x, chunk::CHUNK_SIZE as f32));
+        let chunk =
+            position.map(|x| maths::integer_division(x.floor() as i32, chunk::CHUNK_SIZE as i32));
+        let position = position.map(|x| maths::modulus(x, chunk::CHUNK_SIZE as f32));
         Location::new(chunk, position)
     }
 }
 
 impl std::fmt::Display for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Chunk: ({}, {}, {}), Position: ({}, {}, {})", self.chunk.x, self.chunk.y, self.chunk.z, self.position.x, self.position.y, self.position.z)
+        write!(
+            f,
+            "Chunk: ({}, {}, {}), Position: ({}, {}, {})",
+            self.chunk.x,
+            self.chunk.y,
+            self.chunk.z,
+            self.position.x,
+            self.position.y,
+            self.position.z
+        )
     }
 }

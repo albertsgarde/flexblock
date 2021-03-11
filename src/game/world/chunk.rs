@@ -2,9 +2,9 @@ use crate::game::world::{
     voxel::{Voxel, VoxelType},
     *,
 };
+use cgmath::Vector3;
 use hashbrown::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
-use cgmath::Vector3;
 
 /// The side length of a chunk.
 /// The number of voxels per chunk is this value to the third power.
@@ -32,9 +32,18 @@ impl ChunkLocation {
 
 impl From<Vector3<f32>> for ChunkLocation {
     fn from(position: Vector3<f32>) -> ChunkLocation {
-        debug_assert!(position.x >= 0. && position.y >= 0. && position.z >= 0. && 
-            position.x <= CHUNK_SIZE as f32 && position.y <= CHUNK_SIZE as f32 && position.z <= CHUNK_SIZE as f32, 
-            "Position must be between 0 and chunk size on all coordinates. Position: ({}, {}, {})", position.x, position.y, position.z);
+        debug_assert!(
+            position.x >= 0.
+                && position.y >= 0.
+                && position.z >= 0.
+                && position.x <= CHUNK_SIZE as f32
+                && position.y <= CHUNK_SIZE as f32
+                && position.z <= CHUNK_SIZE as f32,
+            "Position must be between 0 and chunk size on all coordinates. Position: ({}, {}, {})",
+            position.x,
+            position.y,
+            position.z
+        );
         ChunkLocation::new(position.x as u32, position.y as u32, position.z as u32)
     }
 }

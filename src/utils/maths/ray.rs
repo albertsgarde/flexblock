@@ -2,7 +2,7 @@ use cgmath::Vector3;
 
 /// Represents a half-line with a start point and a direction vector.
 #[derive(Debug)]
-pub struct Ray{
+pub struct Ray {
     origin: Vector3<f32>,
     direction: Vector3<f32>,
     pub min: f32,
@@ -33,6 +33,6 @@ impl Ray {
 
     /// Returns the point `t` along the ray.
     pub fn point_at(&self, t: f32) -> Vector3<f32> {
-        self.origin + self.direction*t
+        self.origin + self.direction * t
     }
 }
