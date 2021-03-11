@@ -6,5 +6,5 @@ pub use input_event::InputEvent;
 mod graphics_state_model;
 pub use graphics_state_model::GraphicsStateModel;
 
-mod game;
-pub use game::start_logic_thread;
+mod logic;
+pub use logic::start_logic_thread;
