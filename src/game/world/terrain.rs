@@ -1,15 +1,12 @@
-use crate::{
-    utils::maths::*,
-    world::{
-        chunk::{Chunk, ChunkLocation},
-        voxel::{Voxel, VoxelType},
-        Location, *,
-    },
-};
+use crate::{game::world::{
+    chunk::{Chunk, ChunkLocation},
+    voxel::{Voxel, VoxelType},
+    Location, *,
+}, utils::maths::*,};
 use hashbrown::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 
-const CHUNK_SIZE: i32 = crate::world::chunk::CHUNK_SIZE as i32;
+const CHUNK_SIZE: i32 = super::chunk::CHUNK_SIZE as i32;
 
 /// Struct that stores all voxels in the world.
 #[derive(Serialize, Deserialize)]
@@ -116,7 +113,7 @@ impl Terrain {
 
 #[cfg(test)]
 mod tests {
-    use crate::world::*;
+    use super::super::*;
     use std::fs::File;
     use std::io::{BufReader, BufWriter};
     #[test]
