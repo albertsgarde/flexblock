@@ -1,3 +1,1 @@
-pub struct GraphicsStateModel {
-
-}
+pub struct GraphicsStateModel {}

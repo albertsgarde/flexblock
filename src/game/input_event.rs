@@ -1,3 +1,1 @@
-pub enum InputEvent {
-    
-}
+pub enum InputEvent {}

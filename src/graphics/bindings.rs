@@ -1,3 +1,1 @@
-pub struct Bindings {
-
-}
+pub struct Bindings {}
