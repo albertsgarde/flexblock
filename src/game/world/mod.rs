@@ -16,12 +16,29 @@ pub struct Location {
 
 impl Location {
     /// Creates a new Location from specified coordinates.
+    /// 
+    /// # Arguments
+    /// 
+    /// `chunk` - The index of the chunk.
+    /// `position` - The floating point position in this chunk.
     pub fn new(chunk: Vector3<i32>, position: Vector3<f32>) -> Location {
         Location { chunk, position }
     }
 
+    /// Creates a Location from a set of absolute floating point coordinates.
+    /// 
+    /// # Arguments
+    /// 
+    /// `x` - The absolute x-coordinate of the location.
+    /// `y` - The absolute y-coordinate of the location.
+    /// `z` - The absolute z-coordinate of the location.
     pub fn from_coords(x: f32, y: f32, z: f32) -> Location {
         Vector3::new(x, y, z).into()
+    }
+
+    /// Rounds the location to the nearest whole voxel.
+    pub fn round(&self) -> Location {
+        Location::new(self.chunk, self.position.map(|x| maths::modulus(x, chunk::CHUNK_SIZE as f32)))
     }
 }
 
