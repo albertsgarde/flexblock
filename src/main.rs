@@ -40,14 +40,14 @@ async fn main() {
     let packing_to_window_sender = channels::PackingToWindowSender {
         bindings: bindings.clone(),
     };
-    let packing_to_window_receiver = channels::PackingToWindowReceiver {
-        bindings
-    };
+    let packing_to_window_receiver = channels::PackingToWindowReceiver { bindings };
 
     // Start threads.
     let logic_thread = game::start_logic_thread(window_to_logic_receiver, logic_to_packing_sender);
-    let packing_thread = graphics::start_packing_thread(logic_to_packing_receiver, packing_to_window_sender);
-    let window_thread = graphics::start_window_thread(packing_to_window_receiver, window_to_logic_sender);
+    let packing_thread =
+        graphics::start_packing_thread(logic_to_packing_receiver, packing_to_window_sender);
+    let window_thread =
+        graphics::start_window_thread(packing_to_window_receiver, window_to_logic_sender);
     window_thread.await.unwrap();
     packing_thread.await.unwrap();
     logic_thread.await.unwrap();
