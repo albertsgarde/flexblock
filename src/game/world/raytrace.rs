@@ -11,6 +11,12 @@ impl Ray {
         Ray { origin, direction }
     }
 
+    /// After entering the voxel with the specified corner, returns the voxel the ray exits into or None if the ray never hits the voxel.
+    /// 
+    /// # Arguments
+    /// 
+    /// `voxel_corner` - The corner of the voxel with lowest coordinates.
+    /// `voxel_size` - The size of voxels. Should usually be 1.
     pub fn voxel_exit(&self, voxel_corner: Vector3<f32>, voxel_size: f32) -> Option<Vector3<f32>> {
         let mut t_min_x = (voxel_corner.x - self.origin.x) / self.direction.x;
         let mut t_max_x = (voxel_corner.x + voxel_size - self.origin.x) / self.direction.x;
