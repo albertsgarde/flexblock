@@ -1,13 +1,13 @@
 use serde::{Deserialize, Serialize};
 
-use crate::world::{
+use super::{
     chunk::{Chunk, ChunkLocation},
     voxel::{Voxel, VoxelType},
     Location, *,
 };
 use hashbrown::hash_map::HashMap;
 
-const CHUNK_SIZE: i32 = crate::world::chunk::CHUNK_SIZE as i32;
+const CHUNK_SIZE: i32 = super::chunk::CHUNK_SIZE as i32;
 
 fn modulus(lhs: i32, rhs: i32) -> u32 {
     if lhs < 0 {
@@ -130,7 +130,7 @@ impl Terrain {
 
 #[cfg(test)]
 mod tests {
-    use crate::world::*;
+    use super::super::*;
     use std::fs::File;
     use std::io::{BufWriter, BufReader};
     #[test]

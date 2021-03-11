@@ -1,4 +1,4 @@
-use crate::world::{
+use super::{
     voxel::{Voxel, VoxelType},
     *,
 };
