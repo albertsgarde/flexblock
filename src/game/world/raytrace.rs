@@ -40,12 +40,12 @@ impl Ray {
         let mut result = voxel_corner;
         if t_max_x > t_max_y {
             if t_max_x > t_max_z {
-                voxel_corner.x += voxel_size.copysign(self.direction.x);
+                result.x += voxel_size.copysign(self.direction.x);
             } else {
-                voxel_corner.z += voxel_size.copysign(self.direction.z);
+                result.z += voxel_size.copysign(self.direction.z);
             }
         } else {
-            voxel_corner.y += voxel_size.copysign(self.direction.y);
+            result.y += voxel_size.copysign(self.direction.y);
         }
         Some(result)
     } 

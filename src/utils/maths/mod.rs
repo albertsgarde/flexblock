@@ -2,11 +2,11 @@ pub mod ray;
 
 /// Finds the mathematical modulus.
 /// That is, the modulus is always positive.
-pub fn modulus(lhs: i32, rhs: i32) -> u32 {
-    if lhs < 0 {
-        (lhs % rhs + rhs) as u32
+pub fn modulus(lhs: f32, rhs: f32) -> f32 {
+    if lhs < 0. {
+        lhs % rhs + rhs
     } else {
-        (lhs % rhs) as u32
+        lhs % rhs
     }
 }
 

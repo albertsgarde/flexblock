@@ -1,35 +1,17 @@
-use crate::{game::world::{
-    chunk::{Chunk, ChunkLocation},
+use crate::game::world::{
+    chunk::Chunk,
     voxel::{Voxel, VoxelType},
     Location, *,
-}, utils::maths::*,};
+};
 use hashbrown::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 
-const CHUNK_SIZE: i32 = super::chunk::CHUNK_SIZE as i32;
+const CHUNK_SIZE: f32 = super::chunk::CHUNK_SIZE as f32;
 
 /// Struct that stores all voxels in the world.
 #[derive(Serialize, Deserialize)]
 pub struct Terrain {
-    chunks: HashMap<(i32, i32, i32), Chunk>,
-}
-
-/// Transforms a world location into a chunck index and a chunk location.
-/// In other words, given a world location, this function finds which chunk that location is in
-/// and the location within that chunk.
-fn location_to_chunk_index_and_location(loc: Location) -> ((i32, i32, i32), ChunkLocation) {
-    (
-        (
-            integer_division(loc.x, CHUNK_SIZE),
-            integer_division(loc.y, CHUNK_SIZE),
-            integer_division(loc.z, CHUNK_SIZE),
-        ),
-        ChunkLocation::new(
-            modulus(loc.x, CHUNK_SIZE),
-            modulus(loc.y, CHUNK_SIZE),
-            modulus(loc.z, CHUNK_SIZE),
-        ),
-    )
+    chunks: HashMap<Vector3<i32>, Chunk>,
 }
 
 impl Terrain {
@@ -47,9 +29,8 @@ impl Terrain {
     ///
     /// * `loc` - Will find the type of the voxel at this location.
     pub fn voxel_type(&self, loc: Location) -> VoxelType {
-        let (chunk_index, chunk_location) = location_to_chunk_index_and_location(loc);
-        match self.chunks.get(&chunk_index) {
-            Some(chunk) => chunk.voxel_type_unchecked(chunk_location),
+        match self.chunks.get(&loc.chunk) {
+            Some(chunk) => chunk.voxel_type_unchecked(loc.position.into()),
             _ => voxel::DEFAULT_TYPE,
         }
     }
@@ -62,9 +43,8 @@ impl Terrain {
     ///
     /// * `loc` - Will find the object of the voxel at this location.
     pub fn voxel_object(&self, loc: Location) -> Option<&dyn Voxel> {
-        let (chunk_index, chunk_location) = location_to_chunk_index_and_location(loc);
-        match self.chunks.get(&chunk_index) {
-            Some(chunk) => chunk.voxel_object(chunk_location),
+        match self.chunks.get(&loc.chunk) {
+            Some(chunk) => chunk.voxel_object(loc.position.into()),
             _ => None,
         }
     }
@@ -77,9 +57,8 @@ impl Terrain {
     ///
     /// * `loc` - Will find the type and object of the voxel at this location.
     pub fn voxel(&self, loc: Location) -> (VoxelType, Option<&dyn Voxel>) {
-        let (chunk_index, chunk_location) = location_to_chunk_index_and_location(loc);
-        match self.chunks.get(&chunk_index) {
-            Some(chunk) => chunk.voxel_unchecked(chunk_location),
+        match self.chunks.get(&loc.chunk) {
+            Some(chunk) => chunk.voxel_unchecked(loc.position.into()),
             _ => (voxel::DEFAULT_TYPE, None),
         }
     }
@@ -87,13 +66,12 @@ impl Terrain {
     /// Sets the voxel type for the voxel at the given location.
     /// If the location is outside of all chunks, a new chunk is created.
     pub fn set_voxel_type(&mut self, loc: Location, voxel_type: VoxelType) {
-        let (chunk_index, chunk_location) = location_to_chunk_index_and_location(loc);
-        if let Some(chunk) = self.chunks.get_mut(&chunk_index) {
-            chunk.set_voxel_type_unchecked(chunk_location, voxel_type);
+        if let Some(chunk) = self.chunks.get_mut(&loc.chunk) {
+            chunk.set_voxel_type_unchecked(loc.position.into(), voxel_type);
         } else {
             let mut chunk = Chunk::new();
-            chunk.set_voxel_type_unchecked(chunk_location, voxel_type);
-            self.chunks.insert(chunk_index, chunk);
+            chunk.set_voxel_type_unchecked(loc.position.into(), voxel_type);
+            self.chunks.insert(loc.chunk, chunk);
         }
     }
 
@@ -120,31 +98,31 @@ mod tests {
     fn negative_numbers() {
         // Create a terrain and add two voxels.
         let mut terrain = terrain::Terrain::new();
-        terrain.set_voxel_type(Location::new(0, -3, 0), voxel::VoxelType(1));
-        terrain.set_voxel_type(Location::new(25, 0, 0), voxel::VoxelType(1));
+        terrain.set_voxel_type(Location::from_coords(0., -3., 0.), voxel::VoxelType(1));
+        terrain.set_voxel_type(Location::from_coords(25., 0., 0.), voxel::VoxelType(1));
 
         assert_eq!(
-            terrain.voxel_type(Location::new(0, -3, 0)),
+            terrain.voxel_type(Location::from_coords(0., -3., 0.)),
             voxel::VoxelType(1)
         );
         assert_eq!(
-            terrain.voxel_type(Location::new(0, -2, 0)),
+            terrain.voxel_type(Location::from_coords(0., -2., 0.)),
             voxel::VoxelType(0)
         );
         assert_eq!(
-            terrain.voxel_type(Location::new(0, -4, 0)),
+            terrain.voxel_type(Location::from_coords(0., -4., 0.)),
             voxel::VoxelType(0)
         );
         assert_eq!(
-            terrain.voxel_type(Location::new(0, 1, 0)),
+            terrain.voxel_type(Location::from_coords(0., 1., 0.)),
             voxel::VoxelType(0)
         );
         assert_eq!(
-            terrain.voxel_type(Location::new(25, 0, 0)),
+            terrain.voxel_type(Location::from_coords(25., 0., 0.)),
             voxel::VoxelType(1)
         );
         assert_eq!(
-            terrain.voxel_type(Location::new(25, 1, 0)),
+            terrain.voxel_type(Location::from_coords(25., 1., 0.)),
             voxel::VoxelType(0)
         );
     }
@@ -153,8 +131,8 @@ mod tests {
     fn write_read() {
         // Create a terrain and add two voxels.
         let mut terrain = terrain::Terrain::new();
-        terrain.set_voxel_type(Location::new(0, 0, 0), voxel::VoxelType(1));
-        terrain.set_voxel_type(Location::new(25, 0, 0), voxel::VoxelType(1));
+        terrain.set_voxel_type(Location::from_coords(0., 0., 0.), voxel::VoxelType(1));
+        terrain.set_voxel_type(Location::from_coords(25., 0., 0.), voxel::VoxelType(1));
 
         // Write terrain to file in bincode format.
         {
@@ -166,19 +144,19 @@ mod tests {
         let terrain: terrain::Terrain = bincode::deserialize_from(file).unwrap();
         std::fs::remove_file("save.flex").unwrap();
         assert_eq!(
-            terrain.voxel_type(Location::new(0, 0, 0)),
+            terrain.voxel_type(Location::from_coords(0., 0., 0.)),
             voxel::VoxelType(1)
         );
         assert_eq!(
-            terrain.voxel_type(Location::new(0, 1, 0)),
+            terrain.voxel_type(Location::from_coords(0., 1., 0.)),
             voxel::VoxelType(0)
         );
         assert_eq!(
-            terrain.voxel_type(Location::new(25, 0, 0)),
+            terrain.voxel_type(Location::from_coords(25., 0., 0.)),
             voxel::VoxelType(1)
         );
         assert_eq!(
-            terrain.voxel_type(Location::new(25, 1, 0)),
+            terrain.voxel_type(Location::from_coords(25., 1., 0.)),
             voxel::VoxelType(0)
         );
     }
