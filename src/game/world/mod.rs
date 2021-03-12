@@ -1,7 +1,7 @@
 mod chunk;
+mod raytrace;
 mod terrain;
 mod voxel;
-mod raytrace;
 
 pub use terrain::Terrain;
 pub use voxel::Voxel;
