@@ -4,6 +4,7 @@
 mod channels;
 mod game;
 mod graphics;
+mod utils;
 
 use crate::game::GraphicsStateModel;
 use crate::graphics::Bindings;
