@@ -1,8 +1,8 @@
 use crate::channels::*;
-use tokio::task::{self, JoinHandle};
+use std::thread::{self, JoinHandle};
 
 pub fn start_packing_thread(_: LogicToPackingReceiver, _: PackingToWindowSender) -> JoinHandle<()> {
-    task::spawn(async {
+    thread::spawn(|| {
         println!("Ready to pack graphics bindings!");
     })
 }

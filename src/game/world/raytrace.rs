@@ -22,13 +22,13 @@ impl Ray {
     }
 
     pub fn point_at(&self, t: f32) -> Vector3<f32> {
-        self.origin + self.direction*t
+        self.origin + self.direction * t
     }
 
     /// After entering the voxel with the specified corner, returns the voxel the ray exits into or None if the ray never hits the voxel.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// `voxel_corner` - The corner of the voxel with lowest coordinates.
     /// `voxel_size` - The size of voxels. Should usually be 1.
     pub fn voxel_exit(&self, voxel_corner: Vector3<f32>, voxel_size: f32) -> Option<Vector3<f32>> {
@@ -96,12 +96,17 @@ impl Ray {
 }
 
 /// After entering the voxel with the specified corner, returns the voxel the ray exits into or None if the ray never hits the voxel.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// `voxel_corner` - The corner of the voxel with lowest coordinates.
 /// `voxel_size` - The size of voxels. Should usually be 1.
-pub fn voxel_exit(origin: Vector3<f32>, direction: Vector3<f32>, voxel_corner: Vector3<f32>, voxel_size: f32) -> f32 {
+pub fn voxel_exit(
+    origin: Vector3<f32>,
+    direction: Vector3<f32>,
+    voxel_corner: Vector3<f32>,
+    voxel_size: f32,
+) -> f32 {
     let (mut t_min_x, mut t_max_x) = if direction.x == 0. {
         (-std::f32::INFINITY, std::f32::INFINITY)
     } else {
