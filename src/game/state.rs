@@ -1,4 +1,4 @@
-use crate::game::{world, InputEvent, GraphicsStateModel};
+use crate::game::{world, GraphicsStateModel, InputEvent};
 
 pub struct State {
     terrain: world::Terrain,
@@ -7,7 +7,10 @@ pub struct State {
 
 impl State {
     pub fn new() -> State {
-        State { terrain: world::Terrain::new(), cur_tick: 0 }
+        State {
+            terrain: world::Terrain::new(),
+            cur_tick: 0,
+        }
     }
 
     pub fn tick(&mut self, _: &[InputEvent]) {

@@ -6,19 +6,21 @@ pub enum InputEvent {}
 
 /// Represents the entire history of input events.
 pub struct InputEventHistory {
-    input_events: Vec<Vec<InputEvent>>
+    input_events: Vec<Vec<InputEvent>>,
 }
 
 impl InputEventHistory {
     /// Creates a new history with no events stored.
     pub fn new() -> InputEventHistory {
-        InputEventHistory { input_events: Vec::new()}
+        InputEventHistory {
+            input_events: Vec::new(),
+        }
     }
 
     /// Empties the channel and stores the events as the events for a new tick.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// `input_event_receiver` - The channel to empty of events.
     pub fn handle_inputs(&mut self, input_event_receiver: &mpsc::Receiver<InputEvent>) {
         let mut tick_input_events = Vec::new();
@@ -34,9 +36,9 @@ impl InputEventHistory {
 
     /// Gets all events stored for the specific tick.
     /// Returns None if the history hasn't reached the given tick number yet.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// `tick_num` - The tick to get events for.
     pub fn get_events(&'_ self, tick_num: usize) -> Option<&'_ [InputEvent]> {
         self.input_events.get(tick_num).map(|vec| &vec[..])

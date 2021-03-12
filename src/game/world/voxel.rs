@@ -8,8 +8,7 @@ pub const DEFAULT_TYPE: VoxelType = VoxelType(0);
 
 /// Defines functionality and extra information for a voxel.
 #[typetag::serde(tag = "type")]
-pub trait Voxel: VoxelClone + Send {
-}
+pub trait Voxel: VoxelClone + Send {}
 
 pub trait VoxelClone {
     fn clone_box(&self) -> Box<dyn Voxel>;
@@ -30,4 +29,3 @@ impl Clone for Box<dyn Voxel> {
         self.clone_box()
     }
 }
-

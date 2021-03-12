@@ -6,6 +6,8 @@ pub struct GraphicsStateModel {
 
 impl GraphicsStateModel {
     pub fn new() -> GraphicsStateModel {
-        GraphicsStateModel {terrain: Terrain::new()}
+        GraphicsStateModel {
+            terrain: Terrain::new(),
+        }
     }
 }
