@@ -8,7 +8,7 @@ pub const DEFAULT_TYPE: VoxelType = VoxelType(0);
 
 /// Defines functionality and extra information for a voxel.
 #[typetag::serde(tag = "type")]
-pub trait Voxel: VoxelClone {
+pub trait Voxel: VoxelClone + Send {
 }
 
 pub trait VoxelClone {
