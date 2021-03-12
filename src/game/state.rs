@@ -1,7 +1,9 @@
 use crate::game::{world, GraphicsStateModel, InputEvent, Player};
+use serde::{Deserialize, Serialize};
 
 /// Holds the entire world state.
 /// Everything that is part of the game is held within.
+#[derive(Deserialize, Serialize)]
 pub struct State {
     terrain: world::Terrain,
     player: Player,
