@@ -5,6 +5,7 @@ use crate::game::world::{
 };
 use hashbrown::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
+use cgmath::{Vector3, Zero};
 
 const CHUNK_SIZE: f32 = super::chunk::CHUNK_SIZE as f32;
 
@@ -87,6 +88,32 @@ impl Terrain {
         }
         self.chunks.retain(|_, chunk| !matches!(chunk, Chunk::SingleType(voxel_type) if *voxel_type == voxel::DEFAULT_TYPE));
     }
+
+    pub fn trace_ray(&self, origin: Location, direction: Vector3<f32>) -> Option<Location> {
+        let mut loc = origin;
+        let mut chunks = 0;
+        while chunks < 100 {
+            loc.coerce();
+            println!("Coerced loc: {:?}", loc);
+            if let Some(chunk) = self.chunks.get(&loc.chunk) {
+                println!("Some chunk");
+                let ray = raytrace::Ray::new(loc.position, direction);
+                if let Some(position) = chunk.trace_ray(ray) {
+                    loc.position = position;
+                } else {
+                    loc.position += direction*(raytrace::voxel_exit(loc.position, direction, Vector3::zero(), chunk::CHUNK_SIZE_F)+1e-4);
+                }
+            } else {
+                println!("Empty chunk");
+                loc.position += direction*(raytrace::voxel_exit(loc.position, direction, Vector3::zero(), chunk::CHUNK_SIZE_F)+1e-4);
+            }
+            if Chunk::within_chunk(loc.position) {
+                return Some(loc.round());
+            }
+            chunks += 1;
+        }
+        None
+    }
 }
 
 #[cfg(test)]
@@ -159,5 +186,48 @@ mod tests {
             terrain.voxel_type(Location::from_coords(25., 1., 0.)),
             voxel::VoxelType(0)
         );
+    }
+
+    #[test]
+    fn ray_trace_2d() {
+        let mut terrain = crate::game::world::terrain::Terrain::new();
+        terrain.set_voxel_type(Location::from_coords(-6.48, 10.63, 0.), voxel::VoxelType(3));
+        terrain.set_voxel_type(Location::from_coords(-5.73, 10.21, 0.), voxel::VoxelType(4));
+
+        let dir = cgmath::Vector3::new(-4.18, 2.34, 0.);
+        let loc = Location::from_coords(18.22, -3.2, 0.);
+        let hit = terrain.trace_ray(loc, dir).unwrap();
+        let hit_type = terrain.voxel_type(hit);
+        assert_eq!(hit.chunk, Vector3::new(-1, 0, 0));
+        assert_eq!(hit_type, voxel::VoxelType(4));
+    }
+
+    #[test]
+    fn ray_trace_3d() {
+        let mut terrain = crate::game::world::terrain::Terrain::new();
+        terrain.set_voxel_type(Location::from_coords(19.01, -3.64, -7.58), voxel::VoxelType(1));
+        terrain.set_voxel_type(Location::from_coords(12.62, -0.07, 7.58), voxel::VoxelType(2));
+        terrain.set_voxel_type(Location::from_coords(11.61, 0.5, 9.97), voxel::VoxelType(3));
+
+        let dir = cgmath::Vector3::new(-4.18, 2.34, 9.92);
+        let loc = Location::from_coords(18.22, -3.2, -5.71);
+        let hit = terrain.trace_ray(loc, dir).unwrap();
+        let hit_type = terrain.voxel_type(hit);
+        assert_eq!(hit.chunk, Vector3::new(0, -1, 0));
+        assert!(hit.position.x > 11.999 && hit.position.x < 12.0001);
+        assert_eq!(hit_type, voxel::VoxelType(2));
+    }
+
+    #[test]
+    fn ray_trace_3d_long_distance() {
+        let mut terrain = crate::game::world::terrain::Terrain::new();
+        terrain.set_voxel_type(Location::from_coords(19.01, -3.64, -7.58), voxel::VoxelType(1));
+        terrain.set_voxel_type(Location::from_coords(-671.76, 258.52, 84.34), voxel::VoxelType(2));
+
+        let dir = cgmath::Vector3::new(-2.51, -1.84, 0.02);
+        let loc = Location::from_coords(-310.81, 523.12, 81.9);
+        let hit = terrain.trace_ray(loc, dir).unwrap();
+        let hit_type = terrain.voxel_type(hit);
+        assert_eq!(hit_type, voxel::VoxelType(2));
     }
 }
