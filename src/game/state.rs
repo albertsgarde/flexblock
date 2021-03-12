@@ -19,18 +19,18 @@ impl State {
     }
 
     /// Runs one game tick reacting to the given input events.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// `_` - The input events received this tick.
     pub fn tick(&mut self, _: &[InputEvent]) {
         self.cur_tick += 1;
     }
 
     /// Updates the graphics model with any changes in the state.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// `graphics_state_model` - A mutable reference to the model to update.
     pub fn update_graphics_state_model(&self, graphics_state_model: &mut GraphicsStateModel) {
         graphics_state_model.terrain = self.terrain.clone();

@@ -46,7 +46,7 @@ impl Location {
 
     /// 0 on all coordinates.
     pub fn origin() -> Location {
-        Location::new(Vector3::new(0, 0, 0), Vector3::new(0., 0. ,0.))
+        Location::new(Vector3::new(0, 0, 0), Vector3::new(0., 0., 0.))
     }
 
     /// If the position is out of bounds, the chunk will be moved to correct for it.

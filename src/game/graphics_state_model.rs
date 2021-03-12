@@ -2,7 +2,7 @@ use crate::game::{world::Terrain, Player};
 
 pub struct GraphicsStateModel {
     pub terrain: Terrain,
-    pub player: Player
+    pub player: Player,
 }
 
 impl GraphicsStateModel {

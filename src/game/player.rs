@@ -12,13 +12,16 @@ pub struct Player {
 
 impl Player {
     /// Creates a new player with the given location and view direction.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// `location` - The initial location of the player.
     /// `view_direction` - The initial view direction of the player.
     pub fn new(location: Location, view_direction: Vector3<f32>) -> Player {
-        Player {location, view_direction}
+        Player {
+            location,
+            view_direction,
+        }
     }
 
     /// Creates a new player at origin facing in the positive x-direction.
