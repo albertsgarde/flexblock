@@ -1,7 +1,10 @@
 mod chunk;
 mod raytrace;
-pub mod terrain;
-pub mod voxel;
+mod terrain;
+mod voxel;
+
+pub use terrain::Terrain;
+pub use voxel::Voxel;
 
 use crate::utils::maths;
 use cgmath::Vector3;

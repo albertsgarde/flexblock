@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 const CHUNK_SIZE: f32 = super::chunk::CHUNK_SIZE as f32;
 
 /// Struct that stores all voxels in the world.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Terrain {
     chunks: HashMap<Vector3<i32>, Chunk>,
 }
