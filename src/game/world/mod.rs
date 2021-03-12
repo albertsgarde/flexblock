@@ -8,11 +8,12 @@ pub use voxel::Voxel;
 
 use crate::utils::maths;
 use cgmath::Vector3;
+use serde::{Deserialize, Serialize};
 use std::ops::Add;
 
 /// Defines a integer location in the world.
 /// Specifies a voxel.
-#[derive(Clone, Copy, Debug)]
+#[derive(Deserialize, Serialize, Clone, Copy, Debug)]
 pub struct Location {
     pub chunk: Vector3<i32>,
     pub position: Vector3<f32>,
