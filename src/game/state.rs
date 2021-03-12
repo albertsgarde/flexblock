@@ -15,6 +15,6 @@ impl State {
     }
 
     pub fn update_graphics_state_model(&self, graphics_state_model: &mut GraphicsStateModel) {
-        
+        graphics_state_model.terrain = terrain.clone();
     }
 }
