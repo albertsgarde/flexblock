@@ -25,8 +25,8 @@ impl InputEventHistory {
         loop {
             match input_event_receiver.try_recv() {
                 Ok(input_event) => tick_input_events.push(input_event),
-                Err(Empty) => break,
-                Err(Disconnected) => panic!("Event channel disconnected!"),
+                Err(mpsc::TryRecvError::Empty) => break,
+                Err(mpsc::TryRecvError::Disconnected) => panic!("Event channel disconnected!"),
             }
         }
         self.input_events.push(tick_input_events)

@@ -1,5 +1,5 @@
-use crate::{game::{InputEvent, InputEventHistory, state::State}, channels::*};
-use std::{time::{Duration, Instant}, thread::{self, JoinHandle}, sync::mpsc};
+use crate::{game::{InputEventHistory, state::State}, channels::*};
+use std::{time::{Duration, Instant}, thread::{self, JoinHandle}};
 
 const TPS: u32 = 24;
 const SECONDS_PER_TICK: f32 = 1./ (TPS as f32);

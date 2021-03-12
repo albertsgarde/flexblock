@@ -10,7 +10,7 @@ impl State {
         State { terrain: world::Terrain::new(), cur_tick: 0 }
     }
 
-    pub fn tick(&mut self, input_events: &[InputEvent]) {
+    pub fn tick(&mut self, _: &[InputEvent]) {
         self.cur_tick += 1;
     }
 
