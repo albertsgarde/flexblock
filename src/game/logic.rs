@@ -1,8 +1,8 @@
 use crate::channels::*;
-use tokio::task::{self, JoinHandle};
+use std::thread::{self, JoinHandle};
 
 pub fn start_logic_thread(_: WindowToLogicReceiver, _: LogicToPackingSender) -> JoinHandle<()> {
-    task::spawn(async {
+    thread::spawn(|| {
         println!("Running game logic!");
     })
 }

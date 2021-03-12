@@ -1,8 +1,8 @@
 use crate::channels::*;
-use tokio::task::{self, JoinHandle};
+use std::thread::{self, JoinHandle};
 
 pub fn start_window_thread(_: PackingToWindowReceiver, _: WindowToLogicSender) -> JoinHandle<()> {
-    task::spawn(async {
+    thread::spawn(|| {
         println!("Managing window!");
     })
 }
