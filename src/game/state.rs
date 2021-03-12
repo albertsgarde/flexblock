@@ -7,14 +7,14 @@ pub struct State {
 
 impl State {
     pub fn new() -> State {
-        State { terrain: world::Terrain::new() }
+        State { terrain: world::Terrain::new(), cur_tick: 0 }
     }
 
     pub fn tick(&mut self, input_events: &[InputEvent]) {
-        cur_tick += 1;
+        self.cur_tick += 1;
     }
 
     pub fn update_graphics_state_model(&self, graphics_state_model: &mut GraphicsStateModel) {
-        graphics_state_model.terrain = terrain.clone();
+        graphics_state_model.terrain = self.terrain.clone();
     }
 }
