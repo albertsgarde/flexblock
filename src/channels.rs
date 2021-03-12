@@ -1,16 +1,15 @@
 use crate::game::{GraphicsStateModel, InputEvent};
 use crate::graphics::Bindings;
-use std::sync::{Arc, Mutex};
-use tokio::sync::mpsc;
+use std::sync::{mpsc, Arc, Mutex};
 
 pub struct Update;
 
 pub struct WindowToLogicSender {
-    pub channel_sender: mpsc::UnboundedSender<InputEvent>,
+    pub channel_sender: mpsc::Sender<InputEvent>,
 }
 
 pub struct WindowToLogicReceiver {
-    pub channel_receiver: mpsc::UnboundedReceiver<InputEvent>,
+    pub channel_receiver: mpsc::Receiver<InputEvent>,
 }
 
 pub struct LogicToPackingSender {

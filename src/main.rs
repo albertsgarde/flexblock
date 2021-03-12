@@ -4,17 +4,15 @@
 mod channels;
 mod game;
 mod graphics;
+mod utils;
 
 use crate::game::GraphicsStateModel;
 use crate::graphics::Bindings;
-use game::InputEvent;
-use std::sync::{Arc, Mutex};
-use tokio::sync::mpsc;
+use std::sync::{mpsc, Arc, Mutex};
 
-#[tokio::main]
-async fn main() {
+fn main() {
     // Create game input event channel.
-    let (game_event_sender, game_event_receiver) = mpsc::unbounded_channel::<InputEvent>();
+    let (game_event_sender, game_event_receiver) = mpsc::channel();
     let window_to_logic_sender = channels::WindowToLogicSender {
         channel_sender: game_event_sender,
     };
@@ -24,8 +22,7 @@ async fn main() {
 
     // Create state model for the packer and a channel to tell packer of updates.
     let graphics_state_model = Arc::new(Mutex::new(GraphicsStateModel {}));
-    let (graphics_model_update_sender, graphics_model_update_receiver) =
-        mpsc::channel::<channels::Update>(1);
+    let (graphics_model_update_sender, graphics_model_update_receiver) = mpsc::channel();
     let logic_to_packing_sender = channels::LogicToPackingSender {
         channel_sender: graphics_model_update_sender,
         graphics_state_model: graphics_state_model.clone(),
@@ -48,7 +45,7 @@ async fn main() {
         graphics::start_packing_thread(logic_to_packing_receiver, packing_to_window_sender);
     let window_thread =
         graphics::start_window_thread(packing_to_window_receiver, window_to_logic_sender);
-    window_thread.await.unwrap();
-    packing_thread.await.unwrap();
-    logic_thread.await.unwrap();
+    window_thread.join().expect("Panic in window thread");
+    packing_thread.join().expect("Panic in packing thread");
+    logic_thread.join().expect("Panic in logic thread");
 }

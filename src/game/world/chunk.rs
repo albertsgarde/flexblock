@@ -1,13 +1,16 @@
-use super::{
+use crate::game::world::{
+    raytrace::Ray,
     voxel::{Voxel, VoxelType},
     *,
 };
+use cgmath::Vector3;
 use hashbrown::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 
 /// The side length of a chunk.
 /// The number of voxels per chunk is this value to the third power.
 pub const CHUNK_SIZE: u32 = 16;
+pub const CHUNK_SIZE_F: f32 = CHUNK_SIZE as f32;
 
 /// The number of elements in a chunk's voxel vector.
 const CHUNK_LENGTH: usize = (CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE) as usize;
@@ -29,6 +32,13 @@ impl ChunkLocation {
     }
 }
 
+impl From<Vector3<f32>> for ChunkLocation {
+    fn from(position: Vector3<f32>) -> ChunkLocation {
+        Chunk::debug_assert_within_chunk(position);
+        ChunkLocation::new(position.x as u32, position.y as u32, position.z as u32)
+    }
+}
+
 /// Represents a cube-shaped block of voxels.
 #[derive(Serialize, Deserialize)]
 pub enum Chunk {
@@ -40,6 +50,25 @@ impl Chunk {
     /// Create a new chunk with all voxels set to the default type.
     pub fn new() -> Chunk {
         Chunk::SingleType(voxel::DEFAULT_TYPE)
+    }
+
+    pub fn within_chunk(position: Vector3<f32>) -> bool {
+        position.x >= 0.
+            && position.y >= 0.
+            && position.z >= 0.
+            && position.x <= CHUNK_SIZE_F
+            && position.y <= CHUNK_SIZE_F
+            && position.z <= CHUNK_SIZE_F
+    }
+
+    pub fn debug_assert_within_chunk(position: Vector3<f32>) {
+        debug_assert!(
+            Chunk::within_chunk(position),
+            "Position must be between 0 and chunk size on all coordinates. Position: ({}, {}, {})",
+            position.x,
+            position.y,
+            position.z
+        );
     }
 
     /// Returns the type of the voxel at the specified location within the chunk.
@@ -118,6 +147,34 @@ impl Chunk {
                     *self = Chunk::SingleType(single_type);
                 }
             }
+        }
+    }
+
+    fn ignore_voxel(&self, voxel: ChunkLocation) -> bool {
+        raytrace::ignore_voxel_type(self.voxel_type_unchecked(voxel))
+    }
+
+    /// Traces a ray within the chunk returning the first non-ignored voxel hit or the
+    /// first position outside the chunk if none is hit.
+    /// Undefined behaviour occurs if the ray origin is outside chunk bounds.
+    pub fn trace_ray(&self, ray: Ray) -> Option<Vector3<f32>> {
+        Chunk::debug_assert_within_chunk(ray.origin);
+        if let Chunk::SingleType(voxel_type) = self {
+            if raytrace::ignore_voxel_type(*voxel_type) {
+                //raytrace::round(ray.point_at(raytrace::voxel_exit(ray.origin, ray.direction, Vector3::zero(), CHUNK_SIZE_F) + 1e-4))
+                None
+            } else {
+                Some(ray.voxel_exit(raytrace::round(ray.origin), 1.).unwrap())
+            }
+        } else {
+            let mut voxel = ray.voxel_exit(raytrace::round(ray.origin), 1.).unwrap();
+            while Chunk::within_chunk(voxel) {
+                if !self.ignore_voxel(voxel.into()) {
+                    return Some(voxel);
+                }
+                voxel = ray.voxel_exit(voxel, 1.).unwrap();
+            }
+            None
         }
     }
 }
