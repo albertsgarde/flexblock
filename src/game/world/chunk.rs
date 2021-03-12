@@ -1,6 +1,6 @@
 use crate::game::world::{
-    voxel::{Voxel, VoxelType},
     raytrace::Ray,
+    voxel::{Voxel, VoxelType},
     *,
 };
 use cgmath::Vector3;
@@ -54,11 +54,11 @@ impl Chunk {
 
     pub fn within_chunk(position: Vector3<f32>) -> bool {
         position.x >= 0.
-        && position.y >= 0.
-        && position.z >= 0.
-        && position.x <= CHUNK_SIZE_F
-        && position.y <= CHUNK_SIZE_F
-        && position.z <= CHUNK_SIZE_F
+            && position.y >= 0.
+            && position.z >= 0.
+            && position.x <= CHUNK_SIZE_F
+            && position.y <= CHUNK_SIZE_F
+            && position.z <= CHUNK_SIZE_F
     }
 
     pub fn debug_assert_within_chunk(position: Vector3<f32>) {
@@ -154,7 +154,7 @@ impl Chunk {
         raytrace::ignore_voxel_type(self.voxel_type_unchecked(voxel))
     }
 
-    /// Traces a ray within the chunk returning the first non-ignored voxel hit or the 
+    /// Traces a ray within the chunk returning the first non-ignored voxel hit or the
     /// first position outside the chunk if none is hit.
     /// Undefined behaviour occurs if the ray origin is outside chunk bounds.
     pub fn trace_ray(&self, ray: Ray) -> Option<Vector3<f32>> {
