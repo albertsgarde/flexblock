@@ -11,3 +11,6 @@ mod logic;
 pub use logic::start_logic_thread;
 
 mod state;
+
+mod player;
+pub use player::Player;
