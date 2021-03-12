@@ -8,7 +8,7 @@ mod utils;
 
 use crate::game::GraphicsStateModel;
 use crate::graphics::Bindings;
-use std::sync::{Arc, Mutex, mpsc};
+use std::sync::{mpsc, Arc, Mutex};
 
 fn main() {
     // Create game input event channel.
@@ -22,8 +22,7 @@ fn main() {
 
     // Create state model for the packer and a channel to tell packer of updates.
     let graphics_state_model = Arc::new(Mutex::new(GraphicsStateModel {}));
-    let (graphics_model_update_sender, graphics_model_update_receiver) =
-        mpsc::channel();
+    let (graphics_model_update_sender, graphics_model_update_receiver) = mpsc::channel();
     let logic_to_packing_sender = channels::LogicToPackingSender {
         channel_sender: graphics_model_update_sender,
         graphics_state_model: graphics_state_model.clone(),

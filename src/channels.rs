@@ -1,6 +1,6 @@
 use crate::game::{GraphicsStateModel, InputEvent};
 use crate::graphics::Bindings;
-use std::sync::{Arc, Mutex, mpsc};
+use std::sync::{mpsc, Arc, Mutex};
 
 pub struct Update;
 

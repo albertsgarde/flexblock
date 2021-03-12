@@ -4,8 +4,8 @@ pub mod terrain;
 pub mod voxel;
 
 use crate::utils::maths;
-use std::ops::Add;
 use cgmath::Vector3;
+use std::ops::Add;
 
 /// Defines a integer location in the world.
 /// Specifies a voxel.
@@ -19,9 +19,9 @@ impl Location {
     /// Creates a new Location from specified coordinates.
     /// Asserts in debug mode that the position is within 0 and chunk size in all dimensions.
     /// In release no such checks are made and if the position is out of bounds undefined behaviour occurs.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// `chunk` - The index of the chunk.
     /// `position` - The floating point position in this chunk.
     pub fn new(chunk: Vector3<i32>, position: Vector3<f32>) -> Location {
@@ -69,9 +69,9 @@ impl Location {
     }
 
     /// Creates a Location from a set of absolute floating point coordinates.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// `x` - The absolute x-coordinate of the location.
     /// `y` - The absolute y-coordinate of the location.
     /// `z` - The absolute z-coordinate of the location.
@@ -126,13 +126,13 @@ mod tests {
     #[test]
     fn from_coords() {
         let loc = Location::from_coords(2., 3., 4.);
-        assert_eq!(loc.chunk, Vector3::new(0,0,0));
+        assert_eq!(loc.chunk, Vector3::new(0, 0, 0));
         assert!(loc.position.x > 1.999 && loc.position.x < 2.001);
         assert!(loc.position.y > 2.999 && loc.position.y < 3.001);
         assert!(loc.position.z > 3.999 && loc.position.z < 4.001);
 
         let loc = Location::from_coords(16. + 2., 16. + 3., 16. + 4.);
-        assert_eq!(loc.chunk, Vector3::new(1,1,1));
+        assert_eq!(loc.chunk, Vector3::new(1, 1, 1));
         assert!(loc.position.x > 1.999 && loc.position.x < 2.001);
         assert!(loc.position.y > 2.999 && loc.position.y < 3.001);
         assert!(loc.position.z > 3.999 && loc.position.z < 4.001);
@@ -141,7 +141,7 @@ mod tests {
     #[test]
     fn from_coords_negative() {
         let loc = Location::from_coords(2., -3., 4.);
-        assert_eq!(loc.chunk, Vector3::new(0,-1,0));
+        assert_eq!(loc.chunk, Vector3::new(0, -1, 0));
         assert!(loc.position.x > 1.999 && loc.position.x < 2.001);
         assert!(loc.position.y > 12.999 && loc.position.y < 13.001);
         assert!(loc.position.z > 3.999 && loc.position.z < 4.001);
