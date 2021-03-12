@@ -16,7 +16,7 @@ pub const CHUNK_SIZE_F: f32 = CHUNK_SIZE as f32;
 const CHUNK_LENGTH: usize = (CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE) as usize;
 
 /// Represents a voxel location in a chunk.
-#[derive(Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct ChunkLocation {
     index: usize,
 }
@@ -40,7 +40,7 @@ impl From<Vector3<f32>> for ChunkLocation {
 }
 
 /// Represents a cube-shaped block of voxels.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum Chunk {
     SingleType(VoxelType),
     MultiType(Vec<VoxelType>, HashMap<ChunkLocation, Box<dyn Voxel>>),
