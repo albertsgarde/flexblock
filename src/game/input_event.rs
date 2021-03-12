@@ -38,12 +38,12 @@ impl InputEventHistory {
     /// # Arguments
     /// 
     /// `tick_num` - The tick to get events for.
-    pub fn get_events<'a>(&'a self, tick_num: usize) -> Option<&'a [InputEvent]> {
+    pub fn get_events(&'_ self, tick_num: usize) -> Option<&'_ [InputEvent]> {
         self.input_events.get(tick_num).map(|vec| &vec[..])
     }
 
     /// Returns the events for the latest tick.
-    pub fn cur_tick_events<'a>(&'a self) -> Option<&'a [InputEvent]> {
+    pub fn cur_tick_events(&'_ self) -> Option<&'_ [InputEvent]> {
         self.input_events.last().map(|vec| &vec[..])
     }
 
