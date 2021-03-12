@@ -8,11 +8,12 @@ pub use voxel::Voxel;
 
 use crate::utils::maths;
 use cgmath::Vector3;
+use serde::{Deserialize, Serialize};
 use std::ops::Add;
 
 /// Defines a integer location in the world.
 /// Specifies a voxel.
-#[derive(Clone, Copy, Debug)]
+#[derive(Deserialize, Serialize, Clone, Copy, Debug)]
 pub struct Location {
     pub chunk: Vector3<i32>,
     pub position: Vector3<f32>,
@@ -41,6 +42,11 @@ impl Location {
             position.z
         );
         Location { chunk, position }
+    }
+
+    /// 0 on all coordinates.
+    pub fn origin() -> Location {
+        Location::new(Vector3::new(0, 0, 0), Vector3::new(0., 0., 0.))
     }
 
     /// If the position is out of bounds, the chunk will be moved to correct for it.
