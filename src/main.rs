@@ -6,8 +6,11 @@ mod game;
 mod graphics;
 mod utils;
 
+#[macro_use]
+extern crate bytepack_derive;
+
 use crate::game::GraphicsStateModel;
-use crate::graphics::Bindings;
+use crate::graphics::RenderPack;
 use std::sync::{mpsc, Arc, Mutex};
 
 fn main() {
@@ -33,19 +36,20 @@ fn main() {
     };
 
     // Create bindings object to share between packer and window.
-    let bindings = Arc::new(Mutex::new(Bindings {}));
+    let render_pack: Arc<Mutex<Option<RenderPack>>> = Arc::new(Mutex::new(None));
     let packing_to_window_sender = channels::PackingToWindowSender {
-        bindings: bindings.clone(),
+        render_pack: render_pack.clone(),
     };
-    let packing_to_window_receiver = channels::PackingToWindowReceiver { bindings };
+    let packing_to_window_receiver = channels::PackingToWindowReceiver { render_pack };
 
     // Start threads.
     let logic_thread = game::start_logic_thread(window_to_logic_receiver, logic_to_packing_sender);
     let packing_thread =
         graphics::start_packing_thread(logic_to_packing_receiver, packing_to_window_sender);
-    let window_thread =
-        graphics::start_window_thread(packing_to_window_receiver, window_to_logic_sender);
-    window_thread.join().expect("Panic in window thread");
+    
+    // We unfortunately cannot catch panics from the window thread :(
+    graphics::start_window(packing_to_window_receiver, window_to_logic_sender);
+
     packing_thread.join().expect("Panic in packing thread");
     logic_thread.join().expect("Panic in logic thread");
 }
