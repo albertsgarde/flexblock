@@ -1,7 +1,7 @@
 use std::sync::mpsc;
 
 /// Represents the event of something happening outside of state that the state might need to react to.
-/// Examples are player actions and game closing.
+/// Player actions are some examples.
 pub enum InputEvent {}
 
 /// Represents the entire history of input events.
