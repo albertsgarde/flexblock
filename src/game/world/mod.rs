@@ -117,7 +117,7 @@ impl Sub<Location> for Location {
     type Output = Vector3<f32>;
 
     fn sub(self, rhs: Location) -> Vector3<f32> {
-        self.position-rhs.position+(self.chunk-rhs.chunk).map(|x| x as f32 *16.)
+        self.position - rhs.position + (self.chunk - rhs.chunk).map(|x| x as f32 * 16.)
     }
 }
 
@@ -168,7 +168,7 @@ mod tests {
     fn subtract() {
         let loc1 = Location::from_coords(1321., -231., 21.);
         let loc2 = Location::from_coords(-21., -32.13, 42.);
-        let result = loc1-loc2;
+        let result = loc1 - loc2;
         assert!(result.x > 1341.999 && result.x < 1342.001);
         assert!(result.y > -198.8701 && result.y < -198.8699);
         assert!(result.z > -21.001 && result.z < -20.999);
