@@ -9,7 +9,7 @@ pub use voxel::Voxel;
 use crate::utils::maths;
 use cgmath::Vector3;
 use serde::{Deserialize, Serialize};
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 /// Defines a integer location in the world.
 /// Specifies a voxel.
@@ -113,6 +113,14 @@ impl Add<Vector3<f32>> for Location {
     }
 }
 
+impl Sub<Location> for Location {
+    type Output = Vector3<f32>;
+
+    fn sub(self, rhs: Location) -> Vector3<f32> {
+        self.position-rhs.position+(self.chunk-rhs.chunk).map(|x| x as f32 *16.)
+    }
+}
+
 impl std::fmt::Display for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -154,5 +162,15 @@ mod tests {
         assert!(loc.position.x > 1.999 && loc.position.x < 2.001);
         assert!(loc.position.y > 12.999 && loc.position.y < 13.001);
         assert!(loc.position.z > 3.999 && loc.position.z < 4.001);
+    }
+
+    #[test]
+    fn subtract() {
+        let loc1 = Location::from_coords(1321., -231., 21.);
+        let loc2 = Location::from_coords(-21., -32.13, 42.);
+        let result = loc1-loc2;
+        assert!(result.x > 1341.999 && result.x < 1342.001);
+        assert!(result.y > -198.8701 && result.y < -198.8699);
+        assert!(result.z > -21.001 && result.z < -20.999);
     }
 }
