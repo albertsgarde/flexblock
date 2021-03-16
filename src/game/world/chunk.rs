@@ -185,7 +185,6 @@ impl Chunk {
 
 pub enum ChunkIterator<'a> {
     SingleType {
-        voxel_num: usize,
         voxel_type: VoxelType,
         position: Vec3,
     },
@@ -200,7 +199,7 @@ impl<'a> Iterator for ChunkIterator<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            ChunkIterator::SingleType{ voxel_num, voxel_type , position} => {
+            ChunkIterator::SingleType{ voxel_type , position} => {
                 position.z += 1.;
                 if position.z >= CHUNK_SIZE_F {
                     position.z -= CHUNK_SIZE_F;
@@ -240,7 +239,7 @@ impl<'a> IntoIterator for &'a Chunk {
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            Chunk::SingleType(voxel_type) => ChunkIterator::SingleType{voxel_num: 0, voxel_type: *voxel_type, position: Vec3::new(0., 0., -1.)},
+            Chunk::SingleType(voxel_type) => ChunkIterator::SingleType{voxel_type: *voxel_type, position: Vec3::new(0., 0., -1.)},
             Chunk::MultiType(array, _) => ChunkIterator::MultiType{iter: array.iter(), position: Vec3::new(0., 0., -1.)},
         }
     }
