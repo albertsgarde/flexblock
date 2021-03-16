@@ -101,12 +101,7 @@ impl Ray {
 ///
 /// `voxel_corner` - The corner of the voxel with lowest coordinates.
 /// `voxel_size` - The size of voxels. Should usually be 1.
-pub fn voxel_exit(
-    origin: Vec3,
-    direction: Vec3,
-    voxel_corner: Vec3,
-    voxel_size: f32,
-) -> f32 {
+pub fn voxel_exit(origin: Vec3, direction: Vec3, voxel_corner: Vec3, voxel_size: f32) -> f32 {
     let (mut t_min_x, mut t_max_x) = if direction.x == 0. {
         (-std::f32::INFINITY, std::f32::INFINITY)
     } else {

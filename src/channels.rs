@@ -1,6 +1,6 @@
-use crate::game::{GraphicsStateModel};
-use crate::graphics::RenderPack;
+use crate::game::GraphicsStateModel;
 use crate::graphics::ExternalEvent;
+use crate::graphics::RenderPack;
 use std::sync::{mpsc, Arc, Mutex};
 
 pub struct Update;

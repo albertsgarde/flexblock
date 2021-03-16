@@ -1,4 +1,4 @@
-use crate::utils::vertex::{Vertex3D};
+use crate::utils::vertex::Vertex3D;
 use std::slice::Iter;
 
 pub struct RenderPack {
@@ -30,7 +30,7 @@ impl RenderPack {
 
 pub struct VertexPack {
     pub vertices: Vec<Vertex3D>,
-    pub elements: Vec<u32>
+    pub elements: Vec<u32>,
 }
 
 pub enum RenderMessage {
@@ -51,18 +51,12 @@ pub enum RenderMessage {
 
 impl VertexPack {
     ///TODO: Make this follow the contract
-    pub fn new(
-        vertices: Vec<Vertex3D>,
-        elements: Option<Vec<u32>>
-    ) -> VertexPack {
+    pub fn new(vertices: Vec<Vertex3D>, elements: Option<Vec<u32>>) -> VertexPack {
         let elements = match elements {
             Some(e) => e,
             None => Vec::new(),
         };
-        VertexPack {
-            vertices,
-            elements
-        }
+        VertexPack { vertices, elements }
     }
 }
 
