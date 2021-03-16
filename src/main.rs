@@ -6,6 +6,7 @@ mod game;
 mod graphics;
 mod utils;
 
+extern crate nalgebra_glm as glm;
 #[macro_use]
 extern crate bytepack_derive;
 
@@ -46,7 +47,7 @@ fn main() {
     let logic_thread = game::start_logic_thread(window_to_logic_receiver, logic_to_packing_sender);
     let packing_thread =
         graphics::start_packing_thread(logic_to_packing_receiver, packing_to_window_sender);
-    
+
     // We unfortunately cannot catch panics from the window thread :(
     graphics::start_window(packing_to_window_receiver, window_to_logic_sender);
 

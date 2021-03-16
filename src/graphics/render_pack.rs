@@ -1,5 +1,4 @@
-
-use crate::utils::vertex::{Vertex3D, AttributePointerList};
+use crate::utils::vertex::{Vertex3D};
 use std::slice::Iter;
 
 pub struct RenderPack {
@@ -29,17 +28,15 @@ impl RenderPack {
     }
 }
 
-
-pub struct RenderData {
+pub struct VertexPack {
     pub vertices: Vec<Vertex3D>,
-    pub elements: Vec<u32>,
-    attributes: AttributePointerList,
+    pub elements: Vec<u32>
 }
 
 pub enum RenderMessage {
     Pack {
         vertex_array: usize,
-        pack: RenderData,
+        pack: VertexPack,
     },
     Clear {
         vertex_array: usize,
@@ -52,38 +49,31 @@ pub enum RenderMessage {
     },
 }
 
-impl RenderData {
+impl VertexPack {
     ///TODO: Make this follow the contract
     pub fn new(
         vertices: Vec<Vertex3D>,
-        elements: Option<Vec<u32>>,
-        attributes: AttributePointerList,
-    ) -> RenderData {
+        elements: Option<Vec<u32>>
+    ) -> VertexPack {
         let elements = match elements {
             Some(e) => e,
             None => Vec::new(),
         };
-        RenderData {
+        VertexPack {
             vertices,
-            elements,
-            attributes,
+            elements
         }
     }
-
-    pub fn get_stride(&self) -> usize {
-        self.attributes.get_stride()
-    }
 }
-
 
 //TODO: Add mat 3, 2, and vec 3, 2, and f32, u32, i32
 pub struct UniformData {
-    pub mat4s: Vec<(cgmath::Matrix4<f32>, String)>,
-    pub vec4s: Vec<(cgmath::Vector4<f32>, String)>,
+    pub mat4s: Vec<(glm::Mat4, String)>,
+    pub vec4s: Vec<(glm::Vec3, String)>,
 }
 
 impl UniformData {
-    pub fn new(mat4s: Vec<(cgmath::Matrix4<f32>, String)>, vec4s: Vec<(cgmath::Vector4<f32>, String)>) -> UniformData {
+    pub fn new(mat4s: Vec<(glm::Mat4, String)>, vec4s: Vec<(glm::Vec3, String)>) -> UniformData {
         UniformData { mat4s, vec4s }
     }
 }

@@ -1,6 +1,5 @@
-
-use super::{VertexArray, ShaderManager};
-use crate::graphics::{UniformData, RenderMessage, RenderData};
+use super::{ShaderManager, VertexArray};
+use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
 
 ///
@@ -36,7 +35,7 @@ impl RenderCaller {
     /// This is supposed to turn a packed render into something that can then be rendered directly. So
     /// this has access to OpenGL calls.
     /// TODO: Enforce requirements on RenderPack<T> to make this safe.
-    unsafe fn unpack(&mut self, array: &usize, pack: &RenderData) {
+    unsafe fn unpack(&mut self, array: &usize, pack: &VertexPack) {
         if *array >= self.vertex_array.get_vbos() {
             panic!(
                 "Trying to clear an array with index {}, but there's only {} arrays ",
@@ -61,12 +60,21 @@ impl RenderCaller {
 
     /// TODO: THIS IS WHERE YOU LEFT OFF, CONTINUE FROM HERE
     unsafe fn choose_shader(&mut self, shader: &String) {
-        println!("Choosing shader {}!", shader);
-        self.shader_manager.bind_shader(shader).unwrap();
+        match self.shader_manager.bind_shader(shader) {
+            Err(s) => {
+                println!("{}", s)
+            } //TODO: LOG INSTEAD
+            _ => (),
+        }
     }
 
     unsafe fn uniforms(&mut self, uniforms: &UniformData) {
-        self.shader_manager.uniforms(uniforms).unwrap();
+        match self.shader_manager.uniforms(uniforms) {
+            Err(s) => {
+                println!("{}", s)
+            } //TODO: LOG INSTEAD
+            _ => (),
+        }
     }
 
     pub unsafe fn read_message(&mut self, message: &RenderMessage) {

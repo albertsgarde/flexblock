@@ -107,7 +107,6 @@ impl Index<usize> for AttributePointerList {
     }
 }
 
-
 ///
 /// One attribute pointer
 pub struct AttributePointer {
