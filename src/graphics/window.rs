@@ -1,8 +1,15 @@
 use crate::channels::*;
-use std::thread::{self, JoinHandle};
+use super::wrapper::{EventHandler,Window};
 
-pub fn start_window_thread(_: PackingToWindowReceiver, _: WindowToLogicSender) -> JoinHandle<()> {
-    thread::spawn(|| {
-        println!("Managing window!");
-    })
+pub fn start_window(rx: PackingToWindowReceiver, tx: WindowToLogicSender){
+    
+    let window = unsafe { Window::new(rx) };
+
+    let eh : EventHandler = Box::new(move |event| {
+        if let Some(event) = super::ExternalEvent::create_from_glut_event(event) {
+            tx.channel_sender.send(event).unwrap();
+        }
+    });
+
+    unsafe { window.run(eh) };
 }
