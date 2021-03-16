@@ -23,6 +23,7 @@ impl Terrain {
         }
     }
 
+    /// Returns the chunk with the specified index or None if no such chunk exists.
     pub fn chunk(&self, chunk: IVec3) -> Option<&Chunk> {
         self.chunks.get(&chunk)
     }
