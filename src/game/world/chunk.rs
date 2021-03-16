@@ -3,7 +3,7 @@ use crate::game::world::{
     voxel::{Voxel, VoxelType},
     *,
 };
-use cgmath::Vector3;
+use glm::Vec3;
 use hashbrown::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 
@@ -32,8 +32,8 @@ impl ChunkLocation {
     }
 }
 
-impl From<Vector3<f32>> for ChunkLocation {
-    fn from(position: Vector3<f32>) -> ChunkLocation {
+impl From<Vec3> for ChunkLocation {
+    fn from(position: Vec3) -> ChunkLocation {
         Chunk::debug_assert_within_chunk(position);
         ChunkLocation::new(position.x as u32, position.y as u32, position.z as u32)
     }
@@ -52,7 +52,7 @@ impl Chunk {
         Chunk::SingleType(voxel::DEFAULT_TYPE)
     }
 
-    pub fn within_chunk(position: Vector3<f32>) -> bool {
+    pub fn within_chunk(position: Vec3) -> bool {
         position.x >= 0.
             && position.y >= 0.
             && position.z >= 0.
@@ -61,7 +61,7 @@ impl Chunk {
             && position.z <= CHUNK_SIZE_F
     }
 
-    pub fn debug_assert_within_chunk(position: Vector3<f32>) {
+    pub fn debug_assert_within_chunk(position: Vec3) {
         debug_assert!(
             Chunk::within_chunk(position),
             "Position must be between 0 and chunk size on all coordinates. Position: ({}, {}, {})",
@@ -157,7 +157,7 @@ impl Chunk {
     /// Traces a ray within the chunk returning the first non-ignored voxel hit or the
     /// first position outside the chunk if none is hit.
     /// Undefined behaviour occurs if the ray origin is outside chunk bounds.
-    pub fn trace_ray(&self, ray: Ray) -> Option<Vector3<f32>> {
+    pub fn trace_ray(&self, ray: Ray) -> Option<Vec3> {
         Chunk::debug_assert_within_chunk(ray.origin);
         if let Chunk::SingleType(voxel_type) = self {
             if raytrace::ignore_voxel_type(*voxel_type) {

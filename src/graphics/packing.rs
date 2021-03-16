@@ -23,7 +23,6 @@ pub fn start_packing_thread(rx: LogicToPackingReceiver, tx: PackingToWindowSende
             
             let direction = data.player.view_direction();
             let position = data.player.location().position;
-            let position = position + cgmath::vec3(0.,0.,0.);
             let center = position+direction;
             
             let v : glm::Mat4 = glm::look_at(&glm::vec3(position[0], position[1], position[2]), 

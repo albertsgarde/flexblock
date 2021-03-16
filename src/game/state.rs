@@ -15,7 +15,7 @@ impl State {
     pub fn new() -> State {
         State {
             terrain: world::Terrain::new(),
-            player: Player::new(world::Location::origin(), cgmath::Vector3::new(1., 0., 0.)),
+            player: Player::new(world::Location::origin(), glm::Vec3::new(1., 0., 0.)),
             cur_tick: 0,
         }
     }

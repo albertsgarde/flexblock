@@ -1,5 +1,5 @@
 use crate::game::world::voxel;
-use cgmath::Vector3;
+use glm::Vec3;
 use std::mem::swap;
 
 /// Whether to ignore the specified voxel type when tracing.
@@ -7,21 +7,21 @@ pub fn ignore_voxel_type(voxel_type: voxel::VoxelType) -> bool {
     voxel_type == voxel::DEFAULT_TYPE
 }
 
-pub fn round(position: Vector3<f32>) -> Vector3<f32> {
+pub fn round(position: Vec3) -> Vec3 {
     position.map(|x| x.floor())
 }
 
 pub struct Ray {
-    pub origin: Vector3<f32>,
-    pub direction: Vector3<f32>,
+    pub origin: Vec3,
+    pub direction: Vec3,
 }
 
 impl Ray {
-    pub fn new(origin: Vector3<f32>, direction: Vector3<f32>) -> Ray {
+    pub fn new(origin: Vec3, direction: Vec3) -> Ray {
         Ray { origin, direction }
     }
 
-    pub fn point_at(&self, t: f32) -> Vector3<f32> {
+    pub fn point_at(&self, t: f32) -> Vec3 {
         self.origin + self.direction * t
     }
 
@@ -31,7 +31,7 @@ impl Ray {
     ///
     /// `voxel_corner` - The corner of the voxel with lowest coordinates.
     /// `voxel_size` - The size of voxels. Should usually be 1.
-    pub fn voxel_exit(&self, voxel_corner: Vector3<f32>, voxel_size: f32) -> Option<Vector3<f32>> {
+    pub fn voxel_exit(&self, voxel_corner: Vec3, voxel_size: f32) -> Option<Vec3> {
         println!("Origin: {:?}  Direction: {:?}", self.origin, self.direction);
         println!("Helleflynder: {:?}", voxel_corner);
         let (mut t_min_x, mut t_max_x) = if self.direction.x == 0. {
@@ -102,9 +102,9 @@ impl Ray {
 /// `voxel_corner` - The corner of the voxel with lowest coordinates.
 /// `voxel_size` - The size of voxels. Should usually be 1.
 pub fn voxel_exit(
-    origin: Vector3<f32>,
-    direction: Vector3<f32>,
-    voxel_corner: Vector3<f32>,
+    origin: Vec3,
+    direction: Vec3,
+    voxel_corner: Vec3,
     voxel_size: f32,
 ) -> f32 {
     let (mut t_min_x, mut t_max_x) = if direction.x == 0. {
