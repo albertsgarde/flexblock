@@ -1,15 +1,16 @@
-use crate::game::{GraphicsStateModel, InputEvent};
-use crate::graphics::Bindings;
+use crate::game::{GraphicsStateModel};
+use crate::graphics::RenderPack;
+use crate::graphics::ExternalEvent;
 use std::sync::{mpsc, Arc, Mutex};
 
 pub struct Update;
 
 pub struct WindowToLogicSender {
-    pub channel_sender: mpsc::Sender<InputEvent>,
+    pub channel_sender: mpsc::Sender<ExternalEvent>,
 }
 
 pub struct WindowToLogicReceiver {
-    pub channel_receiver: mpsc::Receiver<InputEvent>,
+    pub channel_receiver: mpsc::Receiver<ExternalEvent>,
 }
 
 pub struct LogicToPackingSender {
@@ -23,9 +24,9 @@ pub struct LogicToPackingReceiver {
 }
 
 pub struct PackingToWindowSender {
-    pub bindings: Arc<Mutex<Bindings>>,
+    pub render_pack: Arc<Mutex<Option<RenderPack>>>,
 }
 
 pub struct PackingToWindowReceiver {
-    pub bindings: Arc<Mutex<Bindings>>,
+    pub render_pack: Arc<Mutex<Option<RenderPack>>>,
 }
