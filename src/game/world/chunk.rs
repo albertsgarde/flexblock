@@ -178,3 +178,43 @@ impl Chunk {
         }
     }
 }
+
+pub enum ChunkIterator<'a> {
+    SingleType {
+        voxel_num: usize,
+        voxel_type: VoxelType,
+    },
+    MultiType {
+        iter: std::slice::Iter<'a, VoxelType>,
+    },
+}
+
+impl<'a> Iterator for ChunkIterator<'a> {
+    type Item = VoxelType;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            ChunkIterator::SingleType{ voxel_num, voxel_type } => {
+                if *voxel_num == CHUNK_LENGTH {
+                    None
+                } else {
+                    *voxel_num += 1;
+                    Some(*voxel_type)
+                }
+            },
+            ChunkIterator::MultiType{ iter } => iter.next().map(|vt| *vt)
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a Chunk {
+    type Item = VoxelType;
+    type IntoIter = ChunkIterator<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        match self {
+            Chunk::SingleType(voxel_type) => ChunkIterator::SingleType{voxel_num: 0, voxel_type: *voxel_type},
+            Chunk::MultiType(array, _) => ChunkIterator::MultiType{iter: array.iter()},
+        }
+    }
+}
