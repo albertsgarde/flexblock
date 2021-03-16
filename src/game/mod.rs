@@ -10,6 +10,8 @@ pub use graphics_state_model::GraphicsStateModel;
 mod logic;
 pub use logic::start_logic_thread;
 
+pub mod physics;
+
 mod state;
 
 mod player;
