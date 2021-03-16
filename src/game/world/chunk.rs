@@ -199,7 +199,10 @@ impl<'a> Iterator for ChunkIterator<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            ChunkIterator::SingleType{ voxel_type , position} => {
+            ChunkIterator::SingleType {
+                voxel_type,
+                position,
+            } => {
                 position.z += 1.;
                 if position.z >= CHUNK_SIZE_F {
                     position.z -= CHUNK_SIZE_F;
@@ -209,12 +212,12 @@ impl<'a> Iterator for ChunkIterator<'a> {
                         position.x += 1.;
                         if position.x >= CHUNK_SIZE_F {
                             return None;
-                        } 
+                        }
                     }
                 }
                 Some((*voxel_type, *position))
-            },
-            ChunkIterator::MultiType{ iter , position} => {
+            }
+            ChunkIterator::MultiType { iter, position } => {
                 position.z += 1.;
                 if position.z >= CHUNK_SIZE_F {
                     position.z -= CHUNK_SIZE_F;
@@ -224,7 +227,7 @@ impl<'a> Iterator for ChunkIterator<'a> {
                         position.x += 1.;
                         if position.x >= CHUNK_SIZE_F {
                             return None;
-                        } 
+                        }
                     }
                 }
                 iter.next().map(|vt| (*vt, *position))
@@ -239,8 +242,14 @@ impl<'a> IntoIterator for &'a Chunk {
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            Chunk::SingleType(voxel_type) => ChunkIterator::SingleType{voxel_type: *voxel_type, position: Vec3::new(0., 0., -1.)},
-            Chunk::MultiType(array, _) => ChunkIterator::MultiType{iter: array.iter(), position: Vec3::new(0., 0., -1.)},
+            Chunk::SingleType(voxel_type) => ChunkIterator::SingleType {
+                voxel_type: *voxel_type,
+                position: Vec3::new(0., 0., -1.),
+            },
+            Chunk::MultiType(array, _) => ChunkIterator::MultiType {
+                iter: array.iter(),
+                position: Vec3::new(0., 0., -1.),
+            },
         }
     }
 }
@@ -252,16 +261,16 @@ mod tests {
     #[test]
     fn iterator() {
         let mut chunk = Chunk::new();
-        chunk.set_voxel_type_unchecked(ChunkLocation::new(0,0,1), VoxelType(1));
-        chunk.set_voxel_type_unchecked(ChunkLocation::new(3,2,1), VoxelType(5));
+        chunk.set_voxel_type_unchecked(ChunkLocation::new(0, 0, 1), VoxelType(1));
+        chunk.set_voxel_type_unchecked(ChunkLocation::new(3, 2, 1), VoxelType(5));
         let mut iter = chunk.iter();
         assert_eq!(iter.next().unwrap(), (VoxelType(0), Vec3::new(0., 0., 0.)));
         assert_eq!(iter.next().unwrap(), (VoxelType(1), Vec3::new(0., 0., 1.)));
-        for _ in 2..(3*CHUNK_SIZE*CHUNK_SIZE+2*CHUNK_SIZE+1) {
+        for _ in 2..(3 * CHUNK_SIZE * CHUNK_SIZE + 2 * CHUNK_SIZE + 1) {
             assert_eq!(iter.next().unwrap().0, VoxelType(0));
         }
         assert_eq!(iter.next().unwrap(), (VoxelType(5), Vec3::new(3., 2., 1.)));
-        for _ in (3*CHUNK_SIZE*CHUNK_SIZE+2*CHUNK_SIZE+2)..(CHUNK_LENGTH as u32) {
+        for _ in (3 * CHUNK_SIZE * CHUNK_SIZE + 2 * CHUNK_SIZE + 2)..(CHUNK_LENGTH as u32) {
             assert_eq!(iter.next().unwrap().0, VoxelType(0));
         }
         assert_eq!(iter.next(), None);
