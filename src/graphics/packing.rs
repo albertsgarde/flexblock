@@ -20,8 +20,8 @@ pub fn start_packing_thread(
             let data = rx.graphics_state_model.lock().unwrap();
             //TODO: DO STUFF WITH TERRAIN
 
-            let direction = data.player.view_direction();
-            let position = data.player.location().position;
+            let direction = data.view.view_direction();
+            let position = data.view.location().position;
             let center = position + direction;
 
             let v: glm::Mat4 = glm::look_at(

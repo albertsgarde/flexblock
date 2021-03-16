@@ -12,5 +12,5 @@ pub use logic::start_logic_thread;
 
 mod state;
 
-mod player;
-pub use player::Player;
+mod view;
+pub use view::View;
