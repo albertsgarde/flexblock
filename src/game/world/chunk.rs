@@ -3,7 +3,7 @@ use crate::game::world::{
     voxel::{Voxel, VoxelType},
     *,
 };
-use cgmath::Vector3;
+use glm::Vec3;
 use hashbrown::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 
@@ -32,8 +32,8 @@ impl ChunkLocation {
     }
 }
 
-impl From<Vector3<f32>> for ChunkLocation {
-    fn from(position: Vector3<f32>) -> ChunkLocation {
+impl From<Vec3> for ChunkLocation {
+    fn from(position: Vec3) -> ChunkLocation {
         Chunk::debug_assert_within_chunk(position);
         ChunkLocation::new(position.x as u32, position.y as u32, position.z as u32)
     }
@@ -52,7 +52,7 @@ impl Chunk {
         Chunk::SingleType(voxel::DEFAULT_TYPE)
     }
 
-    pub fn within_chunk(position: Vector3<f32>) -> bool {
+    pub fn within_chunk(position: Vec3) -> bool {
         position.x >= 0.
             && position.y >= 0.
             && position.z >= 0.
@@ -61,7 +61,7 @@ impl Chunk {
             && position.z <= CHUNK_SIZE_F
     }
 
-    pub fn debug_assert_within_chunk(position: Vector3<f32>) {
+    pub fn debug_assert_within_chunk(position: Vec3) {
         debug_assert!(
             Chunk::within_chunk(position),
             "Position must be between 0 and chunk size on all coordinates. Position: ({}, {}, {})",
@@ -157,7 +157,7 @@ impl Chunk {
     /// Traces a ray within the chunk returning the first non-ignored voxel hit or the
     /// first position outside the chunk if none is hit.
     /// Undefined behaviour occurs if the ray origin is outside chunk bounds.
-    pub fn trace_ray(&self, ray: Ray) -> Option<Vector3<f32>> {
+    pub fn trace_ray(&self, ray: Ray) -> Option<Vec3> {
         Chunk::debug_assert_within_chunk(ray.origin);
         if let Chunk::SingleType(voxel_type) = self {
             if raytrace::ignore_voxel_type(*voxel_type) {
@@ -176,5 +176,103 @@ impl Chunk {
             }
             None
         }
+    }
+
+    pub fn iter<'a>(&'a self) -> ChunkIterator<'a> {
+        self.into_iter()
+    }
+}
+
+pub enum ChunkIterator<'a> {
+    SingleType {
+        voxel_type: VoxelType,
+        position: Vec3,
+    },
+    MultiType {
+        iter: std::slice::Iter<'a, VoxelType>,
+        position: Vec3,
+    },
+}
+
+impl<'a> Iterator for ChunkIterator<'a> {
+    type Item = (VoxelType, Vec3);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            ChunkIterator::SingleType {
+                voxel_type,
+                position,
+            } => {
+                position.z += 1.;
+                if position.z >= CHUNK_SIZE_F {
+                    position.z -= CHUNK_SIZE_F;
+                    position.y += 1.;
+                    if position.y >= CHUNK_SIZE_F {
+                        position.y -= CHUNK_SIZE_F;
+                        position.x += 1.;
+                        if position.x >= CHUNK_SIZE_F {
+                            return None;
+                        }
+                    }
+                }
+                Some((*voxel_type, *position))
+            }
+            ChunkIterator::MultiType { iter, position } => {
+                position.z += 1.;
+                if position.z >= CHUNK_SIZE_F {
+                    position.z -= CHUNK_SIZE_F;
+                    position.y += 1.;
+                    if position.y >= CHUNK_SIZE_F {
+                        position.y -= CHUNK_SIZE_F;
+                        position.x += 1.;
+                        if position.x >= CHUNK_SIZE_F {
+                            return None;
+                        }
+                    }
+                }
+                iter.next().map(|vt| (*vt, *position))
+            }
+        }
+    }
+}
+
+impl<'a> IntoIterator for &'a Chunk {
+    type Item = (VoxelType, Vec3);
+    type IntoIter = ChunkIterator<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        match self {
+            Chunk::SingleType(voxel_type) => ChunkIterator::SingleType {
+                voxel_type: *voxel_type,
+                position: Vec3::new(0., 0., -1.),
+            },
+            Chunk::MultiType(array, _) => ChunkIterator::MultiType {
+                iter: array.iter(),
+                position: Vec3::new(0., 0., -1.),
+            },
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn iterator() {
+        let mut chunk = Chunk::new();
+        chunk.set_voxel_type_unchecked(ChunkLocation::new(0, 0, 1), VoxelType(1));
+        chunk.set_voxel_type_unchecked(ChunkLocation::new(3, 2, 1), VoxelType(5));
+        let mut iter = chunk.iter();
+        assert_eq!(iter.next().unwrap(), (VoxelType(0), Vec3::new(0., 0., 0.)));
+        assert_eq!(iter.next().unwrap(), (VoxelType(1), Vec3::new(0., 0., 1.)));
+        for _ in 2..(3 * CHUNK_SIZE * CHUNK_SIZE + 2 * CHUNK_SIZE + 1) {
+            assert_eq!(iter.next().unwrap().0, VoxelType(0));
+        }
+        assert_eq!(iter.next().unwrap(), (VoxelType(5), Vec3::new(3., 2., 1.)));
+        for _ in (3 * CHUNK_SIZE * CHUNK_SIZE + 2 * CHUNK_SIZE + 2)..(CHUNK_LENGTH as u32) {
+            assert_eq!(iter.next().unwrap().0, VoxelType(0));
+        }
+        assert_eq!(iter.next(), None);
     }
 }

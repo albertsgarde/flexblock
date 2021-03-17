@@ -1,6 +1,5 @@
-
-use super::{VertexArray, ShaderManager};
-use crate::graphics::{UniformData, RenderMessage, RenderData};
+use super::{ShaderManager, VertexArray};
+use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
 
 ///
@@ -36,57 +35,66 @@ impl RenderCaller {
     /// This is supposed to turn a packed render into something that can then be rendered directly. So
     /// this has access to OpenGL calls.
     /// TODO: Enforce requirements on RenderPack<T> to make this safe.
-    unsafe fn unpack(&mut self, array: &usize, pack: &RenderData) {
-        if *array >= self.vertex_array.get_vbos() {
+    unsafe fn unpack(&mut self, buffer: &usize, pack: &VertexPack) {
+        if *buffer >= self.vertex_array.get_vbos() {
             panic!(
-                "Trying to clear an array with index {}, but there's only {} arrays ",
-                array,
+                "Trying to clear a buffer with index {}, but there's only {} buffers ",
+                buffer,
                 self.vertex_array.get_vbos()
             );
         }
-        self.vertex_array.fill_vbo(*array, &pack.vertices);
-        self.vertex_array.fill_ebo(*array, &pack.elements);
+        self.vertex_array.fill_vbo(*buffer, &pack.vertices);
+        self.vertex_array.fill_ebo(*buffer, &pack.elements);
     }
 
-    unsafe fn clear(&mut self, array: &usize) {
-        if *array >= self.vertex_array.get_vbos() {
+    unsafe fn clear(&mut self, buffer: &usize) {
+        if *buffer >= self.vertex_array.get_vbos() {
             panic!(
                 "Trying to clear an array with index {}, but there's only {} arrays ",
-                array,
+                buffer,
                 self.vertex_array.get_vbos()
             );
         }
-        self.vertex_array.clear(*array);
+        self.vertex_array.clear(*buffer);
     }
 
     /// TODO: THIS IS WHERE YOU LEFT OFF, CONTINUE FROM HERE
     unsafe fn choose_shader(&mut self, shader: &String) {
-        println!("Choosing shader {}!", shader);
-        self.shader_manager.bind_shader(shader).unwrap();
+        match self.shader_manager.bind_shader(shader) {
+            Err(s) => {
+                println!("{}", s)
+            } //TODO: LOG INSTEAD
+            _ => (),
+        }
     }
 
     unsafe fn uniforms(&mut self, uniforms: &UniformData) {
-        self.shader_manager.uniforms(uniforms).unwrap();
+        match self.shader_manager.uniforms(uniforms) {
+            Err(s) => {
+                println!("{}", s)
+            } //TODO: LOG INSTEAD
+            _ => (),
+        }
     }
 
     pub unsafe fn read_message(&mut self, message: &RenderMessage) {
         match message {
-            RenderMessage::Pack { vertex_array, pack } => self.unpack(vertex_array, pack),
-            RenderMessage::Clear { vertex_array } => self.clear(vertex_array),
+            RenderMessage::Pack { buffer, pack } => self.unpack(buffer, pack),
+            RenderMessage::ClearArray { buffer } => self.clear(buffer),
             RenderMessage::ChooseShader { shader } => self.choose_shader(shader),
             RenderMessage::Uniforms { uniforms } => self.uniforms(uniforms),
+            RenderMessage::Draw {buffer} => self.render(buffer),
+            RenderMessage::ClearBuffers {color_buffer, depth_buffer} => self.clear_buffers(color_buffer, depth_buffer),
         }
     }
 
-    pub unsafe fn render(&mut self) {
-        for i in 0..(self.vertex_array.get_vbos()) {
-            //println!("VBO {} has size {}",i,self.vertex_array.get_size(i));
+    pub unsafe fn render(&mut self, buffer : &usize) {
+        debug_assert!(self.vertex_array.get_size(*buffer) > 0, "A render call was made on an empty vertex array!");
+        self.vertex_array.draw(*buffer);
+    }
 
-            if self.vertex_array.get_size(i) > 0 {
-                self.vertex_array.draw(i);
-
-                //gl::DrawArrays(gl::TRIANGLES, 0, self.vertex_array.get_size(i) as i32);
-            }
-        }
+    pub unsafe fn clear_buffers(&mut self,  color_buffer : &bool, depth_buffer : &bool) {
+        debug_assert!(*color_buffer || *depth_buffer, "A clear buffer call should never be made when neither color nor depth buffer is cleared!");
+        gl::Clear( ( if *color_buffer {gl::COLOR_BUFFER_BIT} else {0}) | (if *depth_buffer {gl::DEPTH_BUFFER_BIT} else {0}) );
     }
 }

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::fs;
+
 use crate::graphics::UniformData;
 
 pub enum ProgramType {
@@ -13,7 +14,7 @@ pub enum ProgramType {
 /// Then shaders can only be changed by the shader manager.
 pub struct Shader {
     program_id: u32,
-    name : String,
+    name: String,
     required_uniforms: Vec<(String, String)>,
     uniform_locations: HashMap<String, i32>,
     bound_uniforms: Vec<String>,
@@ -84,8 +85,11 @@ impl Shader {
         Ok((id, Self::find_uniforms(&shader_source, file)))
     }
 
-
-    pub unsafe fn new(vertex_file: &str, fragment_file: &str, name : &str) -> Result<Shader, String> {
+    pub unsafe fn new(
+        vertex_file: &str,
+        fragment_file: &str,
+        name: &str,
+    ) -> Result<Shader, String> {
         let (vsid, mut vsuniforms) = match Self::load_shader(vertex_file, gl::VERTEX_SHADER) {
             Ok(id) => id,
             Err(s) => return Err(s),
@@ -158,7 +162,7 @@ impl Shader {
 
         Ok(Shader {
             program_id,
-            name : String::from(name),
+            name: String::from(name),
             required_uniforms,
             bound_uniforms: Vec::new(),
             uniform_locations: uniform_locations,
@@ -166,7 +170,7 @@ impl Shader {
         })
     }
 
-    pub unsafe fn new_compute(compute_file: &str, name : &str) -> Result<Shader, String> {
+    pub unsafe fn new_compute(compute_file: &str, name: &str) -> Result<Shader, String> {
         let (id, required_uniforms) = match Self::load_shader(compute_file, gl::COMPUTE_SHADER) {
             Ok(id) => id,
             Err(s) => return Err(s),
@@ -220,7 +224,7 @@ impl Shader {
             program_id,
             required_uniforms,
             uniform_locations,
-            name : String::from(name),
+            name: String::from(name),
             bound_uniforms: Vec::new(),
             shader_type: ProgramType::Compute,
         })
@@ -232,17 +236,12 @@ impl Shader {
         let mut counter = 0;
         for line in source.lines() {
             counter += 1;
-            println!("Line says {}!", line);
             if line.starts_with("uniform") {
                 let next = &line[8..];
-                println!("Looking for uniforms in {}!", next);
                 let re = regex::Regex::new(r"\w+").unwrap();
                 let mut ms = re.captures_iter(next);
-                if let Some(s) = ms.next() {
-                    println!("First next word was {}!", &s[0]);
-                }
+                ms.next();
                 if let Some(type_name) = ms.next() {
-                    println!("Pre-registering uniform {}!", &type_name[0]);
                     uniforms.push((
                         String::from(&type_name[0]),
                         format!("{}:{}", filename, counter),
@@ -301,10 +300,9 @@ fn create_whitespace_cstring_with_len(len: usize) -> CString {
     unsafe { CString::from_vec_unchecked(buffer) }
 }
 
-
 pub struct ShaderManager {
     shaders: Vec<Shader>, //Shaders indexed by given names
-    shader_names : HashMap<String, usize>,
+    shader_names: HashMap<String, usize>,
     // Name of chosen shader - so disgusting.
     bound_shader: Option<usize>,
 }
@@ -312,14 +310,15 @@ pub struct ShaderManager {
 impl<'a> ShaderManager {
     pub fn new() -> ShaderManager {
         ShaderManager {
-            shaders : Vec::new(),
+            shaders: Vec::new(),
             shader_names: HashMap::new(),
             bound_shader: None,
         }
     }
 
     pub unsafe fn add_shader(&mut self, shader: Shader) {
-        self.shader_names.insert(String::from(shader.get_name()), self.shaders.len());
+        self.shader_names
+            .insert(String::from(shader.get_name()), self.shaders.len());
         self.shaders.push(shader);
     }
 
@@ -338,17 +337,20 @@ impl<'a> ShaderManager {
         Ok(format!(""))
     }
 
-    pub unsafe fn uniforms(
-        &mut self,
-        uniforms: &UniformData,
-    ) -> Result<u32, String> {
+    pub unsafe fn uniforms(&mut self, uniforms: &UniformData) -> Result<u32, String> {
         //TODO: THERE COULD BE NO CURRENT SHADER
+        if let None = self.bound_shader {
+            return Err(String::from(
+                "Uniforms were sent, but there's no bound shader!",
+            ));
+        }
+
         let s = self.shaders.get(self.bound_shader.unwrap()).unwrap();
         for entry in &uniforms.mat4s {
             let loc = (s).uniform_locations.get(&entry.1);
             let mat = entry.0;
 
-            gl::UniformMatrix4fv(*loc.unwrap(), 1, gl::FALSE, (&mat[0][0]) as *const f32);
+            gl::UniformMatrix4fv(*loc.unwrap(), 1, gl::FALSE, (mat.as_ptr()) as *const f32);
             //TODO: HOW TO DO THIS?? s.fill_uniform(&entry.1);
         }
 
@@ -359,8 +361,7 @@ impl<'a> ShaderManager {
             println!("{:?}", s.uniform_locations);
             let vec = entry.0;
 
-            gl::Uniform4fv(*loc.unwrap(), 1, (&vec[0] ) as *const f32)
-        
+            gl::Uniform4fv(*loc.unwrap(), 1, (vec.as_ptr()) as *const f32)
         }
         Ok(0)
     }
@@ -406,7 +407,7 @@ impl<'a> ShaderManager {
             let shader = match Shader::new(
                 &(format!("{}/{}.vertexshader", folder, vs)),
                 &(format!("{}/{}.fragmentshader", folder, vs)),
-                &vs
+                &vs,
             ) {
                 Ok(s) => s,
                 Err(s) => {
