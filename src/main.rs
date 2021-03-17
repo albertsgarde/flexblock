@@ -11,7 +11,7 @@ extern crate nalgebra_glm as glm;
 extern crate bytepack_derive;
 
 use crate::game::GraphicsStateModel;
-use crate::graphics::RenderPack;
+use crate::graphics::RenderMessages;
 use std::sync::{mpsc, Arc, Mutex};
 
 fn main() {
@@ -37,7 +37,7 @@ fn main() {
     };
 
     // Create bindings object to share between packer and window.
-    let render_pack: Arc<Mutex<Option<RenderPack>>> = Arc::new(Mutex::new(None));
+    let render_pack: Arc<Mutex<Option<RenderMessages>>> = Arc::new(Mutex::new(None));
     let packing_to_window_sender = channels::PackingToWindowSender {
         render_pack: render_pack.clone(),
     };

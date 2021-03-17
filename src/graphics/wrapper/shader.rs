@@ -236,17 +236,12 @@ impl Shader {
         let mut counter = 0;
         for line in source.lines() {
             counter += 1;
-            println!("Line says {}!", line);
             if line.starts_with("uniform") {
                 let next = &line[8..];
-                println!("Looking for uniforms in {}!", next);
                 let re = regex::Regex::new(r"\w+").unwrap();
                 let mut ms = re.captures_iter(next);
-                if let Some(s) = ms.next() {
-                    println!("First next word was {}!", &s[0]);
-                }
+                ms.next();
                 if let Some(type_name) = ms.next() {
-                    println!("Pre-registering uniform {}!", &type_name[0]);
                     uniforms.push((
                         String::from(&type_name[0]),
                         format!("{}:{}", filename, counter),

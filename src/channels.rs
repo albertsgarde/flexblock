@@ -1,6 +1,6 @@
 use crate::game::GraphicsStateModel;
 use crate::graphics::ExternalEvent;
-use crate::graphics::RenderPack;
+use crate::graphics::RenderMessages;
 use std::sync::{mpsc, Arc, Mutex};
 
 pub struct Update;
@@ -24,9 +24,9 @@ pub struct LogicToPackingReceiver {
 }
 
 pub struct PackingToWindowSender {
-    pub render_pack: Arc<Mutex<Option<RenderPack>>>,
+    pub render_pack: Arc<Mutex<Option<RenderMessages>>>,
 }
 
 pub struct PackingToWindowReceiver {
-    pub render_pack: Arc<Mutex<Option<RenderPack>>>,
+    pub render_pack: Arc<Mutex<Option<RenderMessages>>>,
 }

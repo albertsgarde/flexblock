@@ -8,7 +8,7 @@ pub trait Vertex: Packed + Copy {
     fn attribute_pointers() -> AttributePointerList;
 }
 
-#[derive(Packed, Copy, Clone)]
+#[derive(Packed, Copy, Clone,Debug)]
 pub struct V3C3 {
     pub x: f32,
     pub y: f32,

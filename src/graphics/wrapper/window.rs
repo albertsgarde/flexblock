@@ -35,6 +35,9 @@ impl Window {
         //TODO: DEPTH TESTING IS OPTIONAL, NOT REQUIRED!
         gl::Enable(gl::DEPTH_TEST);
         gl::DepthFunc(gl::LESS);
+        gl::ClearColor(0.6, 0.6, 0.6, 1.0);
+        gl::Enable(gl::CULL_FACE);
+        gl::CullFace(gl::BACK);
 
         let render_caller = RenderCaller::new();
 
@@ -49,8 +52,6 @@ impl Window {
     }
 
     unsafe fn render(&mut self) {
-        gl::ClearColor(0.6, 0.6, 0.6, 1.0);
-        gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
         // Try getting the lock; only render if there's render messages available.
         // TODO: THIS HAS CHANGED BECAUSE NEW RENDER SENDER SYSTEM
@@ -65,27 +66,6 @@ impl Window {
                     self.render_caller.read_message(message);
                 }
 
-                /* TODO: THESE ARE ALL MOCK UNIFORMS!
-
-                if let Some(shader) = self.render_caller.shader_manager.get_active_shader_name() {
-
-
-
-                    let mvp : cgmath::Matrix4<f32> = cgmath::Transform::look_at(cgmath::Point3::<f32> {x : 0., y: 0., z :0.},
-                        cgmath::Point3::<f32> {x : 0., y: 0., z :-10.},
-                        cgmath::Vector3::<f32> {x : 0., y: 1., z :0.});
-
-                    let mvp = cgmath::perspective(cgmath::Deg (45.), 4./3., 0.1, 100.) * mvp;// TODO: MAKE THE WIDTH/HEIGHT CORRECT
-
-                    let uniforms = UniformData::new(vec![(mvp, String::from("MVP"))], vec![]);
-
-                    self.render_caller
-                        .shader_manager
-                        .uniforms(&uniforms)
-                        .unwrap();
-
-                }*/
-                self.render_caller.render();
                 self.context.swap_buffers().unwrap();
             }
         }
