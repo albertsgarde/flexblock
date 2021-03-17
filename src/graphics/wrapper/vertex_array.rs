@@ -1,10 +1,10 @@
 //TODO: THIS IS ALL WRONG; ONE VERTEX ARRAY HOLDS A GROUP OF BUFFERS
 use super::ArrayBuffer;
 use super::ElementBuffer;
-use crate::utils::vertex::{Vertex, AttributePointerList};
+use crate::utils::vertex::{AttributePointerList, Vertex};
 use crate::utils::Vertex3D;
 
-pub struct VertexArray<T : Vertex> {
+pub struct VertexArray<T: Vertex> {
     id: u32,
     vbos: Vec<ArrayBuffer<T>>,
     ebos: Vec<ElementBuffer>,
@@ -12,7 +12,7 @@ pub struct VertexArray<T : Vertex> {
 }
 
 //TODO: WHAT TO DO WHEN MULTIPLE VERTREX ARRAYS TRY TO BIND SAME LOCATION AT THE SAME TIME??
-impl<T : Vertex> VertexArray<T> {
+impl<T: Vertex> VertexArray<T> {
     //TODO: validate inputs
     pub unsafe fn new(dummy: T) -> Result<VertexArray<T>, String> {
         let attributes = Vertex3D::attribute_pointers();

@@ -1,15 +1,15 @@
-use crate::game::{world::Terrain, Player};
+use crate::game::{world::Terrain, View};
 
 pub struct GraphicsStateModel {
     pub terrain: Terrain,
-    pub player: Player,
+    pub view: View,
 }
 
 impl GraphicsStateModel {
     pub fn new() -> GraphicsStateModel {
         GraphicsStateModel {
             terrain: Terrain::new(),
-            player: Player::default(),
+            view: View::default(),
         }
     }
 }
