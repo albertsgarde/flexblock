@@ -108,8 +108,6 @@ impl BFS {
     fn next(&mut self, view_location : glm::IVec3, max_distance : i32) -> Option<glm::IVec3> {
         if let Some(result) = self.frontier.pop_front().take() {
 
-            println!("Visiting chunk at location {:?}", result);
-
             self.visited_locations.push(result);
 
             self.try_add_frontier(result+glm::vec3(1,0,0), view_location, max_distance);
@@ -171,7 +169,6 @@ impl RenderState {
     }
 
     fn pack_chunk(&mut self, chunk : &Chunk, location : glm::IVec3, messages : &mut RenderMessages) -> Result<(), String> {
-        println!("Packing a chunk!");
         if self.packed_chunks.contains(&Some(location)) {
             return Err(String::from("The given chunk has already been packed"));
         }
@@ -202,7 +199,7 @@ impl RenderState {
             if let Some(loc) = bfs.next(view_location, 4) {
                 if let Some(chunk) = terrain.chunk(loc) {
                     match self.pack_chunk(chunk, loc, messages) {
-                        Ok(_) => {println!("Packed another chunk!")},
+                        Ok(_) => { },
                         Err(s) => {println!("{}",s)}
                     }
                 }
@@ -217,8 +214,6 @@ impl RenderState {
         for location in &self.packed_chunks {
             if let Some(location) = location {
                 let mvp = glm::translate(vp_matrix, &glm::vec3(location.x as f32 *16., location.y as f32 *16., location.z as f32 *16.));
-
-                println!("Drawing buffer {}", counter);
 
                 render_messages.add_message(RenderMessage::Uniforms {
                     uniforms : UniformData::new( vec![(mvp, String::from("MVP"))], vec![])

@@ -32,10 +32,8 @@ impl Shader {
             ));
         }
 
-        println!("Src: {:?}", source);
         let id = gl::CreateShader(shader_type);
 
-        println!("ID? {}", id);
 
         gl::ShaderSource(id, 1, &source.as_ptr(), std::ptr::null());
         gl::CompileShader(id);
@@ -90,6 +88,7 @@ impl Shader {
         fragment_file: &str,
         name: &str,
     ) -> Result<Shader, String> {
+        println!("Loading shader {}",name);
         let (vsid, mut vsuniforms) = match Self::load_shader(vertex_file, gl::VERTEX_SHADER) {
             Ok(id) => id,
             Err(s) => return Err(s),
@@ -101,10 +100,6 @@ impl Shader {
 
         vsuniforms.append(&mut fsuniforms);
         let required_uniforms = vsuniforms;
-
-        for uniform in &required_uniforms {
-            println!("Registering uniform {}!", uniform.0);
-        }
 
         let program_id = gl::CreateProgram();
 
@@ -217,7 +212,6 @@ impl Shader {
             uniform_locations.insert(String::from(&entry.0), id);
             //uniform_locations.
         }
-        println!("Now we have uniform locations {:?}", uniform_locations);
         gl::UseProgram(0);
 
         Ok(Shader {
