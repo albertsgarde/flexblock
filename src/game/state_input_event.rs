@@ -2,20 +2,20 @@ use std::sync::mpsc;
 
 /// Represents the event of something happening outside of state that the state might need to react to.
 /// Examples are player actions and game closing.
-pub enum InputEvent {
+pub enum StateInputEvent {
     Nothing, //TODO: THIS IS SJUSK
 }
 
 // TODO: THIS IMPL BLOCK IS SJUSK
-impl InputEvent {
-    pub fn input_event_from_external(_e: crate::graphics::ExternalEvent) -> InputEvent {
-        InputEvent::Nothing
+impl StateInputEvent {
+    pub fn input_event_from_external(_e: crate::graphics::ExternalEvent) -> StateInputEvent {
+        StateInputEvent::Nothing
     }
 }
 
 /// Represents the entire history of input events.
 pub struct InputEventHistory {
-    input_events: Vec<Vec<InputEvent>>,
+    input_events: Vec<Vec<StateInputEvent>>,
 }
 
 impl InputEventHistory {
@@ -40,7 +40,7 @@ impl InputEventHistory {
         loop {
             match input_event_receiver.try_recv() {
                 Ok(input_event) => {
-                    tick_input_events.push(InputEvent::input_event_from_external(input_event))
+                    tick_input_events.push(StateInputEvent::input_event_from_external(input_event))
                 }
                 Err(mpsc::TryRecvError::Empty) => break,
                 Err(mpsc::TryRecvError::Disconnected) => panic!("Event channel disconnected!"),
@@ -55,12 +55,12 @@ impl InputEventHistory {
     /// # Arguments
     ///
     /// `tick_num` - The tick to get events for.
-    pub fn get_events(&'_ self, tick_num: usize) -> Option<&'_ [InputEvent]> {
+    pub fn get_events(&'_ self, tick_num: usize) -> Option<&'_ [StateInputEvent]> {
         self.input_events.get(tick_num).map(|vec| &vec[..])
     }
 
     /// Returns the events for the latest tick.
-    pub fn cur_tick_events(&'_ self) -> Option<&'_ [InputEvent]> {
+    pub fn cur_tick_events(&'_ self) -> Option<&'_ [StateInputEvent]> {
         self.input_events.last().map(|vec| &vec[..])
     }
 

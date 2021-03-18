@@ -1,4 +1,4 @@
-use crate::game::{world, GraphicsStateModel, InputEvent, View};
+use crate::game::{world, GraphicsStateModel, StateInputEvent, View};
 use serde::{Deserialize, Serialize};
 
 /// Holds the entire world state.
@@ -27,7 +27,7 @@ impl State {
     /// # Arguments
     ///
     /// `_` - The input events received this tick.
-    pub fn tick(&mut self, _: &[InputEvent]) {
+    pub fn tick(&mut self, _: &[StateInputEvent]) {
         self.cur_tick += 1;
     }
 
