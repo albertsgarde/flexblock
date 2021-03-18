@@ -3,7 +3,7 @@ use crate::game::world::{
     voxel::{Voxel, VoxelType},
     Location, *,
 };
-use cgmath::{Vector3, Zero};
+use glm::{IVec3, Vec3};
 use hashbrown::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 
@@ -12,7 +12,7 @@ const CHUNK_SIZE: f32 = super::chunk::CHUNK_SIZE as f32;
 /// Struct that stores all voxels in the world.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Terrain {
-    chunks: HashMap<Vector3<i32>, Chunk>,
+    chunks: HashMap<IVec3, Chunk>,
 }
 
 impl Terrain {
@@ -21,6 +21,11 @@ impl Terrain {
         Terrain {
             chunks: HashMap::new(),
         }
+    }
+
+    /// Returns the chunk with the specified index or None if no such chunk exists.
+    pub fn chunk(&self, chunk: IVec3) -> Option<&Chunk> {
+        self.chunks.get(&chunk)
     }
 
     /// Returns the type of voxel at the specified location.
@@ -89,7 +94,7 @@ impl Terrain {
         self.chunks.retain(|_, chunk| !matches!(chunk, Chunk::SingleType(voxel_type) if *voxel_type == voxel::DEFAULT_TYPE));
     }
 
-    pub fn trace_ray(&self, origin: Location, direction: Vector3<f32>) -> Option<Location> {
+    pub fn trace_ray(&self, origin: Location, direction: Vec3) -> Option<Location> {
         let mut loc = origin;
         let mut chunks = 0;
         while chunks < 100 {
@@ -105,7 +110,7 @@ impl Terrain {
                         * (raytrace::voxel_exit(
                             loc.position,
                             direction,
-                            Vector3::zero(),
+                            Vec3::new(0., 0., 0.),
                             chunk::CHUNK_SIZE_F,
                         ) + 1e-4);
                 }
@@ -115,7 +120,7 @@ impl Terrain {
                     * (raytrace::voxel_exit(
                         loc.position,
                         direction,
-                        Vector3::zero(),
+                        Vec3::new(0., 0., 0.),
                         chunk::CHUNK_SIZE_F,
                     ) + 1e-4);
             }
@@ -206,11 +211,11 @@ mod tests {
         terrain.set_voxel_type(Location::from_coords(-6.48, 10.63, 0.), voxel::VoxelType(3));
         terrain.set_voxel_type(Location::from_coords(-5.73, 10.21, 0.), voxel::VoxelType(4));
 
-        let dir = cgmath::Vector3::new(-4.18, 2.34, 0.);
+        let dir = Vec3::new(-4.18, 2.34, 0.);
         let loc = Location::from_coords(18.22, -3.2, 0.);
         let hit = terrain.trace_ray(loc, dir).unwrap();
         let hit_type = terrain.voxel_type(hit);
-        assert_eq!(hit.chunk, Vector3::new(-1, 0, 0));
+        assert_eq!(hit.chunk, IVec3::new(-1, 0, 0));
         assert_eq!(hit_type, voxel::VoxelType(4));
     }
 
@@ -227,11 +232,11 @@ mod tests {
         );
         terrain.set_voxel_type(Location::from_coords(11.61, 0.5, 9.97), voxel::VoxelType(3));
 
-        let dir = cgmath::Vector3::new(-4.18, 2.34, 9.92);
+        let dir = Vec3::new(-4.18, 2.34, 9.92);
         let loc = Location::from_coords(18.22, -3.2, -5.71);
         let hit = terrain.trace_ray(loc, dir).unwrap();
         let hit_type = terrain.voxel_type(hit);
-        assert_eq!(hit.chunk, Vector3::new(0, -1, 0));
+        assert_eq!(hit.chunk, IVec3::new(0, -1, 0));
         assert!(hit.position.x > 11.999 && hit.position.x < 12.0001);
         assert_eq!(hit_type, voxel::VoxelType(2));
     }
@@ -248,7 +253,7 @@ mod tests {
             voxel::VoxelType(2),
         );
 
-        let dir = cgmath::Vector3::new(-2.51, -1.84, 0.02);
+        let dir = Vec3::new(-2.51, -1.84, 0.02);
         let loc = Location::from_coords(-310.81, 523.12, 81.9);
         let hit = terrain.trace_ray(loc, dir).unwrap();
         let hit_type = terrain.voxel_type(hit);

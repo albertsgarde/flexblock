@@ -1,4 +1,4 @@
-use crate::game::{world, GraphicsStateModel, InputEvent, Player};
+use crate::game::{world, GraphicsStateModel, InputEvent, View};
 use serde::{Deserialize, Serialize};
 
 /// Holds the entire world state.
@@ -6,18 +6,20 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize)]
 pub struct State {
     terrain: world::Terrain,
-    player: Player,
+    view: View,
     cur_tick: u64,
 }
 
 impl State {
     /// Initializes a state with no terrain and a default placed player.
     pub fn new() -> State {
-        State {
+        let mut state = State {
             terrain: world::Terrain::new(),
-            player: Player::new(world::Location::origin(), cgmath::Vector3::new(1., 0., 0.)),
+            view: View::new(world::Location::origin(), glm::Vec3::new(0., 0., -1.)),
             cur_tick: 0,
-        }
+        };
+        state.terrain.set_voxel_type(world::Location::from_coords(3., 3., -8.), world::VoxelType(1));
+        state
     }
 
     /// Runs one game tick reacting to the given input events.
@@ -36,6 +38,6 @@ impl State {
     /// `graphics_state_model` - A mutable reference to the model to update.
     pub fn update_graphics_state_model(&self, graphics_state_model: &mut GraphicsStateModel) {
         graphics_state_model.terrain = self.terrain.clone();
-        graphics_state_model.player = self.player.clone();
+        graphics_state_model.view = self.view.clone();
     }
 }

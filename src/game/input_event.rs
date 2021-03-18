@@ -1,8 +1,17 @@
 use std::sync::mpsc;
 
 /// Represents the event of something happening outside of state that the state might need to react to.
-/// Player actions are some examples.
-pub enum InputEvent {}
+/// Examples are player actions and game closing.
+pub enum InputEvent {
+    Nothing, //TODO: THIS IS SJUSK
+}
+
+// TODO: THIS IMPL BLOCK IS SJUSK
+impl InputEvent {
+    pub fn input_event_from_external(_e: crate::graphics::ExternalEvent) -> InputEvent {
+        InputEvent::Nothing
+    }
+}
 
 /// Represents the entire history of input events.
 pub struct InputEventHistory {
@@ -22,11 +31,17 @@ impl InputEventHistory {
     /// # Arguments
     ///
     /// `input_event_receiver` - The channel to empty of events.
-    pub fn handle_inputs(&mut self, input_event_receiver: &mpsc::Receiver<InputEvent>) {
+    /// TODO: THIS SHOULDN'T TAKE EXTERNAL EVENTS, IT SHOULD TAKE INPUT EVENTS
+    pub fn handle_inputs(
+        &mut self,
+        input_event_receiver: &mpsc::Receiver<crate::graphics::ExternalEvent>,
+    ) {
         let mut tick_input_events = Vec::new();
         loop {
             match input_event_receiver.try_recv() {
-                Ok(input_event) => tick_input_events.push(input_event),
+                Ok(input_event) => {
+                    tick_input_events.push(InputEvent::input_event_from_external(input_event))
+                }
                 Err(mpsc::TryRecvError::Empty) => break,
                 Err(mpsc::TryRecvError::Disconnected) => panic!("Event channel disconnected!"),
             }
