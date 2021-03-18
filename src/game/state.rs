@@ -18,7 +18,10 @@ impl State {
             view: View::default(),
             cur_tick: 0,
         };
-        state.terrain.set_voxel_type(world::Location::from_coords(3., 3., -8.), world::VoxelType(1));
+        state.terrain.set_voxel_type(
+            world::Location::from_coords(3., 3., -8.),
+            world::VoxelType(1),
+        );
         state
     }
 
@@ -32,9 +35,9 @@ impl State {
         for event in events {
             match *event {
                 StateInputEvent::RotateView { delta } => self.view.turn(delta),
-                StateInputEvent::MovePlayerRelative {delta} => {
+                StateInputEvent::MovePlayerRelative { delta } => {
                     let move_vec = self.view.view_to_world(delta);
-                    self.view.translate(move_vec*0.05);
+                    self.view.translate(move_vec * 0.05);
                 }
             }
         }
