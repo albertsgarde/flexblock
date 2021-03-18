@@ -52,7 +52,6 @@ impl Window {
     }
 
     unsafe fn render(&mut self) {
-
         // Try getting the lock; only render if there's render messages available.
         // TODO: THIS HAS CHANGED BECAUSE NEW RENDER SENDER SYSTEM
         let render_messages = self.render_messages.render_pack.try_lock();

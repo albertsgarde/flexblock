@@ -29,10 +29,14 @@ impl RenderMessages {
 
     /// Merges an old, unused render pack into the render pack, putting it first and only keeping persistent render messages
     /// TODO: Make things cancel each other out, like filling and emptying the same vertex array should cancel out - this is probably actually a very inconsequential optimization
-    pub fn merge_old(&mut self, old_pack : RenderMessages) {
-        let mut new_messages : Vec<RenderMessage>= old_pack.messages.into_iter().filter(|x|  x.is_persistent()).collect();
+    pub fn merge_old(&mut self, old_pack: RenderMessages) {
+        let mut new_messages: Vec<RenderMessage> = old_pack
+            .messages
+            .into_iter()
+            .filter(|x| x.is_persistent())
+            .collect();
         new_messages.append(&mut self.messages);
-        self.messages= new_messages;
+        self.messages = new_messages;
     }
 }
 
@@ -40,7 +44,6 @@ pub struct VertexPack {
     pub vertices: Vec<Vertex3D>,
     pub elements: Vec<u32>,
 }
-
 
 /// One render message to the graphics thread.
 /// TODO: Documentation & contract checking
@@ -56,9 +59,9 @@ pub enum RenderMessage {
     },
     ClearBuffers {
         /// Whether to clear the color buffer
-        color_buffer : bool,
+        color_buffer: bool,
         // Whether to clear the depth buffer
-        depth_buffer : bool,
+        depth_buffer: bool,
     },
     ChooseShader {
         shader: String,
@@ -67,7 +70,9 @@ pub enum RenderMessage {
         uniforms: UniformData,
     },
     /// buffer = which buffer in the vertex array to target.
-    Draw { buffer : usize }
+    Draw {
+        buffer: usize,
+    },
 }
 
 impl RenderMessage {
@@ -76,10 +81,13 @@ impl RenderMessage {
     /// The prototypical impersistent render message is Draw. Everything that is drawn is 100% drawn every tick.
     pub fn is_persistent(&self) -> bool {
         match self {
-            RenderMessage::Pack{buffer: _,pack: _} => true,
-            RenderMessage::ClearArray{buffer: _} => true,
-            RenderMessage::ClearBuffers { color_buffer:_, depth_buffer:_ } => false,
-            RenderMessage::ChooseShader {shader: _} => false,
+            RenderMessage::Pack { buffer: _, pack: _ } => true,
+            RenderMessage::ClearArray { buffer: _ } => true,
+            RenderMessage::ClearBuffers {
+                color_buffer: _,
+                depth_buffer: _,
+            } => false,
+            RenderMessage::ChooseShader { shader: _ } => false,
             RenderMessage::Uniforms { uniforms: _ } => false,
             RenderMessage::Draw { buffer: _ } => false,
         }
