@@ -15,7 +15,7 @@ impl State {
     pub fn new() -> State {
         let mut state = State {
             terrain: world::Terrain::new(),
-            view: View::new(world::Location::origin(), glm::Vec3::new(0., 0., -1.)),
+            view: View::default(),
             cur_tick: 0,
         };
         state.terrain.set_voxel_type(world::Location::from_coords(3., 3., -8.), world::VoxelType(1));
