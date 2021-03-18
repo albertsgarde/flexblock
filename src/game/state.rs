@@ -13,11 +13,13 @@ pub struct State {
 impl State {
     /// Initializes a state with no terrain and a default placed player.
     pub fn new() -> State {
-        State {
+        let mut state = State {
             terrain: world::Terrain::new(),
-            view: View::new(world::Location::origin(), glm::Vec3::new(1., 0., 0.)),
+            view: View::new(world::Location::origin(), glm::Vec3::new(0., 0., -1.)),
             cur_tick: 0,
-        }
+        };
+        state.terrain.set_voxel_type(world::Location::from_coords(3., 3., -8.), world::VoxelType(1));
+        state
     }
 
     /// Runs one game tick reacting to the given input events.
