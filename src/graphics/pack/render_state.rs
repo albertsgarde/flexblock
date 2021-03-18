@@ -79,7 +79,8 @@ fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
 /// Doesn't get us all the way to mvp (multiply this by the model matrix, and you're there boyo).
 pub fn get_vp_matrix(view: &View) -> glm::Mat4 {
     let direction = view.view_direction();
-    let position = view.location().position;
+    let chunk = &view.location().chunk;
+    let position : glm::Vec3 = view.location().position + glm::vec3((chunk.x*16) as f32, (chunk.y*16) as f32, (chunk.z*16) as f32);
     let center = position + direction;
     let up = view.up();
 
