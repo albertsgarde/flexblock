@@ -1,21 +1,17 @@
 use crate::graphics::ExternalEvent;
-use std::{collections::HashMap, sync::mpsc};
-use glutin::event::{ElementState, VirtualKeyCode};
 use glm::Vec3;
-use serde::{Serialize, Deserialize};
+use glutin::event::{ElementState, VirtualKeyCode};
+use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, sync::mpsc};
 
 /// Represents the event of something happening outside of state that the state might need to react to.
 /// Examples are player actions and game closing.
 #[derive(Debug, Serialize, Deserialize)]
 pub enum StateInputEvent {
     /// Rotates the view along the great circle in the delta direction by |delta| radians.
-    RotateView { 
-        delta: (f32, f32),
-    },
+    RotateView { delta: (f32, f32) },
     /// Makes the player move in the direction given in view coordinates.
-    MovePlayerRelative {
-        delta: Vec3,
-    }
+    MovePlayerRelative { delta: Vec3 },
 }
 
 /// Handles external events and produces state input events.
@@ -26,11 +22,17 @@ pub struct ExternalEventHandler {
 
 impl ExternalEventHandler {
     pub fn new() -> ExternalEventHandler {
-        ExternalEventHandler {key_state: HashMap::new(), tick_events: Vec::new()}
+        ExternalEventHandler {
+            key_state: HashMap::new(),
+            tick_events: Vec::new(),
+        }
     }
 
     /// Empties the channel of new events and handles them.
-    pub fn handle_inputs(&mut self, input_event_receiver: &mpsc::Receiver<crate::graphics::ExternalEvent>) {
+    pub fn handle_inputs(
+        &mut self,
+        input_event_receiver: &mpsc::Receiver<crate::graphics::ExternalEvent>,
+    ) {
         loop {
             match input_event_receiver.try_recv() {
                 Ok(event) => self.handle_event(event),
@@ -42,10 +44,15 @@ impl ExternalEventHandler {
 
     fn handle_event(&mut self, event: ExternalEvent) {
         match event {
-            ExternalEvent::MouseMotion{ delta} => self.tick_events.push(StateInputEvent::RotateView{ delta: (0.003*delta.0 as f32, 0.003*delta.1 as f32)}),
-            ExternalEvent::KeyboardInput{ keycode, state} => {
-                self.key_state.insert(keycode, state == ElementState::Pressed);
-            },
+            ExternalEvent::MouseMotion { delta } => {
+                self.tick_events.push(StateInputEvent::RotateView {
+                    delta: (0.003 * delta.0 as f32, 0.003 * delta.1 as f32),
+                })
+            }
+            ExternalEvent::KeyboardInput { keycode, state } => {
+                self.key_state
+                    .insert(keycode, state == ElementState::Pressed);
+            }
         }
     }
 
@@ -66,7 +73,7 @@ impl ExternalEventHandler {
             move_vector += Vec3::new(-1., 0., 0.);
         }
         if move_vector != Vec3::new(0., 0., 0.) {
-            result.push(StateInputEvent::MovePlayerRelative{delta: move_vector});
+            result.push(StateInputEvent::MovePlayerRelative { delta: move_vector });
         }
         result
     }

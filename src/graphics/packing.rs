@@ -1,14 +1,12 @@
-
+use super::pack::{get_vp_matrix, RenderState};
 use super::{RenderMessage, RenderMessages};
-use super::pack::{RenderState,get_vp_matrix};
 use crate::channels::*;
-use std::{thread::{self, JoinHandle}};
+use std::thread::{self, JoinHandle};
 
 pub fn start_packing_thread(
     rx: LogicToPackingReceiver,
     tx: PackingToWindowSender,
 ) -> JoinHandle<()> {
-
     let mut state = RenderState::new();
 
     thread::spawn(move || {
@@ -20,7 +18,7 @@ pub fn start_packing_thread(
             let vp = get_vp_matrix(&data.view);
 
             let mut messages = RenderMessages::new();
-            
+
             // What should happen:
             // 1. Clear color and depth buffer
             // 2. Supply commmon uniforms
@@ -34,14 +32,11 @@ pub fn start_packing_thread(
                 shader: String::from("s1"),
             });
             messages.add_message(RenderMessage::ClearBuffers {
-                color_buffer : true,
-                depth_buffer : true
+                color_buffer: true,
+                depth_buffer: true,
             });
-            
-
 
             state.pack_next_chunk(data.view.location().chunk, &mut messages, &data.terrain);
-
 
             state.render_packed_chunks(&mut messages, &vp);
 
