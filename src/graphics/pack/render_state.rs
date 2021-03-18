@@ -72,11 +72,12 @@ pub fn get_vp_matrix(view : &View) -> glm::Mat4 {
     let direction = view.view_direction();
     let position = view.location().position;
     let center = position + direction;
+    let up = view.up();
 
     let v: glm::Mat4 = glm::look_at(
         &glm::vec3(position[0], position[1], position[2]),
         &glm::vec3(center[0], center[1], center[2]),
-        &glm::vec3(0., 1., 0.),
+        &glm::vec3(up[0], up[1], up[2]),
     );
     let p: glm::Mat4 = glm::perspective_fov(90. / 180. * 3.1415, 600., 400., 0.1, 100.0); //TODO: CORRECT FOV, WIDTH, AND HEIGHT
 

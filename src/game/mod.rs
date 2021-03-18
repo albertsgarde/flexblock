@@ -1,8 +1,9 @@
 pub mod world;
 
-mod input_event;
-pub use input_event::InputEvent;
-pub use input_event::InputEventHistory;
+mod state_input_event;
+pub use state_input_event::StateInputEvent;
+pub use state_input_event::ExternalEventHandler;
+pub use state_input_event::InputEventHistory;
 
 mod graphics_state_model;
 pub use graphics_state_model::GraphicsStateModel;
