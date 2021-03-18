@@ -1,5 +1,5 @@
-mod wrapper;
 mod pack;
+mod wrapper;
 
 mod window;
 pub use window::start_window;
@@ -11,4 +11,4 @@ mod external_event;
 pub use external_event::ExternalEvent;
 
 mod render_messages;
-pub use render_messages::{RenderMessages,RenderMessage,VertexPack,UniformData};
+pub use render_messages::{RenderMessage, RenderMessages, UniformData, VertexPack};

@@ -83,18 +83,34 @@ impl RenderCaller {
             RenderMessage::ClearArray { buffer } => self.clear(buffer),
             RenderMessage::ChooseShader { shader } => self.choose_shader(shader),
             RenderMessage::Uniforms { uniforms } => self.uniforms(uniforms),
-            RenderMessage::Draw {buffer} => self.render(buffer),
-            RenderMessage::ClearBuffers {color_buffer, depth_buffer} => self.clear_buffers(color_buffer, depth_buffer),
+            RenderMessage::Draw { buffer } => self.render(buffer),
+            RenderMessage::ClearBuffers {
+                color_buffer,
+                depth_buffer,
+            } => self.clear_buffers(color_buffer, depth_buffer),
         }
     }
 
-    pub unsafe fn render(&mut self, buffer : &usize) {
-        debug_assert!(self.vertex_array.get_size(*buffer) > 0, "A render call was made on an empty vertex array!");
+    pub unsafe fn render(&mut self, buffer: &usize) {
+        debug_assert!(
+            self.vertex_array.get_size(*buffer) > 0,
+            "A render call was made on an empty vertex array!"
+        );
         self.vertex_array.draw(*buffer);
     }
 
-    pub unsafe fn clear_buffers(&mut self,  color_buffer : &bool, depth_buffer : &bool) {
+    pub unsafe fn clear_buffers(&mut self, color_buffer: &bool, depth_buffer: &bool) {
         debug_assert!(*color_buffer || *depth_buffer, "A clear buffer call should never be made when neither color nor depth buffer is cleared!");
-        gl::Clear( ( if *color_buffer {gl::COLOR_BUFFER_BIT} else {0}) | (if *depth_buffer {gl::DEPTH_BUFFER_BIT} else {0}) );
+        gl::Clear(
+            (if *color_buffer {
+                gl::COLOR_BUFFER_BIT
+            } else {
+                0
+            }) | (if *depth_buffer {
+                gl::DEPTH_BUFFER_BIT
+            } else {
+                0
+            }),
+        );
     }
 }

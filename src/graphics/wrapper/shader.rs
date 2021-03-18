@@ -34,7 +34,6 @@ impl Shader {
 
         let id = gl::CreateShader(shader_type);
 
-
         gl::ShaderSource(id, 1, &source.as_ptr(), std::ptr::null());
         gl::CompileShader(id);
 
@@ -88,7 +87,7 @@ impl Shader {
         fragment_file: &str,
         name: &str,
     ) -> Result<Shader, String> {
-        println!("Loading shader {}",name);
+        println!("Loading shader {}", name);
         let (vsid, mut vsuniforms) = match Self::load_shader(vertex_file, gl::VERTEX_SHADER) {
             Ok(id) => id,
             Err(s) => return Err(s),
