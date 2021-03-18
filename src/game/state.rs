@@ -27,8 +27,17 @@ impl State {
     /// # Arguments
     ///
     /// `_` - The input events received this tick.
-    pub fn tick(&mut self, _: &[StateInputEvent]) {
+    pub fn tick(&mut self, events: &[StateInputEvent]) {
         self.cur_tick += 1;
+        for event in events {
+            match *event {
+                StateInputEvent::RotateView { delta } => self.view.turn(delta),
+                StateInputEvent::MovePlayerRelative {delta} => {
+                    let move_vec = self.view.view_to_world(delta);
+                    self.view.translate(move_vec*0.05);
+                }
+            }
+        }
     }
 
     /// Updates the graphics model with any changes in the state.

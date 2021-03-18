@@ -2,6 +2,7 @@ pub mod world;
 
 mod state_input_event;
 pub use state_input_event::StateInputEvent;
+pub use state_input_event::ExternalEventHandler;
 pub use state_input_event::InputEventHistory;
 
 mod graphics_state_model;

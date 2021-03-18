@@ -1,15 +1,74 @@
-use std::sync::mpsc;
+use crate::graphics::ExternalEvent;
+use std::{collections::HashMap, sync::mpsc};
+use glutin::event::{ElementState, VirtualKeyCode};
+use glm::Vec3;
+use serde::{Serialize, Deserialize};
 
 /// Represents the event of something happening outside of state that the state might need to react to.
 /// Examples are player actions and game closing.
+#[derive(Debug, Serialize, Deserialize)]
 pub enum StateInputEvent {
-    Nothing, //TODO: THIS IS SJUSK
+    /// Rotates the view along the great circle in the delta direction by |delta| radians.
+    RotateView { 
+        delta: (f32, f32),
+    },
+    /// Makes the player move in the direction given in view coordinates.
+    MovePlayerRelative {
+        delta: Vec3,
+    }
 }
 
-// TODO: THIS IMPL BLOCK IS SJUSK
-impl StateInputEvent {
-    pub fn input_event_from_external(_e: crate::graphics::ExternalEvent) -> StateInputEvent {
-        StateInputEvent::Nothing
+/// Handles external events and produces state input events.
+pub struct ExternalEventHandler {
+    key_state: HashMap<VirtualKeyCode, bool>,
+    tick_events: Vec<StateInputEvent>,
+}
+
+impl ExternalEventHandler {
+    pub fn new() -> ExternalEventHandler {
+        ExternalEventHandler {key_state: HashMap::new(), tick_events: Vec::new()}
+    }
+
+    /// Empties the channel of new events and handles them.
+    pub fn handle_inputs(&mut self, input_event_receiver: &mpsc::Receiver<crate::graphics::ExternalEvent>) {
+        loop {
+            match input_event_receiver.try_recv() {
+                Ok(event) => self.handle_event(event),
+                Err(mpsc::TryRecvError::Empty) => break,
+                Err(mpsc::TryRecvError::Disconnected) => panic!("Event channel disconnected!"),
+            }
+        }
+    }
+
+    fn handle_event(&mut self, event: ExternalEvent) {
+        match event {
+            ExternalEvent::MouseMotion{ delta} => self.tick_events.push(StateInputEvent::RotateView{ delta: (0.003*delta.0 as f32, 0.003*delta.1 as f32)}),
+            ExternalEvent::KeyboardInput{ keycode, state} => {
+                self.key_state.insert(keycode, state == ElementState::Pressed);
+            },
+        }
+    }
+
+    /// Returns and clears the current event buffer.
+    pub fn tick_events(&mut self) -> Vec<StateInputEvent> {
+        let mut result = std::mem::replace(&mut self.tick_events, Vec::new());
+        let mut move_vector = Vec3::new(0., 0., 0.);
+        if let Some(true) = self.key_state.get(&VirtualKeyCode::W) {
+            move_vector += Vec3::new(0., 0., -1.);
+        }
+        if let Some(true) = self.key_state.get(&VirtualKeyCode::D) {
+            move_vector += Vec3::new(1., 0., 0.);
+        }
+        if let Some(true) = self.key_state.get(&VirtualKeyCode::S) {
+            move_vector += Vec3::new(0., 0., 1.);
+        }
+        if let Some(true) = self.key_state.get(&VirtualKeyCode::A) {
+            move_vector += Vec3::new(-1., 0., 0.);
+        }
+        if move_vector != Vec3::new(0., 0., 0.) {
+            result.push(StateInputEvent::MovePlayerRelative{delta: move_vector});
+        }
+        result
     }
 }
 
@@ -26,27 +85,9 @@ impl InputEventHistory {
         }
     }
 
-    /// Empties the channel and stores the events as the events for a new tick.
-    ///
-    /// # Arguments
-    ///
-    /// `input_event_receiver` - The channel to empty of events.
-    /// TODO: THIS SHOULDN'T TAKE EXTERNAL EVENTS, IT SHOULD TAKE INPUT EVENTS
-    pub fn handle_inputs(
-        &mut self,
-        input_event_receiver: &mpsc::Receiver<crate::graphics::ExternalEvent>,
-    ) {
-        let mut tick_input_events = Vec::new();
-        loop {
-            match input_event_receiver.try_recv() {
-                Ok(input_event) => {
-                    tick_input_events.push(StateInputEvent::input_event_from_external(input_event))
-                }
-                Err(mpsc::TryRecvError::Empty) => break,
-                Err(mpsc::TryRecvError::Disconnected) => panic!("Event channel disconnected!"),
-            }
-        }
-        self.input_events.push(tick_input_events)
+    /// Receive the events for the next tick.
+    pub fn receive_tick_events(&mut self, events: Vec<StateInputEvent>) {
+        self.input_events.push(events)
     }
 
     /// Gets all events stored for the specific tick.
