@@ -1,4 +1,4 @@
-use crate::game::{world, GraphicsStateModel, InputEvent, View};
+use crate::game::{world, GraphicsStateModel, StateInputEvent, View};
 use serde::{Deserialize, Serialize};
 
 /// Holds the entire world state.
@@ -15,7 +15,7 @@ impl State {
     pub fn new() -> State {
         let mut state = State {
             terrain: world::Terrain::new(),
-            view: View::new(world::Location::origin(), glm::Vec3::new(0., 0., -1.)),
+            view: View::default(),
             cur_tick: 0,
         };
         state.terrain.set_voxel_type(world::Location::from_coords(3., 3., -8.), world::VoxelType(1));
@@ -27,8 +27,17 @@ impl State {
     /// # Arguments
     ///
     /// `_` - The input events received this tick.
-    pub fn tick(&mut self, _: &[InputEvent]) {
+    pub fn tick(&mut self, events: &[StateInputEvent]) {
         self.cur_tick += 1;
+        for event in events {
+            match *event {
+                StateInputEvent::RotateView { delta } => self.view.turn(delta),
+                StateInputEvent::MovePlayerRelative {delta} => {
+                    let move_vec = self.view.view_to_world(delta);
+                    self.view.translate(move_vec*0.05);
+                }
+            }
+        }
     }
 
     /// Updates the graphics model with any changes in the state.

@@ -1,6 +1,6 @@
 use crate::{
     channels::*,
-    game::{state::State, InputEventHistory},
+    game::{state::State, ExternalEventHandler, InputEventHistory},
 };
 use std::{
     thread::{self, JoinHandle},
@@ -19,13 +19,16 @@ pub fn start_logic_thread(
         let gsm_mutex = logic_to_packing_sender.graphics_state_model;
         let gsm_channel = logic_to_packing_sender.channel_sender;
 
+        let mut external_event_handler = ExternalEventHandler::new();
         let mut event_history = InputEventHistory::new();
         let mut state = State::new();
 
         let mut last_tick = Instant::now();
         loop {
-            // Handle input events.
-            event_history.handle_inputs(&window_to_logic_receiver.channel_receiver);
+            // Handle external events.
+            external_event_handler.handle_inputs(&window_to_logic_receiver.channel_receiver);
+            // Add tick events to history.
+            event_history.receive_tick_events(external_event_handler.tick_events());
 
             // Run tick.
             state.tick(
