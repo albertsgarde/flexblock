@@ -6,6 +6,7 @@ mod voxel;
 pub use chunk::Chunk;
 pub use terrain::Terrain;
 pub use voxel::Voxel;
+pub use voxel::VoxelType;
 
 use crate::utils::maths;
 use glm::{IVec3, Vec3};
