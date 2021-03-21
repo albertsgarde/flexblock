@@ -117,9 +117,9 @@ impl Add<Vec3> for Location {
 }
 
 impl Sub<Location> for Location {
-    type Output = Vector3<f32>;
+    type Output = Vec3;
 
-    fn sub(self, rhs: Location) -> Vector3<f32> {
+    fn sub(self, rhs: Location) -> Vec3 {
         self.position - rhs.position + (self.chunk - rhs.chunk).map(|x| x as f32 * 16.)
     }
 }
