@@ -39,6 +39,10 @@ impl From<Vec3> for ChunkLocation {
     }
 }
 
+pub fn chunk_index_to_position(chunk_index: IVec3) -> Vec3 {
+    Vec3::new(chunk_index.x as f32, chunk_index.y as f32, chunk_index.z as f32) * CHUNK_SIZE_F
+}
+
 /// Represents a cube-shaped block of voxels.
 #[derive(Serialize, Deserialize, Clone)]
 pub enum Chunk {

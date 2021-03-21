@@ -4,6 +4,7 @@ mod terrain;
 mod voxel;
 
 pub use chunk::Chunk;
+pub use chunk::chunk_index_to_position;
 pub use terrain::Terrain;
 pub use voxel::Voxel;
 pub use voxel::VoxelType;
