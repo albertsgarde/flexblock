@@ -1,6 +1,6 @@
 use crate::game::world::voxel;
-use glm::Vec3;
 use std::mem::swap;
+use glm::Vec3;
 
 /// Whether to ignore the specified voxel type when tracing.
 pub fn ignore_voxel_type(voxel_type: voxel::VoxelType) -> bool {
