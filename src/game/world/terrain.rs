@@ -102,12 +102,12 @@ impl Terrain {
             println!("Coerced loc: {:?}", loc);
             if let Some(chunk) = self.chunks.get(&loc.chunk) {
                 println!("Some chunk");
-                let ray = raytrace::Ray::new(loc.position, direction);
-                if let Some(position) = chunk.trace_ray(ray) {
+                let origin = loc.position;
+                if let Some(position) = chunk.trace_ray(origin, direction) {
                     loc.position = position;
                 } else {
                     loc.position += direction
-                        * (raytrace::voxel_exit(
+                        * (raytrace::voxel_exit_t(
                             loc.position,
                             direction,
                             Vec3::new(0., 0., 0.),
@@ -117,7 +117,7 @@ impl Terrain {
             } else {
                 println!("Empty chunk");
                 loc.position += direction
-                    * (raytrace::voxel_exit(
+                    * (raytrace::voxel_exit_t(
                         loc.position,
                         direction,
                         Vec3::new(0., 0., 0.),
