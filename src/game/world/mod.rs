@@ -124,6 +124,20 @@ impl Sub<Location> for Location {
     }
 }
 
+impl std::ops::Index<usize> for Location {
+    type Output = (i32, f32);
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &(self.chunk[index], self.position[index])
+    }
+}
+
+impl std::ops::IndexMut<usize> for Location {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut (self.chunk[index], self.position[index])
+    }
+}
+
 impl std::fmt::Display for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
