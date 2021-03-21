@@ -3,11 +3,13 @@ mod raytrace;
 mod terrain;
 mod voxel;
 
+pub use chunk::Chunk;
 pub use terrain::Terrain;
 pub use voxel::Voxel;
+pub use voxel::VoxelType;
 
 use crate::utils::maths;
-use cgmath::Vector3;
+use glm::{IVec3, Vec3};
 use serde::{Deserialize, Serialize};
 use std::ops::{Add, Sub};
 
@@ -15,8 +17,8 @@ use std::ops::{Add, Sub};
 /// Specifies a voxel.
 #[derive(Deserialize, Serialize, Clone, Copy, Debug)]
 pub struct Location {
-    pub chunk: Vector3<i32>,
-    pub position: Vector3<f32>,
+    pub chunk: IVec3,
+    pub position: Vec3,
 }
 
 impl Location {
@@ -28,7 +30,7 @@ impl Location {
     ///
     /// `chunk` - The index of the chunk.
     /// `position` - The floating point position in this chunk.
-    pub fn new(chunk: Vector3<i32>, position: Vector3<f32>) -> Location {
+    pub fn new(chunk: IVec3, position: Vec3) -> Location {
         debug_assert!(
             position.x >= 0.
                 && position.y >= 0.
@@ -46,7 +48,7 @@ impl Location {
 
     /// 0 on all coordinates.
     pub fn origin() -> Location {
-        Location::new(Vector3::new(0, 0, 0), Vector3::new(0., 0., 0.))
+        Location::new(IVec3::new(0, 0, 0), Vec3::new(0., 0., 0.))
     }
 
     /// If the position is out of bounds, the chunk will be moved to correct for it.
@@ -85,7 +87,7 @@ impl Location {
     /// `y` - The absolute y-coordinate of the location.
     /// `z` - The absolute z-coordinate of the location.
     pub fn from_coords(x: f32, y: f32, z: f32) -> Location {
-        Vector3::new(x, y, z).into()
+        Vec3::new(x, y, z).into()
     }
 
     /// Rounds the location to the nearest whole voxel.
@@ -94,8 +96,8 @@ impl Location {
     }
 }
 
-impl From<Vector3<f32>> for Location {
-    fn from(position: Vector3<f32>) -> Location {
+impl From<Vec3> for Location {
+    fn from(position: Vec3) -> Location {
         let chunk =
             position.map(|x| maths::integer_division(x.floor() as i32, chunk::CHUNK_SIZE as i32));
         let position = position.map(|x| maths::modulus(x, chunk::CHUNK_SIZE as f32));
@@ -103,10 +105,10 @@ impl From<Vector3<f32>> for Location {
     }
 }
 
-impl Add<Vector3<f32>> for Location {
+impl Add<Vec3> for Location {
     type Output = Location;
 
-    fn add(mut self, rhs: Vector3<f32>) -> Location {
+    fn add(mut self, rhs: Vec3) -> Location {
         self.position += rhs;
         self.coerce();
         self
@@ -143,13 +145,13 @@ mod tests {
     #[test]
     fn from_coords() {
         let loc = Location::from_coords(2., 3., 4.);
-        assert_eq!(loc.chunk, Vector3::new(0, 0, 0));
+        assert_eq!(loc.chunk, IVec3::new(0, 0, 0));
         assert!(loc.position.x > 1.999 && loc.position.x < 2.001);
         assert!(loc.position.y > 2.999 && loc.position.y < 3.001);
         assert!(loc.position.z > 3.999 && loc.position.z < 4.001);
 
         let loc = Location::from_coords(16. + 2., 16. + 3., 16. + 4.);
-        assert_eq!(loc.chunk, Vector3::new(1, 1, 1));
+        assert_eq!(loc.chunk, IVec3::new(1, 1, 1));
         assert!(loc.position.x > 1.999 && loc.position.x < 2.001);
         assert!(loc.position.y > 2.999 && loc.position.y < 3.001);
         assert!(loc.position.z > 3.999 && loc.position.z < 4.001);
@@ -158,7 +160,7 @@ mod tests {
     #[test]
     fn from_coords_negative() {
         let loc = Location::from_coords(2., -3., 4.);
-        assert_eq!(loc.chunk, Vector3::new(0, -1, 0));
+        assert_eq!(loc.chunk, IVec3::new(0, -1, 0));
         assert!(loc.position.x > 1.999 && loc.position.x < 2.001);
         assert!(loc.position.y > 12.999 && loc.position.y < 13.001);
         assert!(loc.position.z > 3.999 && loc.position.z < 4.001);
