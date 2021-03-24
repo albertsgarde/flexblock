@@ -1,5 +1,5 @@
 use super::RenderCaller;
-use crate::channels::PackingToWindowReceiver;
+use crate::channels::{PackingToWindowReceiver, WindowToPackingSender};
 use glutin::event::{Event, WindowEvent};
 use glutin::event_loop::ControlFlow;
 
@@ -16,7 +16,7 @@ impl Window {
     ///
     /// unsafe, since calling twice on the same thread is likely to lead to serious trouble.
     /// Also, extremely stateful.
-    pub unsafe fn new(rx: PackingToWindowReceiver) -> Window {
+    pub unsafe fn new(rx: PackingToWindowReceiver, packing_tx : WindowToPackingSender) -> Window {
         let el = glutin::event_loop::EventLoop::new();
         let wb = glutin::window::WindowBuilder::new()
             .with_title("Hello world!")

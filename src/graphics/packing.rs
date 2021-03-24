@@ -4,16 +4,17 @@ use crate::channels::*;
 use std::thread::{self, JoinHandle};
 
 pub fn start_packing_thread(
-    rx: LogicToPackingReceiver,
+    logic_rx: LogicToPackingReceiver,
     tx: PackingToWindowSender,
+    window_rx : WindowToPackingReceiver
 ) -> JoinHandle<()> {
     let mut state = RenderState::new();
 
     thread::spawn(move || {
         println!("Ready to pack graphics state!");
 
-        for _ in rx.channel_receiver.iter() {
-            let data = rx.graphics_state_model.lock().unwrap();
+        for _ in logic_rx.channel_receiver.iter() {
+            let data = logic_rx.graphics_state_model.lock().unwrap();
 
             let vp = get_vp_matrix(&data.view);
 

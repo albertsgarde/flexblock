@@ -12,3 +12,6 @@ pub use external_event::ExternalEvent;
 
 mod render_messages;
 pub use render_messages::{RenderMessage, RenderMessages, UniformData, VertexPack};
+
+mod capabilities;
+pub use capabilities::GraphicsCapabilities;
