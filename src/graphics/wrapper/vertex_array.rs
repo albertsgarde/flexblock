@@ -23,7 +23,7 @@ impl<T: Vertex> VertexArray<T> {
         let mut id = 0;
         gl::GenVertexArrays(1, &mut id);
         gl::BindVertexArray(id);
-        for _ in 0..20 {
+        for _ in 0..100 {
             let ebo = ElementBuffer::new().unwrap();
             let vbo = ArrayBuffer::new(dummy).unwrap();
 
