@@ -36,11 +36,11 @@ impl RenderCaller {
     /// this has access to OpenGL calls.
     /// TODO: Enforce requirements on RenderPack<T> to make this safe.
     unsafe fn unpack(&mut self, buffer: &usize, pack: &VertexPack) {
-        if *buffer >= self.vertex_array.get_vbos() {
+        if *buffer >= self.vertex_array.get_vbo_count() {
             panic!(
                 "Trying to clear a buffer with index {}, but there's only {} buffers ",
                 buffer,
-                self.vertex_array.get_vbos()
+                self.vertex_array.get_vbo_count()
             );
         }
         self.vertex_array.fill_vbo(*buffer, &pack.vertices);
@@ -48,11 +48,11 @@ impl RenderCaller {
     }
 
     unsafe fn clear(&mut self, buffer: &usize) {
-        if *buffer >= self.vertex_array.get_vbos() {
+        if *buffer >= self.vertex_array.get_vbo_count() {
             panic!(
                 "Trying to clear an array with index {}, but there's only {} arrays ",
                 buffer,
-                self.vertex_array.get_vbos()
+                self.vertex_array.get_vbo_count()
             );
         }
         self.vertex_array.clear(*buffer);
@@ -112,5 +112,9 @@ impl RenderCaller {
                 0
             }),
         );
+    }
+
+    pub fn get_vbo_count(&self) -> usize {
+        return self.vertex_array.get_vbo_count()
     }
 }

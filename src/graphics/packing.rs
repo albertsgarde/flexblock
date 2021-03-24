@@ -14,6 +14,10 @@ pub fn start_packing_thread(
         println!("Ready to pack graphics state!");
 
         for _ in logic_rx.channel_receiver.iter() {
+            if let Ok(cap) = window_rx.channel_receiver.try_recv() {
+                println!("Received a new graphics capabilities object!");
+                state.update_capabilities(cap);
+            }
             let data = logic_rx.graphics_state_model.lock().unwrap();
 
             let vp = get_vp_matrix(&data.view);
