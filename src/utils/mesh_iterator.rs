@@ -18,16 +18,19 @@ where
     T: Scalar + PartialOrd + AddAssign + Neg<Output = T> + Zero + One,
 {
     /// Creates a MeshIterator for the box with inclusive lower corner at origin and exclusive upper corner at `max_loc`.
-    /// 
+    ///
     /// # Panics
-    /// 
+    ///
     /// Panics if any coordinates of the given vector are non-positive.
     /// Zero coordinates are not allowed.
     /// For some purposes you can use any value below one instead.
     pub fn create(max_loc: TVec3<T>) -> MeshIterator<T> {
         for i in 0..3 {
             if max_loc[i] <= T::zero() {
-                panic!("Argument must have all positive coordinates. Coordinate {} is {:?}", i, max_loc[i]);
+                panic!(
+                    "Argument must have all positive coordinates. Coordinate {} is {:?}",
+                    i, max_loc[i]
+                );
             }
         }
         MeshIterator {
