@@ -1,6 +1,7 @@
-use super::{ShaderManager, VertexArray};
+use super::{ShaderManager, TextureManager, VertexArray, Texture, TextureFormat};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
+use std::collections::HashMap;
 
 ///
 /// TODO
@@ -13,6 +14,7 @@ use crate::utils::Vertex3D;
 pub struct RenderCaller {
     vertex_array: VertexArray<Vertex3D>,
     pub shader_manager: ShaderManager,
+    texture_manager : TextureManager
 }
 
 impl RenderCaller {
@@ -20,14 +22,22 @@ impl RenderCaller {
     /// Marked as unsafe because it calls GL code
     pub unsafe fn new() -> RenderCaller {
         let vertex_array = VertexArray::new(Vertex3D::dummy()).unwrap();
+        
         let mut shader_manager = ShaderManager::new();
 
-        //TODO: This should probably not be called from the RenderCaller new.
+        //TODO: This should maybe not be called from the RenderCaller new. Some decision has to be made.
         shader_manager.load_shaders("shaders");
+
+        // TODO: Which textures are to be available should be loaded from somewhere.
+        // Also, this needs to work with frame buffers.
+        let mut texture_manager = TextureManager::new();
+        let t1 = Texture::new(2, 2, TextureFormat::RGB);
+        texture_manager.add_texture(t1, "bob");
 
         RenderCaller {
             vertex_array,
             shader_manager,
+            texture_manager
         }
     }
 
@@ -115,6 +125,10 @@ impl RenderCaller {
     }
 
     pub fn get_vbo_count(&self) -> usize {
-        return self.vertex_array.get_vbo_count()
+        self.vertex_array.get_vbo_count()
+    }
+
+    pub fn get_texture_names(&self) -> HashMap<String, usize> {
+        self.texture_manager.get_texture_names()
     }
 }

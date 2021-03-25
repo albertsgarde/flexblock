@@ -56,7 +56,10 @@ impl Window {
     }
 
     fn get_capabilities(&self) -> GraphicsCapabilities {
-        GraphicsCapabilities { vbo_count : self.render_caller.get_vbo_count()}
+        GraphicsCapabilities {
+            vbo_count : self.render_caller.get_vbo_count(),
+            texture_names : self.render_caller.get_texture_names()
+        }
     }
 
     unsafe fn render(&mut self) {

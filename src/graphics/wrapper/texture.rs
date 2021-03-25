@@ -1,5 +1,5 @@
 use std::ptr::null;
-
+use std::collections::HashMap;
 
 
 pub enum TextureFormat {
@@ -43,3 +43,24 @@ impl Texture {
         self.filled = true;
     }
 }
+
+pub struct TextureManager {
+    textures : Vec<Texture>,
+    texture_names : HashMap<String, usize>
+}
+
+impl TextureManager {
+    pub fn new() -> TextureManager {
+        TextureManager {textures : vec![], texture_names : HashMap::new()}
+    }
+
+    pub fn get_texture_names(&self) -> HashMap<String, usize> {
+        self.texture_names.clone()
+    }
+
+    pub fn add_texture(&mut self, texture : Texture, name : &str) {
+        self.textures.push(texture);
+        self.texture_names.insert(String::from(name), self.textures.len()-1);
+    }
+}
+

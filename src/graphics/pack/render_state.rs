@@ -142,7 +142,7 @@ pub struct RenderState {
     /// Contains a list of packed chunk locations. The index is which buffer they're packed into. None means no chunk is packed into that buffer.
     packed_chunks: Vec<Option<glm::IVec3>>,
     chunk_search: Option<BFS>,
-    capabilities : GraphicsCapabilities
+    capabilities : Option<GraphicsCapabilities>
 }
 
 impl RenderState {
@@ -153,7 +153,7 @@ impl RenderState {
         RenderState {
             packed_chunks,
             chunk_search: None,
-            capabilities : GraphicsCapabilities {vbo_count : 0}
+            capabilities : None
         }
     }
 
@@ -333,11 +333,16 @@ impl RenderState {
     }
 
     pub fn update_capabilities(&mut self, capabilities : GraphicsCapabilities) {
-        if capabilities.vbo_count > self.capabilities.vbo_count {
-            self.packed_chunks.append(&mut vec![None; capabilities.vbo_count-self.capabilities.vbo_count]);
-        } else  if capabilities.vbo_count < self.capabilities.vbo_count {
-            panic!("There is currently no support for a shrink in the number of available VBOs");
+        if let Some(cap2) = self.capabilities.take() {
+
+            if capabilities.vbo_count > cap2.vbo_count {
+                self.packed_chunks.append(&mut vec![None; capabilities.vbo_count-cap2.vbo_count]);
+            } else  if capabilities.vbo_count < cap2.vbo_count {
+                panic!("There is currently no support for a shrink in the number of available VBOs");
+            }
+            self.capabilities = Some(capabilities);
+        } else {
+            println!("Binding first capabilities object")
         }
-        self.capabilities = capabilities;
     }
 }
