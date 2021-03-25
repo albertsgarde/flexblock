@@ -20,6 +20,7 @@ pub fn integer_division(lhs: i32, rhs: i32) -> i32 {
     }
 }
 
+/// A struct implementing this trait has a additive identity.
 pub trait Zero {
     fn zero() -> Self;
 }
@@ -36,6 +37,7 @@ impl Zero for i32 {
     }
 }
 
+/// A struct implementing this trait has a multiplicative identity.
 pub trait One {
     fn one() -> Self;
 }
