@@ -22,6 +22,10 @@ impl State {
             world::Location::from_coords(3., 3., -8.),
             world::VoxelType(1),
         );
+        state.terrain.set_voxel_type(
+            world::Location::from_coords(19., 1., -8.),
+            world::VoxelType(1),
+        );
         state
     }
 
