@@ -122,7 +122,7 @@ impl<T: Vertex> VertexArray<T> {
         self.vbos[target].get_size()
     }
 
-    pub fn get_vbos(&self) -> usize {
+    pub fn get_vbo_count(&self) -> usize {
         self.vbos.len()
     }
 }

@@ -1,5 +1,8 @@
 use super::RenderCaller;
-use crate::channels::PackingToWindowReceiver;
+use crate::{
+    channels::{PackingToWindowReceiver, WindowToPackingSender},
+    graphics::GraphicsCapabilities,
+};
 use glutin::event::{Event, WindowEvent};
 use glutin::event_loop::ControlFlow;
 
@@ -8,6 +11,7 @@ pub struct Window {
     context: glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>,
     render_caller: RenderCaller,
     render_messages: PackingToWindowReceiver,
+    capabilities_sender: WindowToPackingSender,
 }
 
 pub type EventHandler = Box<dyn FnMut(glutin::event::Event<()>) + Send + 'static>;
@@ -16,7 +20,7 @@ impl Window {
     ///
     /// unsafe, since calling twice on the same thread is likely to lead to serious trouble.
     /// Also, extremely stateful.
-    pub unsafe fn new(rx: PackingToWindowReceiver) -> Window {
+    pub unsafe fn new(rx: PackingToWindowReceiver, packing_tx: WindowToPackingSender) -> Window {
         let el = glutin::event_loop::EventLoop::new();
         let wb = glutin::window::WindowBuilder::new()
             .with_title("Hello world!")
@@ -40,14 +44,27 @@ impl Window {
         gl::CullFace(gl::BACK);
 
         let render_caller = RenderCaller::new();
-
         //unsafe { render_caller.load_shaders("shaders") };
 
-        Window {
+        let res = Window {
             event_loop: Some(el),
             context: windowed_context,
             render_caller,
             render_messages: rx,
+            capabilities_sender: packing_tx,
+        };
+        res.capabilities_sender
+            .channel_sender
+            .send(res.get_capabilities())
+            .unwrap();
+
+        res
+    }
+
+    fn get_capabilities(&self) -> GraphicsCapabilities {
+        GraphicsCapabilities {
+            vbo_count: self.render_caller.get_vbo_count(),
+            texture_names: self.render_caller.get_texture_names(),
         }
     }
 

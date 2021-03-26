@@ -105,14 +105,24 @@ impl VertexPack {
     }
 }
 
-//TODO: Add mat 3, 2, and vec 3, 2, and f32, u32, i32
+//TODO: Add mat 3, 2, and vec 3, 2, and f32, u32, i32, and texture
 pub struct UniformData {
     pub mat4s: Vec<(glm::Mat4, String)>,
     pub vec4s: Vec<(glm::Vec3, String)>,
+    /// The first string is the texture name, second is the uniform location name
+    pub textures: Vec<(String, String)>,
 }
 
 impl UniformData {
-    pub fn new(mat4s: Vec<(glm::Mat4, String)>, vec4s: Vec<(glm::Vec3, String)>) -> UniformData {
-        UniformData { mat4s, vec4s }
+    pub fn new(
+        mat4s: Vec<(glm::Mat4, String)>,
+        vec4s: Vec<(glm::Vec3, String)>,
+        textures: Vec<(String, String)>,
+    ) -> UniformData {
+        UniformData {
+            mat4s,
+            vec4s,
+            textures,
+        }
     }
 }
