@@ -5,7 +5,7 @@ pub fn read_png(path : &str) -> Vec<u8>{
     
     use std::fs::File;
 
-    let decoder = png::Decoder::new(File::open("textures/atlas.png").unwrap());
+    let decoder = png::Decoder::new(File::open(path).unwrap());
     let (info, mut reader) = decoder.read_info().unwrap();
     // Allocate the output buffer.
     let mut buf = vec![0; info.buffer_size()];
