@@ -1,6 +1,7 @@
-use super::{ShaderManager, VertexArray};
+use super::{ShaderManager, TextureManager, Texture, TextureFormat, VertexArray};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
+use std::collections::HashMap;
 
 ///
 /// TODO
@@ -13,6 +14,7 @@ use crate::utils::Vertex3D;
 pub struct RenderCaller {
     vertex_array: VertexArray<Vertex3D>,
     pub shader_manager: ShaderManager,
+    texture_manager: TextureManager,
 }
 
 impl RenderCaller {
@@ -20,14 +22,23 @@ impl RenderCaller {
     /// Marked as unsafe because it calls GL code
     pub unsafe fn new() -> RenderCaller {
         let vertex_array = VertexArray::new(Vertex3D::dummy()).unwrap();
+
         let mut shader_manager = ShaderManager::new();
 
-        //TODO: This should probably not be called from the RenderCaller new.
+        //TODO: This should maybe not be called from the RenderCaller new. Some decision has to be made.
         shader_manager.load_shaders("shaders");
+
+        // TODO: Which textures are to be available should be loaded from somewhere.
+        // Also, this needs to work with frame buffers.
+        let mut texture_manager = TextureManager::new();
+        let mut t1 = Texture::new(800, 800, TextureFormat::RGB);
+        t1.fill(crate::utils::read_png("textures/atlas.png"));
+        texture_manager.add_texture(t1, "atlas");
 
         RenderCaller {
             vertex_array,
             shader_manager,
+            texture_manager,
         }
     }
 
@@ -36,11 +47,11 @@ impl RenderCaller {
     /// this has access to OpenGL calls.
     /// TODO: Enforce requirements on RenderPack<T> to make this safe.
     unsafe fn unpack(&mut self, buffer: &usize, pack: &VertexPack) {
-        if *buffer >= self.vertex_array.get_vbos() {
+        if *buffer >= self.vertex_array.get_vbo_count() {
             panic!(
                 "Trying to clear a buffer with index {}, but there's only {} buffers ",
                 buffer,
-                self.vertex_array.get_vbos()
+                self.vertex_array.get_vbo_count()
             );
         }
         self.vertex_array.fill_vbo(*buffer, &pack.vertices);
@@ -48,18 +59,17 @@ impl RenderCaller {
     }
 
     unsafe fn clear(&mut self, buffer: &usize) {
-        if *buffer >= self.vertex_array.get_vbos() {
+        if *buffer >= self.vertex_array.get_vbo_count() {
             panic!(
                 "Trying to clear an array with index {}, but there's only {} arrays ",
                 buffer,
-                self.vertex_array.get_vbos()
+                self.vertex_array.get_vbo_count()
             );
         }
         self.vertex_array.clear(*buffer);
     }
 
-    /// TODO: THIS IS WHERE YOU LEFT OFF, CONTINUE FROM HERE
-    unsafe fn choose_shader(&mut self, shader: &String) {
+    unsafe fn choose_shader(&mut self, shader: &str) {
         match self.shader_manager.bind_shader(shader) {
             Err(s) => {
                 println!("{}", s)
@@ -69,7 +79,10 @@ impl RenderCaller {
     }
 
     unsafe fn uniforms(&mut self, uniforms: &UniformData) {
-        match self.shader_manager.uniforms(uniforms) {
+        match self
+            .shader_manager
+            .uniforms(uniforms, &self.texture_manager)
+        {
             Err(s) => {
                 println!("{}", s)
             } //TODO: LOG INSTEAD
@@ -112,5 +125,13 @@ impl RenderCaller {
                 0
             }),
         );
+    }
+
+    pub fn get_vbo_count(&self) -> usize {
+        self.vertex_array.get_vbo_count()
+    }
+
+    pub fn get_texture_names(&self) -> HashMap<String, usize> {
+        self.texture_manager.get_texture_names()
     }
 }

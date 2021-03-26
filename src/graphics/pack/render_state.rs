@@ -3,8 +3,8 @@ use crate::game::{
     View,
 };
 use crate::graphics::VertexPack;
-use crate::graphics::{RenderMessage, RenderMessages, UniformData};
-use std::collections::VecDeque;
+use crate::graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
+use std::collections::{VecDeque, HashMap};
 
 /// This creates the vertex pack for a specific chunk. It just goes through all the voxels and adds their faces.
 fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
@@ -20,7 +20,6 @@ fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
         let z1 = z0 + 1.;
 
         if voxel.0 == 1 {
-
             // Back face
             let (mut vadd, mut eadd) =
                 super::cube_faces::back(z0, x0, y0, x1, y1, 1., 0., 0., index);
@@ -73,7 +72,12 @@ fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
 pub fn get_vp_matrix(view: &View) -> glm::Mat4 {
     let direction = view.view_direction();
     let chunk = &view.location().chunk;
-    let position : glm::Vec3 = view.location().position + glm::vec3((chunk.x*16) as f32, (chunk.y*16) as f32, (chunk.z*16) as f32);
+    let position: glm::Vec3 = view.location().position
+        + glm::vec3(
+            (chunk.x * 16) as f32,
+            (chunk.y * 16) as f32,
+            (chunk.z * 16) as f32,
+        );
     let center = position + direction;
     let up = view.up();
 
@@ -142,16 +146,18 @@ pub struct RenderState {
     /// Contains a list of packed chunk locations. The index is which buffer they're packed into. None means no chunk is packed into that buffer.
     packed_chunks: Vec<Option<glm::IVec3>>,
     chunk_search: Option<BFS>,
+    capabilities: GraphicsCapabilities,
 }
 
 impl RenderState {
     pub fn new() -> RenderState {
         //TODO: Buffer space should be sized according to the number of buffers in the target VertexArray. This should coordinate.
-        let packed_chunks = vec![None; 100];
+        let packed_chunks = vec![None; 0];
 
         RenderState {
             packed_chunks,
             chunk_search: None,
+            capabilities: GraphicsCapabilities {vbo_count : 0, texture_names : HashMap::new()},
         }
     }
 
@@ -174,7 +180,7 @@ impl RenderState {
             "Trying to pack a chunk into a buffer outside buffer range!"
         );
         debug_assert!(
-            self.packed_chunks[buffer].is_none(),
+            self.packed_chunks[buffer].is_some(),
             "Trying to remove a chunk from a buffer that does not currently have a bound chunk!"
         );*/
 
@@ -214,17 +220,11 @@ impl RenderState {
         }
     }
 
-    fn unpack_chunk(
-        &mut self,
-        buffer : usize,
-        messages: &mut RenderMessages,
-    ) -> Result<(), String> {
+    fn unpack_chunk(&mut self, buffer: usize, messages: &mut RenderMessages) -> Result<(), String> {
         if self.packed_chunks[buffer].is_none() {
             return Err(String::from("Unpacking an unpacked buffer!"));
         }
-        messages.add_message(RenderMessage::ClearArray {
-            buffer,
-        });
+        messages.add_message(RenderMessage::ClearArray { buffer });
 
         self.unregister_packed_chunk(buffer);
         Ok(())
@@ -234,6 +234,7 @@ impl RenderState {
         self.packed_chunks.contains(&Some(location))
     }
 
+    ///DEPRECATED
     pub fn pack_next_chunk(
         &mut self,
         view_location: glm::IVec3,
@@ -258,13 +259,18 @@ impl RenderState {
         }
     }
 
-    pub fn repack_chunk(&mut self, location : glm::IVec3, messages : &mut RenderMessages, terrain : &Terrain) {
-        let mut counter=0;
+    pub fn repack_chunk(
+        &mut self,
+        location: glm::IVec3,
+        messages: &mut RenderMessages,
+        terrain: &Terrain,
+    ) {
+        let mut counter = 0;
         for chunk in &self.packed_chunks {
             if let Some(chunk) = chunk {
                 if *chunk == location {
                     self.unregister_packed_chunk(counter);
-                    messages.add_message(RenderMessage::ClearArray{ buffer : counter});
+                    messages.add_message(RenderMessage::ClearArray { buffer: counter });
                     break;
                 }
             }
@@ -273,20 +279,21 @@ impl RenderState {
 
         if let Some(chunk) = terrain.chunk(location) {
             match self.pack_chunk(chunk, location, messages) {
-                Err(s) => {println!("{}",s)},
+                Err(s) => {
+                    println!("{}", s)
+                }
                 Ok(()) => {}
             }
         }
-
     }
 
-    pub fn clear_distant_chunks(&mut self, location : glm::IVec3, messages : &mut RenderMessages) {
-        let mut counter=0;
+    pub fn clear_distant_chunks(&mut self, location: glm::IVec3, messages: &mut RenderMessages) {
+        let mut counter = 0;
         let mut remove = Vec::new();
         for chunk in &self.packed_chunks {
             if let Some(chunk) = chunk {
-                let v = chunk-location;
-                if v.x*v.x+v.y*v.y+v.z*v.z > 4 {
+                let v = chunk - location;
+                if v.x * v.x + v.y * v.y + v.z * v.z > 4 {
                     remove.push(counter);
                 }
             }
@@ -294,8 +301,10 @@ impl RenderState {
         }
         for i in remove {
             match self.unpack_chunk(i, messages) {
-                Ok(()) => {},
-                Err(s) => {println!("{}",s)}
+                Ok(()) => {}
+                Err(s) => {
+                    println!("{}", s)
+                }
             }
         }
     }
@@ -320,7 +329,7 @@ impl RenderState {
                 );
 
                 render_messages.add_message(RenderMessage::Uniforms {
-                    uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![]),
+                    uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![], vec![(String::from("atlas"), String::from("test_texture"))]),
                 });
 
                 render_messages.add_message(RenderMessage::Draw { buffer: counter });
@@ -329,4 +338,15 @@ impl RenderState {
         }
     }
 
+    pub fn update_capabilities(&mut self, capabilities: GraphicsCapabilities) {
+        if capabilities.vbo_count > self.capabilities.vbo_count {
+            self.packed_chunks
+                .append(&mut vec![None; capabilities.vbo_count - self.capabilities.vbo_count]);
+        } else if capabilities.vbo_count < self.capabilities.vbo_count {
+            panic!(
+                "There is currently no support for a shrink in the number of available VBOs"
+            );
+        }
+        self.capabilities = capabilities;
+    }
 }

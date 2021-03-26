@@ -2,7 +2,9 @@
 
 layout(location=0) in vec3 vertexPosition_modelspace;
 layout(location=1) in vec3 incolor;
+layout(location=2) in vec2 inUV;
 out vec3 vertexcolor;
+out vec2 UV;
 
 
 uniform mat4 MVP;
@@ -14,4 +16,5 @@ void main() {
 	vec3 fogcolor = vec3(0.6, 0.6, 0.6);
 
 	vertexcolor = incolor * (1-dist) + fogcolor*dist;
+	UV = inUV;
 }
