@@ -3,11 +3,11 @@
 in vec3 vertexcolor;
 in vec2 UV;
 
-uniform sampler2D testTexture;
+uniform sampler2D test_texture;
 
 out vec3 color;
 
 
 void main() {
-    color = vertexcolor;
+    color = vertexcolor * texture(test_texture, UV).xyz;
 }

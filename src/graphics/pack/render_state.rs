@@ -329,7 +329,7 @@ impl RenderState {
                 );
 
                 render_messages.add_message(RenderMessage::Uniforms {
-                    uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![], vec![]),
+                    uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![], vec![(String::from("bob"), String::from("test_texture"))]),
                 });
 
                 render_messages.add_message(RenderMessage::Draw { buffer: counter });

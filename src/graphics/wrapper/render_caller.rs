@@ -1,4 +1,4 @@
-use super::{ShaderManager, Texture, TextureFormat, TextureManager, VertexArray};
+use super::{ShaderManager, TextureManager, VertexArray};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
 use std::collections::HashMap;
@@ -30,13 +30,7 @@ impl RenderCaller {
 
         // TODO: Which textures are to be available should be loaded from somewhere.
         // Also, this needs to work with frame buffers.
-        let mut texture_manager = TextureManager::new();
-        let t1 = Texture::new(2, 2, TextureFormat::RGB);
-        texture_manager.add_texture(t1, "bob");
-        texture_manager.fill_texture(
-            "bob",
-            vec![0, 255, 255, 255, 255, 255, 0, 255, 255, 0, 0, 0],
-        );
+        let texture_manager = TextureManager::new();
 
         RenderCaller {
             vertex_array,

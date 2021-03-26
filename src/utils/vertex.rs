@@ -18,9 +18,21 @@ pub struct V3C3 {
     pub b: f32,
 }
 
+#[derive(Packed, Copy, Clone, Debug)]
+pub struct V3C3UV {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    pub u : f32,
+    pub v : f32
+}
+
 ///
 /// The vertex used basically everywhere in the program.
-pub type Vertex3D = V3C3;
+pub type Vertex3D = V3C3UV;
 
 impl V3C3 {
     ///TODO: Can i make this a part of the vertex trait instead?
@@ -41,6 +53,32 @@ impl Vertex for V3C3 {
         AttributePointerList::new::<V3C3>(vec![
             AttributePointer::new(0, 3, gl::FLOAT, false, 0),
             AttributePointer::new(1, 3, gl::FLOAT, false, 12),
+        ])
+        .unwrap()
+    }
+}
+
+impl V3C3UV {
+    pub fn dummy() -> V3C3UV {
+        V3C3UV {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+            u : 0.0,
+            v : 0.0
+        }
+    }
+}
+
+impl Vertex for V3C3UV {
+    fn attribute_pointers() -> AttributePointerList {
+        AttributePointerList::new::<V3C3UV>(vec![
+            AttributePointer::new(0, 3, gl::FLOAT, false, 0),
+            AttributePointer::new(1, 3, gl::FLOAT, false, 12),
+            AttributePointer::new(2, 2, gl::FLOAT, false, 24),
         ])
         .unwrap()
     }

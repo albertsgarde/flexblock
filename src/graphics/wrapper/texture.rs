@@ -39,7 +39,7 @@ impl Texture {
 
         gl::GenTextures(1, &mut id);
         gl::BindTexture(gl::TEXTURE_2D, id);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32); //TODO: WHAT THE HELL IS GOING ON WITH THIS CONVERSION???
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32); //TODO: WHAT THE HELL IS GOING ON WITH THIS CONVERSION TO I32???
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32); //WHY IS IT NECESSARY??
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
@@ -55,6 +55,7 @@ impl Texture {
             gl::UNSIGNED_BYTE,
             null(),
         );
+        gl::BindTexture(gl::TEXTURE_2D, 0);
 
         Texture {
             id,
@@ -78,6 +79,7 @@ impl Texture {
             data.len()
         );
 
+        gl::BindTexture(gl::TEXTURE_2D, self.id);
         gl::TexImage2D(
             gl::TEXTURE_2D,
             0,
@@ -89,6 +91,7 @@ impl Texture {
             gl::UNSIGNED_BYTE,
             data.as_ptr() as *const gl::types::GLvoid,
         );
+        gl::BindTexture(gl::TEXTURE_2D, 0);
         self.filled = true;
     }
 
