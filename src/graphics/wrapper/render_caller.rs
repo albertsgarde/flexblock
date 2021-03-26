@@ -1,4 +1,4 @@
-use super::{ShaderManager, TextureManager, VertexArray};
+use super::{ShaderManager, TextureManager, Texture, TextureFormat, VertexArray};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
 use std::collections::HashMap;
@@ -30,7 +30,10 @@ impl RenderCaller {
 
         // TODO: Which textures are to be available should be loaded from somewhere.
         // Also, this needs to work with frame buffers.
-        let texture_manager = TextureManager::new();
+        let mut texture_manager = TextureManager::new();
+        let mut t1 = Texture::new(800, 800, TextureFormat::RGB);
+        t1.fill(crate::utils::read_png("textures/atlas.png"));
+        texture_manager.add_texture(t1, "atlas");
 
         RenderCaller {
             vertex_array,
@@ -66,8 +69,7 @@ impl RenderCaller {
         self.vertex_array.clear(*buffer);
     }
 
-    /// TODO: THIS IS WHERE YOU LEFT OFF, CONTINUE FROM HERE
-    unsafe fn choose_shader(&mut self, shader: &String) {
+    unsafe fn choose_shader(&mut self, shader: &str) {
         match self.shader_manager.bind_shader(shader) {
             Err(s) => {
                 println!("{}", s)
