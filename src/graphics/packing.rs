@@ -6,7 +6,7 @@ use std::thread::{self, JoinHandle};
 pub fn start_packing_thread(
     logic_rx: LogicToPackingReceiver,
     tx: PackingToWindowSender,
-    window_rx : WindowToPackingReceiver
+    window_rx: WindowToPackingReceiver,
 ) -> JoinHandle<()> {
     let mut state = RenderState::new();
 
@@ -41,14 +41,38 @@ pub fn start_packing_thread(
                 depth_buffer: true,
             });
 
-           // state.pack_next_chunk(data.view.location().chunk, &mut messages, &data.terrain);
+            // state.pack_next_chunk(data.view.location().chunk, &mut messages, &data.terrain);
             state.repack_chunk(data.view.location().chunk, &mut messages, &data.terrain);
-            state.repack_chunk(data.view.location().chunk+glm::vec3(1,0,0), &mut messages, &data.terrain);
-            state.repack_chunk(data.view.location().chunk+glm::vec3(-1,0,0), &mut messages, &data.terrain);
-            state.repack_chunk(data.view.location().chunk+glm::vec3(0,1,0), &mut messages, &data.terrain);
-            state.repack_chunk(data.view.location().chunk+glm::vec3(0,-1,0), &mut messages, &data.terrain);
-            state.repack_chunk(data.view.location().chunk+glm::vec3(0,0,1), &mut messages, &data.terrain);
-            state.repack_chunk(data.view.location().chunk+glm::vec3(0,0,-1), &mut messages, &data.terrain);
+            state.repack_chunk(
+                data.view.location().chunk + glm::vec3(1, 0, 0),
+                &mut messages,
+                &data.terrain,
+            );
+            state.repack_chunk(
+                data.view.location().chunk + glm::vec3(-1, 0, 0),
+                &mut messages,
+                &data.terrain,
+            );
+            state.repack_chunk(
+                data.view.location().chunk + glm::vec3(0, 1, 0),
+                &mut messages,
+                &data.terrain,
+            );
+            state.repack_chunk(
+                data.view.location().chunk + glm::vec3(0, -1, 0),
+                &mut messages,
+                &data.terrain,
+            );
+            state.repack_chunk(
+                data.view.location().chunk + glm::vec3(0, 0, 1),
+                &mut messages,
+                &data.terrain,
+            );
+            state.repack_chunk(
+                data.view.location().chunk + glm::vec3(0, 0, -1),
+                &mut messages,
+                &data.terrain,
+            );
 
             state.clear_distant_chunks(data.view.location().chunk, &mut messages);
 

@@ -1,7 +1,11 @@
 use super::wrapper::{EventHandler, Window};
 use crate::channels::*;
 
-pub fn start_window(rx: PackingToWindowReceiver, tx: WindowToLogicSender, packing_tx : WindowToPackingSender) {
+pub fn start_window(
+    rx: PackingToWindowReceiver,
+    tx: WindowToLogicSender,
+    packing_tx: WindowToPackingSender,
+) {
     let window = unsafe { Window::new(rx, packing_tx) };
 
     let eh: EventHandler = Box::new(move |event| {

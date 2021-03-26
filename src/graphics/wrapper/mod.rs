@@ -14,4 +14,4 @@ mod render_caller;
 use render_caller::RenderCaller;
 
 mod texture;
-use texture::{Texture, TextureManager, TextureFormat};
+use texture::{Texture, TextureFormat, TextureManager};

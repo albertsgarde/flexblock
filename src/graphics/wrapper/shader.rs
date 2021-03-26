@@ -1,3 +1,4 @@
+use super::TextureManager;
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::fs;
@@ -330,7 +331,11 @@ impl<'a> ShaderManager {
         Ok(format!(""))
     }
 
-    pub unsafe fn uniforms(&mut self, uniforms: &UniformData) -> Result<u32, String> {
+    pub unsafe fn uniforms(
+        &mut self,
+        uniforms: &UniformData,
+        texture_manager: &TextureManager,
+    ) -> Result<u32, String> {
         //TODO: THERE COULD BE NO CURRENT SHADER
         if let None = self.bound_shader {
             return Err(String::from(
@@ -348,13 +353,22 @@ impl<'a> ShaderManager {
         }
 
         for entry in &uniforms.vec4s {
-            println!("Trying to find a location for uniform {}.", &entry.1);
             let loc = s.uniform_locations.get(&entry.1);
-
-            println!("{:?}", s.uniform_locations);
             let vec = entry.0;
 
             gl::Uniform4fv(*loc.unwrap(), 1, (vec.as_ptr()) as *const f32)
+        }
+
+        let mut texture_slot: i32 = 0;
+        for entry in &uniforms.textures {
+            let loc = s.uniform_locations.get(&entry.1);
+            let tex_name = &entry.0;
+            let tex = texture_manager.get_texture(tex_name);
+
+            gl::ActiveTexture(gl::TEXTURE0 + texture_slot as u32);
+            tex.bind();
+            gl::Uniform1i(*loc.unwrap(), texture_slot);
+            texture_slot += 1;
         }
         Ok(0)
     }
