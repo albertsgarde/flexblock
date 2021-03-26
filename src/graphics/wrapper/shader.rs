@@ -391,11 +391,11 @@ impl<'a> ShaderManager {
         for entry in fs::read_dir(folder).unwrap() {
             let e = entry.unwrap();
             let name = e.file_name().into_string().unwrap();
-            if name.ends_with(".vertexshader") {
-                let name = &name[0..(name.len() - 13)];
+            if name.ends_with(".vert") {
+                let name = &name[0..(name.len() - 5)];
                 vertex_shaders.push(String::from(name));
-            } else if name.ends_with(".fragmentshader") {
-                let name = &name[0..(name.len() - 15)];
+            } else if name.ends_with(".frag") {
+                let name = &name[0..(name.len() - 5)];
                 fragment_shaders.push(String::from(name));
             } else {
                 eprintln!("File {} does not contain a shader!", name);
@@ -412,8 +412,8 @@ impl<'a> ShaderManager {
             fragment_shaders.retain(|x| *x != vs);
 
             let shader = match Shader::new(
-                &(format!("{}/{}.vertexshader", folder, vs)),
-                &(format!("{}/{}.fragmentshader", folder, vs)),
+                &(format!("{}/{}.vert", folder, vs)),
+                &(format!("{}/{}.frag", folder, vs)),
                 &vs,
             ) {
                 Ok(s) => s,

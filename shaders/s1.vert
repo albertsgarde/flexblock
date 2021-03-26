@@ -3,6 +3,7 @@
 layout(location=0) in vec3 vertexPosition_modelspace;
 layout(location=1) in vec3 incolor;
 out vec3 vertexcolor;
+out vec2 UV;
 
 
 uniform mat4 MVP;
@@ -14,4 +15,5 @@ void main() {
 	vec3 fogcolor = vec3(0.6, 0.6, 0.6);
 
 	vertexcolor = incolor * (1-dist) + fogcolor*dist;
+	UV = (gl_Position.xy / gl_Position.w) * 0.5 + 0.5;
 }
