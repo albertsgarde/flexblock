@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::ptr::null;
 
+#[derive(Clone)]
 pub enum TextureFormat {
     RGB,
     RGBA,
@@ -24,16 +25,14 @@ impl TextureFormat {
 }
 pub struct Texture {
     id: u32,
-    format: TextureFormat,
     filled: bool,
-    width: u32,
-    height: u32,
+    pub metadata : TextureMetadata
 }
 
 impl Texture {
     ///
     ///Creates a new, empty texture, with the specified width, height, and format
-    pub unsafe fn new(width: u32, height: u32, format: TextureFormat) -> Texture {
+    pub unsafe fn new(width: u32, height: u32, format: TextureFormat, name : &str) -> Texture {
         let glf = format.gl_format();
         let mut id = 0;
 
@@ -59,10 +58,8 @@ impl Texture {
 
         Texture {
             id,
-            format,
             filled: false,
-            width,
-            height,
+            metadata : TextureMetadata { format, width, height, name : String::from(name)} 
         }
     }
 
@@ -71,11 +68,11 @@ impl Texture {
     pub unsafe fn fill(&mut self, data: Vec<u8>) {
         assert_eq!(
             data.len(),
-            (self.width * self.height) as usize  * self.format.bytes(),
+            (self.metadata.width * self.metadata.height) as usize  * self.metadata.format.bytes(),
             "Tried to fill a {}x{} {}-byte-stride texture with {} length data!",
-            self.width,
-            self.height,
-            self.format.bytes(),
+            self.metadata.width,
+            self.metadata.height,
+            self.metadata.format.bytes(),
             data.len()
         );
 
@@ -83,11 +80,11 @@ impl Texture {
         gl::TexImage2D(
             gl::TEXTURE_2D,
             0,
-            self.format.gl_format() as i32,
-            self.width as i32,
-            self.height as i32,
+            self.metadata.format.gl_format() as i32,
+            self.metadata.width as i32,
+            self.metadata.height as i32,
             0,
-            self.format.gl_format(),
+            self.metadata.format.gl_format(),
             gl::UNSIGNED_BYTE,
             data.as_ptr() as *const gl::types::GLvoid,
         );
@@ -100,6 +97,14 @@ impl Texture {
     pub unsafe fn bind(&self) {
         gl::BindTexture(gl::TEXTURE_2D, self.id);
     }
+}
+
+#[derive(Clone)]
+pub struct TextureMetadata {
+    pub format : TextureFormat,
+    pub width : u32,
+    pub height : u32,
+    pub name : String
 }
 
 pub struct TextureManager {
@@ -115,14 +120,18 @@ impl TextureManager {
         }
     }
 
-    pub fn get_texture_names(&self) -> HashMap<String, usize> {
-        self.texture_names.clone()
+    pub fn get_texture_metadata(&self) -> HashMap<String, TextureMetadata> {
+        let mut res = HashMap::new();
+        for texture in &self.textures {
+            res.insert(String::from(&texture.metadata.name), texture.metadata.clone());
+        }
+        res
     }
 
-    pub fn add_texture(&mut self, texture: Texture, name: &str) {
-        self.textures.push(texture);
+    pub fn add_texture(&mut self, texture: Texture) {
         self.texture_names
-            .insert(String::from(name), self.textures.len() - 1);
+            .insert(String::from(&texture.metadata.name), self.textures.len());
+        self.textures.push(texture);
     }
 
     pub fn get_texture(&self, name: &str) -> &Texture {

@@ -64,7 +64,7 @@ impl Window {
     fn get_capabilities(&self) -> GraphicsCapabilities {
         GraphicsCapabilities {
             vbo_count: self.render_caller.get_vbo_count(),
-            texture_names: self.render_caller.get_texture_names(),
+            texture_metadata: self.render_caller.get_texture_manager().get_texture_metadata(),
             shader_metadata : self.render_caller.get_shader_manager().get_shader_metadata()
         }
     }

@@ -27,6 +27,8 @@ pub fn start_packing_thread(
             // Like packing chunks into buffers
             if let Some(old) = message_mutex.take() {
                 messages.merge_old(old);
+            } else {
+                
             }
 
             // Validate render messages.

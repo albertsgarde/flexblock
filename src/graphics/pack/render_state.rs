@@ -152,6 +152,7 @@ pub struct RenderState {
     capabilities: Option<GraphicsCapabilities>,
 }
 
+/// Keeps track of all state necessary to correctly supply graphics calls to the window each frame.
 impl RenderState {
     pub fn new() -> RenderState {
         //TODO: Buffer space should be sized according to the number of buffers in the target VertexArray. This should coordinate.
@@ -164,6 +165,7 @@ impl RenderState {
         }
     }
 
+    /// Registers that a chunk has been packed into the given buffer
     fn register_packed_chunk(&mut self, location: glm::IVec3, buffer: usize) {
         /*debug_assert!(
             buffer < self.packed_chunks.len(),
@@ -177,6 +179,7 @@ impl RenderState {
         self.packed_chunks[buffer] = Some(location);
     }
 
+    /// Deregisters that a chunk has been packed into the given buffer.
     fn unregister_packed_chunk(&mut self, buffer: usize) {
         /*debug_assert!(
             buffer < self.packed_chunks.len(),
@@ -190,6 +193,7 @@ impl RenderState {
         self.packed_chunks[buffer] = None;
     }
 
+    /// Finds a free VBO available for chunk packing
     fn find_free_location(&self) -> Option<usize> {
         let mut counter = 0;
         for c in &self.packed_chunks {
@@ -201,6 +205,7 @@ impl RenderState {
         return None;
     }
 
+    /// Packs a given chunk
     fn pack_chunk(
         &mut self,
         chunk: &Chunk,
@@ -223,6 +228,7 @@ impl RenderState {
         }
     }
 
+    /// Unpacks a given chunk
     fn unpack_chunk(&mut self, buffer: usize, messages: &mut RenderMessages) -> Result<(), String> {
         if self.packed_chunks[buffer].is_none() {
             return Err(String::from("Unpacking an unpacked buffer!"));
@@ -233,6 +239,7 @@ impl RenderState {
         Ok(())
     }
 
+    /// Tells whether a chunk is currently packed
     pub fn is_packed(&self, location: glm::IVec3) -> bool {
         self.packed_chunks.contains(&Some(location))
     }
@@ -262,6 +269,7 @@ impl RenderState {
         }
     }
 
+    /// Packs a chunk if it hasn't been packed before, or unpacks and packs it if it has been packed before.
     pub fn repack_chunk(
         &mut self,
         location: glm::IVec3,
@@ -290,6 +298,7 @@ impl RenderState {
         }
     }
 
+    /// Clears chunks that are further than four chunks from the given location.
     pub fn clear_distant_chunks(&mut self, location: glm::IVec3, messages: &mut RenderMessages) {
         let mut counter = 0;
         let mut remove = Vec::new();
@@ -341,6 +350,7 @@ impl RenderState {
         }
     }
 
+    /// When the window supplies new capabilities, update local capabilities to those.
     pub fn update_capabilities(&mut self, capabilities: GraphicsCapabilities) {
         let vbo_count = match self.capabilities.take() {
             Some(cap2) => cap2.vbo_count,
@@ -358,6 +368,7 @@ impl RenderState {
         self.capabilities = Some(capabilities);
     }
 
+    /// Fills in render messages for a tick
     pub fn create_render_messages(&mut self, data : &MutexGuard<GraphicsStateModel>) -> RenderMessages{
 
         // What should happen:
@@ -421,6 +432,9 @@ impl RenderState {
         }
         messages
     }
+    
+    
+    // --------------------- DEBUG FUNCTIONS BELOW --------------------
 
     /// Validates that this contains only allowed render messages in an allowed order
     pub fn validate(&self, messages : &RenderMessages) -> Result<(), &str> {
@@ -526,6 +540,7 @@ impl RenderState {
 
     }
 
+    /// Validate a single RenderMessage::Uniforms
     fn validate_uniforms(&self, uniforms : &UniformData, chosen_shader : &Option<&ShaderMetadata>, bound_uniforms : &mut Vec<String>, capabilities : &GraphicsCapabilities) -> Result<(), &str> {
 
         //TODO: Enforce uniform type matching to shader known type
@@ -534,7 +549,7 @@ impl RenderState {
 
             // Test if every passed texture exists in the graphics capabilities.
             for entry in &uniforms.textures {
-                if !capabilities.texture_names.contains_key(&entry.0) {
+                if !capabilities.texture_metadata.contains_key(&entry.0) {
                     return Err("Trying to pass a texture as shader uniform that does not exist in the graphics capabilities object!");
                 }
             }
@@ -572,7 +587,7 @@ impl RenderState {
 mod tests {
     use super::RenderState;
     use crate::graphics::GraphicsCapabilities;
-    use crate::graphics::wrapper::{ShaderMetadata, ProgramType};
+    use crate::graphics::wrapper::{ShaderMetadata, ProgramType, TextureMetadata, TextureFormat};
     use crate::graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
     use std::collections::HashMap;
 
@@ -602,15 +617,16 @@ mod tests {
         let mut rs = RenderState::new();
 
         let shader_metadata = create_shader_metadata(extra_uniform);
-        let mut texture_names = HashMap::new();
-        texture_names.insert(String::from("atlas"), 0);
+        let mut texture_metadata = HashMap::new();
+        texture_metadata.insert(String::from("atlas"), TextureMetadata {format : TextureFormat::RGB, width : 2, height : 2, name : String::from("atlas")});
 
-        rs.update_capabilities(GraphicsCapabilities {vbo_count : 100, texture_names, shader_metadata});
+        rs.update_capabilities(GraphicsCapabilities {vbo_count : 100, texture_metadata, shader_metadata});
 
         rs
     }
 
-    fn create_triangle_pack() -> VertexPack {
+    ///Creates a VertexPack for a basic quad
+    fn create_quad_pack() -> VertexPack {
 
         let mut vertices = Vec::new();
         let mut elements = Vec::new();
@@ -638,7 +654,7 @@ mod tests {
 
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
-        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
 
         assert!(rs.validate(&render_messages).unwrap() == ());
     }
@@ -650,20 +666,20 @@ mod tests {
         let mut render_messages = RenderMessages::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test"))]) } );
-        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
 
         assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-existent uniform name!");
         let mut render_messages = RenderMessages::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("at"), String::from("test_texture"))]) } );
-        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
 
         assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-existent texture name!");
 
         let mut render_messages = RenderMessages::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("at"), String::from("test_texture"))]) } );
-        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
 
         assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-existent texture name!");
     }
@@ -674,14 +690,14 @@ mod tests {
 
         let mut render_messages = RenderMessages::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
-        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
         render_messages.add_message(RenderMessage::Draw { buffer : 0} );
 
         assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-filled uniforms!");
         
         let mut render_messages = RenderMessages::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
-        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::Draw { buffer : 0} );
 
@@ -690,7 +706,7 @@ mod tests {
         
         let mut render_messages = RenderMessages::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
-        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![(glm::vec3(0.,0.,0.), String::from("vector"))], vec![(String::from("atlas"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::Draw { buffer : 0} );
@@ -698,7 +714,7 @@ mod tests {
 
         let mut render_messages = RenderMessages::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
-        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![(glm::vec3(0.,0.,0.), String::from("vector"))], vec![(String::from("atlas"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
@@ -708,7 +724,7 @@ mod tests {
 
         let mut render_messages = RenderMessages::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
-        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![(glm::vec3(0.,0.,0.), String::from("vector"))], vec![(String::from("atlas"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
