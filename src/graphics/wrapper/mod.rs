@@ -3,6 +3,7 @@ use buffer::{ArrayBuffer, ElementBuffer};
 
 mod shader;
 use shader::ShaderManager;
+pub use shader::{ShaderMetadata, ProgramType};
 
 mod vertex_array;
 use vertex_array::VertexArray;

@@ -65,6 +65,7 @@ impl Window {
         GraphicsCapabilities {
             vbo_count: self.render_caller.get_vbo_count(),
             texture_names: self.render_caller.get_texture_names(),
+            shader_metadata : self.render_caller.get_shader_manager().get_shader_metadata()
         }
     }
 
@@ -93,6 +94,8 @@ impl Window {
     /// NOTE: THE EXECUTION GOES TO THE GRAPHICS OBJECT WHEN THIS IS CALLED!
     ///
     pub unsafe fn run(mut self, mut event_handler: EventHandler) {
+        self.context.window().set_cursor_grab(true).unwrap();
+        self.context.window().set_cursor_visible(false);
         if let Some(el) = self.event_loop.take() {
             el.run(move |event, _, control_flow| {
                 *control_flow = ControlFlow::Poll;

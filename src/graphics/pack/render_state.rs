@@ -4,7 +4,10 @@ use crate::game::{
 };
 use crate::graphics::VertexPack;
 use crate::graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
-use std::collections::{VecDeque, HashMap};
+use std::collections::{VecDeque};
+use crate::graphics::wrapper::ShaderMetadata;
+use std::sync::MutexGuard;
+use crate::game::GraphicsStateModel;
 
 /// This creates the vertex pack for a specific chunk. It just goes through all the voxels and adds their faces.
 fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
@@ -146,7 +149,7 @@ pub struct RenderState {
     /// Contains a list of packed chunk locations. The index is which buffer they're packed into. None means no chunk is packed into that buffer.
     packed_chunks: Vec<Option<glm::IVec3>>,
     chunk_search: Option<BFS>,
-    capabilities: GraphicsCapabilities,
+    capabilities: Option<GraphicsCapabilities>,
 }
 
 impl RenderState {
@@ -157,7 +160,7 @@ impl RenderState {
         RenderState {
             packed_chunks,
             chunk_search: None,
-            capabilities: GraphicsCapabilities {vbo_count : 0, texture_names : HashMap::new()},
+            capabilities: None
         }
     }
 
@@ -339,14 +342,289 @@ impl RenderState {
     }
 
     pub fn update_capabilities(&mut self, capabilities: GraphicsCapabilities) {
-        if capabilities.vbo_count > self.capabilities.vbo_count {
+        let vbo_count = match self.capabilities.take() {
+            Some(cap2) => cap2.vbo_count,
+            None => 0,
+        };
+
+        if capabilities.vbo_count > vbo_count {
             self.packed_chunks
-                .append(&mut vec![None; capabilities.vbo_count - self.capabilities.vbo_count]);
-        } else if capabilities.vbo_count < self.capabilities.vbo_count {
+                .append(&mut vec![None; capabilities.vbo_count - vbo_count]);
+        } else if capabilities.vbo_count < vbo_count {
             panic!(
                 "There is currently no support for a shrink in the number of available VBOs"
             );
         }
-        self.capabilities = capabilities;
+        self.capabilities = Some(capabilities);
+    }
+
+    pub fn create_render_messages(&mut self, data : &MutexGuard<GraphicsStateModel>) -> RenderMessages{
+
+        // What should happen:
+        // 1. Clear color and depth buffer
+        // 2. Supply commmon uniforms
+        // 3. For every new chunk we're interested in (Or dirty chunks)
+        //   3a. Fill the chunk into a vertex array or update the existing vertex array
+        // 4. For every chunk already filled into a vertex array
+        //   4a. Supply specific uniforms
+        //   4b. Draw
+
+        let mut messages = RenderMessages::new();
+
+        if self.capabilities.is_some() {
+
+            messages.add_message(RenderMessage::ChooseShader {
+                shader: String::from("s1"),
+            });
+            messages.add_message(RenderMessage::ClearBuffers {
+                color_buffer: true,
+                depth_buffer: true,
+            });
+
+            // state.pack_next_chunk(data.view.location().chunk, &mut messages, &data.terrain);
+            self.repack_chunk(data.view.location().chunk, &mut messages, &data.terrain);
+            self.repack_chunk(
+                data.view.location().chunk + glm::vec3(1, 0, 0),
+                &mut messages,
+                &data.terrain,
+            );
+            self.repack_chunk(
+                data.view.location().chunk + glm::vec3(-1, 0, 0),
+                &mut messages,
+                &data.terrain,
+            );
+            self.repack_chunk(
+                data.view.location().chunk + glm::vec3(0, 1, 0),
+                &mut messages,
+                &data.terrain,
+            );
+            self.repack_chunk(
+                data.view.location().chunk + glm::vec3(0, -1, 0),
+                &mut messages,
+                &data.terrain,
+            );
+            self.repack_chunk(
+                data.view.location().chunk + glm::vec3(0, 0, 1),
+                &mut messages,
+                &data.terrain,
+            );
+            self.repack_chunk(
+                data.view.location().chunk + glm::vec3(0, 0, -1),
+                &mut messages,
+                &data.terrain,
+            );
+
+            self.clear_distant_chunks(data.view.location().chunk, &mut messages);
+
+            let vp = get_vp_matrix(&data.view);
+            self.render_packed_chunks(&mut messages, &vp);
+        }
+        messages
+    }
+
+    /// Validates that this contains only allowed render messages in an allowed order
+    pub fn validate(&self, messages : &RenderMessages) -> Result<(), &str> {
+
+        let verbose = true;
+
+
+        if verbose {
+            println!("Validating render message pack with {} messages!", messages.size());
+        }
+        if let Some(capabilities) = &self.capabilities {
+
+            let mut chosen_shader = None;
+            let mut bound_uniforms = Vec::new();
+            let shader_metadata= &capabilities.shader_metadata;
+
+            for message in messages.iter() {
+                match message {
+                    RenderMessage::ChooseShader {shader} => {
+                        if !shader_metadata.contains_key(shader) {
+                            return Err("A choose shader render message is sent, but the shader does not exist!");
+                        }
+                        chosen_shader = Some(&shader_metadata[shader]);
+                        bound_uniforms = Vec::new();
+
+                        if verbose {
+                            println!("Choosing shader {}", shader);
+                        }
+                    },
+                    RenderMessage::ClearArray {buffer} => {
+                        if *buffer >= capabilities.vbo_count {
+                            return Err("Trying to pack into a VBO index that is not available! Out of bounds!");
+                        }
+                        
+                        //TODO: FIGURE OUT A WAY TO VALIDATE WHETHER VBOS ARE FILLED OR NOT!
+
+                        if verbose {
+                            println!("Clearing VBO {}", buffer);
+                        }
+                    },
+                    RenderMessage::ClearBuffers {color_buffer, depth_buffer} => {
+                        if !color_buffer && !depth_buffer {
+                            return Err("A clear buffers render message is sent, but no buffers are cleared!");
+                        }
+                        if verbose {
+                            println!("Clearing color? {} and depth? {}", color_buffer, depth_buffer);
+                        }
+                    },
+                    RenderMessage::Draw{buffer} => {
+                        if chosen_shader.is_none() {
+                            return Err("Trying to draw without picking a shader first!");
+                        }
+                        //TODO: FIGURE OUT A WAY TO VALIDATE WHETHER VBOS ARE FILLED OR NOT!
+
+                        if verbose {
+                            println!("Drawing buffer {}", buffer);
+                        }
+                    },
+                    RenderMessage::Pack{buffer, pack} => {
+                        if *buffer >= capabilities.vbo_count {
+                            return Err("Trying to pack into a VBO index that is not available! Out of bounds!");
+                        }
+
+                        if pack.elements.len() %3 != 0 || (pack.elements.len() == 0 && pack.vertices.len() % 3 != 0){
+                            return Err("Received a vertex pack that does not contain a whole number of triangles!");
+                        }
+                        if pack.vertices.len() == 0 {
+                            return Err("Trying to fil VBO with empty vertex pack! A VBO is cleared by sending a RenderMessage::ClearArray message!");
+                        }
+                        //TODO: FIGURE OUT A WAY TO VALIDATE WHETHER VBOS ARE FILLED OR NOT!
+
+                        if verbose {
+                            println!("filling VBO {}", buffer);
+                        }
+                    },
+                    RenderMessage::Uniforms {uniforms} => {
+                        self.validate_uniforms(uniforms, &chosen_shader, &mut bound_uniforms, capabilities)?;
+                        if verbose {
+                            println!("Filling in uniforms");
+                        }
+                    }
+                }
+            }
+    
+            Ok(())
+        }
+        else {
+            if messages.size() > 0 {
+                Err("Trying to send render messages when no graphics capabilities object is available!")
+            } else {
+                Ok(())
+            }
+        }
+
+    }
+
+    fn validate_uniforms(&self, uniforms : &UniformData, chosen_shader : &Option<&ShaderMetadata>, bound_uniforms : &mut Vec<String>, capabilities : &GraphicsCapabilities) -> Result<(), &str> {
+
+        //TODO: Enforce uniform type matching to shader known type
+
+        if let Some(s) = &chosen_shader {
+
+            // Test if every passed texture exists in the graphics capabilities.
+            for entry in &uniforms.textures {
+                if !capabilities.texture_names.contains_key(&entry.0) {
+                    return Err("Trying to pass a texture as shader uniform that does not exist in the graphics capabilities object!");
+                }
+            }
+
+            // Test if the shader wants every uniform passed to it
+            // (TODO: This may be overzealous, maybe you should be let off with a warning.)
+            for uniform in uniforms.get_uniform_locations() {
+                let req_uniforms = &s.required_uniforms;
+                let mut contained = false;
+                for req_uni in req_uniforms {
+                    if req_uni.0 == *uniform {
+                        contained = true
+                    }
+                }
+
+                if !contained {
+                    return Err("Trying to pass a uniform to a shader that does not want it! (This is non-critical, should maybe be a warning instead)");
+                }
+                
+                if !bound_uniforms.contains(&uniform) {
+                    bound_uniforms.push(String::from(uniform));
+                }
+            }
+
+        } else {
+            return Err("Trying to pass uniforms without picking a shader first!");
+        }
+
+        Ok(())
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::RenderState;
+    use crate::graphics::GraphicsCapabilities;
+    use crate::graphics::wrapper::{ShaderMetadata, ProgramType};
+    use crate::graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
+    use std::collections::HashMap;
+
+    fn create_shader_metadata() -> HashMap<String, ShaderMetadata> {
+        let mut res = HashMap::new();
+        let t1 = ShaderMetadata {
+            name : String::from("s1"),
+            required_uniforms : vec![(String::from("test_texture"),String::from(""))],
+            shader_type : ProgramType::Graphics
+        };
+        res.insert(String::from(&t1.name), t1);
+
+        res
+    }
+
+    /// Creates a basic render state that has a capabilities object with:
+    ///  - one shader (s1) that needs one uniform (test_texture)
+    ///  - one texture (atlas)
+    ///  - 100 vbos
+    fn create_render_state() -> RenderState {
+        let mut rs = RenderState::new();
+
+        let shader_metadata = create_shader_metadata();
+        let mut texture_names = HashMap::new();
+        texture_names.insert(String::from("atlas"), 0);
+
+        rs.update_capabilities(GraphicsCapabilities {vbo_count : 100, texture_names, shader_metadata});
+
+        rs
+    }
+
+    fn create_triangle_pack() -> VertexPack {
+
+        let mut vertices = Vec::new();
+        let mut elements = Vec::new();
+        let x0 = 0.;
+        let x1 = x0 + 1.;
+        let y0 = 0.;
+        let y1 = y0 + 1.;
+        let z0 = 0.;
+
+        // Back face
+        let (mut vadd, mut eadd) =
+            super::super::cube_faces::back(z0, x0, y0, x1, y1, 1., 0., 0., 0);
+        vertices.append(&mut vadd);
+        elements.append(&mut eadd);
+        let vertex_pack = VertexPack::new(vertices, Some(elements));
+        vertex_pack
+    }
+
+    #[test]
+    fn basic_validation() {
+        let rs = create_render_state();
+
+        let mut render_messages = RenderMessages::new();
+
+
+        render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+
+        assert!(rs.validate(&render_messages).unwrap() == ());
     }
 }

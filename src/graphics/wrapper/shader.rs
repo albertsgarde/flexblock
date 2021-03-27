@@ -5,6 +5,7 @@ use std::fs;
 
 use crate::graphics::UniformData;
 
+#[derive(Clone)]
 pub enum ProgramType {
     Graphics,
     Compute,
@@ -15,11 +16,17 @@ pub enum ProgramType {
 /// Then shaders can only be changed by the shader manager.
 pub struct Shader {
     program_id: u32,
-    name: String,
-    required_uniforms: Vec<(String, String)>,
     uniform_locations: HashMap<String, i32>,
-    bound_uniforms: Vec<String>,
-    shader_type: ProgramType,
+    metadata : ShaderMetadata
+}
+
+#[derive(Clone)]
+pub struct ShaderMetadata {
+    pub name : String,
+    /// The uniforms that this shader needs filled out
+    /// First is the name of the shader, second is the file and line at which it is found (for error reports)
+    pub required_uniforms: Vec<(String, String)>,
+    pub shader_type: ProgramType,
 }
 
 impl Shader {
@@ -155,13 +162,16 @@ impl Shader {
         }
         gl::UseProgram(0);
 
+
+
         Ok(Shader {
             program_id,
-            name: String::from(name),
-            required_uniforms,
-            bound_uniforms: Vec::new(),
             uniform_locations: uniform_locations,
-            shader_type: ProgramType::Graphics,
+            metadata : ShaderMetadata {
+                name: String::from(name),
+                required_uniforms,
+                shader_type: ProgramType::Graphics,
+            }
         })
     }
 
@@ -216,11 +226,12 @@ impl Shader {
 
         Ok(Shader {
             program_id,
-            required_uniforms,
             uniform_locations,
-            name: String::from(name),
-            bound_uniforms: Vec::new(),
-            shader_type: ProgramType::Compute,
+            metadata : ShaderMetadata {
+                name: String::from(name),
+                required_uniforms,
+                shader_type: ProgramType::Graphics,
+            }
         })
     }
 
@@ -255,25 +266,8 @@ impl Shader {
         gl::UseProgram(0);
     }
 
-    /// TODO: Shader manager should make sure this is done for every uniform call
-    /// This is a debug function
-    pub fn fill_uniform(&mut self, uniform_name: &str) {
-        self.bound_uniforms.push(String::from(uniform_name));
-    }
-
-    /// This function validates that all uniforms are bound when the render is called
-    /// This is a debug function
-    pub fn ready_to_render(&self) -> Result<String, String> {
-        for (k, v) in self.required_uniforms.iter() {
-            if !self.bound_uniforms.contains(k) {
-                return Err(format!("uniform {} not filled for {}!", k, v));
-            }
-        }
-        return Ok(String::from(""));
-    }
-
-    pub fn get_name(&self) -> &str {
-        &self.name
+    pub fn get_metadata(&self) -> &ShaderMetadata {
+        &self.metadata
     }
 }
 
@@ -312,7 +306,7 @@ impl<'a> ShaderManager {
 
     pub unsafe fn add_shader(&mut self, shader: Shader) {
         self.shader_names
-            .insert(String::from(shader.get_name()), self.shaders.len());
+            .insert(String::from(&shader.metadata.name), self.shaders.len());
         self.shaders.push(shader);
     }
 
@@ -375,10 +369,18 @@ impl<'a> ShaderManager {
 
     pub fn get_active_shader_name(&self) -> Option<String> {
         if let Some(index) = self.bound_shader {
-            Some(String::from(self.shaders[index].get_name()))
+            Some(String::from(&self.shaders[index].metadata.name))
         } else {
             None
         }
+    }
+
+    pub fn get_shader_metadata(&self) -> HashMap<String, ShaderMetadata> {
+        let mut res = HashMap::new();
+        for shader in &self.shaders {
+            res.insert(String::from(&shader.metadata.name), shader.metadata.clone());
+        }
+        res
     }
 
     // Loads fragment and vertex shader pairs from folder, and TODO: compute shaders individually

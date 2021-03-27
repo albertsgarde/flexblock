@@ -134,4 +134,8 @@ impl RenderCaller {
     pub fn get_texture_names(&self) -> HashMap<String, usize> {
         self.texture_manager.get_texture_names()
     }
+
+    pub fn get_shader_manager(&self) -> &ShaderManager {
+        &self.shader_manager
+    }
 }
