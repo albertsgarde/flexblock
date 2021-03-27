@@ -24,7 +24,7 @@ pub struct Shader {
 pub struct ShaderMetadata {
     pub name : String,
     /// The uniforms that this shader needs filled out
-    /// First is the name of the shader, second is the file and line at which it is found (for error reports)
+    /// First string is the name of the uniform, second is the file and line at which it is found (for error reports)
     pub required_uniforms: Vec<(String, String)>,
     pub shader_type: ProgramType,
 }
@@ -346,7 +346,7 @@ impl<'a> ShaderManager {
             //TODO: HOW TO DO THIS?? s.fill_uniform(&entry.1);
         }
 
-        for entry in &uniforms.vec4s {
+        for entry in &uniforms.vec3s {
             let loc = s.uniform_locations.get(&entry.1);
             let vec = entry.0;
 

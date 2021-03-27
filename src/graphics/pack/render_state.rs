@@ -425,7 +425,7 @@ impl RenderState {
     /// Validates that this contains only allowed render messages in an allowed order
     pub fn validate(&self, messages : &RenderMessages) -> Result<(), &str> {
 
-        let verbose = true;
+        let verbose = false;
 
 
         if verbose {
@@ -470,9 +470,18 @@ impl RenderState {
                         }
                     },
                     RenderMessage::Draw{buffer} => {
-                        if chosen_shader.is_none() {
+                        if let Some(s) = &chosen_shader {
+
+                            for uniform in &s.required_uniforms {
+                                if !bound_uniforms.contains(&uniform.0) {
+                                    return Err("Trying to draw without supplying all needed uniforms!");
+                                }
+                            }
+                        }
+                        else {
                             return Err("Trying to draw without picking a shader first!");
                         }
+
                         //TODO: FIGURE OUT A WAY TO VALIDATE WHETHER VBOS ARE FILLED OR NOT!
 
                         if verbose {
@@ -567,14 +576,18 @@ mod tests {
     use crate::graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
     use std::collections::HashMap;
 
-    fn create_shader_metadata() -> HashMap<String, ShaderMetadata> {
+    fn create_shader_metadata(extra_uniform : bool) -> HashMap<String, ShaderMetadata> {
         let mut res = HashMap::new();
-        let t1 = ShaderMetadata {
+        let mut required_uniforms = vec![(String::from("test_texture"),String::from(""))];
+        if extra_uniform {
+            required_uniforms.push((String::from("vector"),String::from("")));
+        }
+        let s1 = ShaderMetadata {
             name : String::from("s1"),
-            required_uniforms : vec![(String::from("test_texture"),String::from(""))],
+            required_uniforms,
             shader_type : ProgramType::Graphics
         };
-        res.insert(String::from(&t1.name), t1);
+        res.insert(String::from(&s1.name), s1);
 
         res
     }
@@ -583,10 +596,12 @@ mod tests {
     ///  - one shader (s1) that needs one uniform (test_texture)
     ///  - one texture (atlas)
     ///  - 100 vbos
-    fn create_render_state() -> RenderState {
+    /// If extra_uniform is supplied
+    ///  - another uniform, of type vec4, with name "vector"
+    fn create_render_state(extra_uniform : bool) -> RenderState {
         let mut rs = RenderState::new();
 
-        let shader_metadata = create_shader_metadata();
+        let shader_metadata = create_shader_metadata(extra_uniform);
         let mut texture_names = HashMap::new();
         texture_names.insert(String::from("atlas"), 0);
 
@@ -615,8 +630,8 @@ mod tests {
     }
 
     #[test]
-    fn basic_validation() {
-        let rs = create_render_state();
+    fn basic_validation() { // Does extremely basic validation
+        let rs = create_render_state(false);
 
         let mut render_messages = RenderMessages::new();
 
@@ -626,5 +641,81 @@ mod tests {
         render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
 
         assert!(rs.validate(&render_messages).unwrap() == ());
+    }
+
+    #[test]
+    fn texture_name_validation() { // Ensures that we can only use textures that exist in the graphics capabilities object
+        let rs = create_render_state(false);
+
+        let mut render_messages = RenderMessages::new();
+        render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test"))]) } );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+
+        assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-existent uniform name!");
+        let mut render_messages = RenderMessages::new();
+        render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("at"), String::from("test_texture"))]) } );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+
+        assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-existent texture name!");
+
+        let mut render_messages = RenderMessages::new();
+        render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("at"), String::from("test_texture"))]) } );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+
+        assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-existent texture name!");
+    }
+
+    #[test]
+    fn uniform_validation() { // Ensures that the uniform validation method works correctly
+        let rs = create_render_state(true);
+
+        let mut render_messages = RenderMessages::new();
+        render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Draw { buffer : 0} );
+
+        assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-filled uniforms!");
+        
+        let mut render_messages = RenderMessages::new();
+        render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
+        render_messages.add_message(RenderMessage::Draw { buffer : 0} );
+
+        assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-filled uniforms!");
+
+        
+        let mut render_messages = RenderMessages::new();
+        render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![(glm::vec3(0.,0.,0.), String::from("vector"))], vec![(String::from("atlas"), String::from("test_texture"))]) } );
+        render_messages.add_message(RenderMessage::Draw { buffer : 0} );
+        assert!(rs.validate(&render_messages).is_ok(), "Validate doesn't accept filled out uniforms!");
+
+        let mut render_messages = RenderMessages::new();
+        render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![(glm::vec3(0.,0.,0.), String::from("vector"))], vec![(String::from("atlas"), String::from("test_texture"))]) } );
+        render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
+        render_messages.add_message(RenderMessage::Draw { buffer : 0} );
+
+        assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-filled uniforms after shader swap!");
+
+        let mut render_messages = RenderMessages::new();
+        render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
+        render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_triangle_pack()} );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![(glm::vec3(0.,0.,0.), String::from("vector"))], vec![(String::from("atlas"), String::from("test_texture"))]) } );
+        render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
+        render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![(glm::vec3(0.,0.,0.), String::from("vector"))], vec![(String::from("atlas"), String::from("test_texture"))]) } );
+        render_messages.add_message(RenderMessage::Draw { buffer : 0} );
+
+        assert!(rs.validate(&render_messages).is_ok(), "Validate doesn't accept filled out uniforms after shader swap!");
     }
 }
