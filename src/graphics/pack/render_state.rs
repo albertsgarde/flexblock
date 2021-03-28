@@ -433,23 +433,41 @@ impl RenderState {
         messages
     }
     
+}
+
+/// Validates that a set of render messages are legal.
+/// Only used for debug
+pub struct RenderMessageValidator {
+    /// Which vbos are currently packed as far as the validator knows (note that this doesn't update until validate is called)
+    packed_vbos : Vec<bool>
+}
+
+impl RenderMessageValidator {
     
-    // --------------------- DEBUG FUNCTIONS BELOW --------------------
+    pub fn new() -> RenderMessageValidator {
+        RenderMessageValidator { packed_vbos : Vec::new() }
+    }
 
     /// Validates that this contains only allowed render messages in an allowed order
-    pub fn validate(&self, messages : &RenderMessages) -> Result<(), &str> {
+    /// Note that this cannot be activated in the middle of the program; it is stateful (since vbos are packed and unpacked.)
+    pub fn validate(&mut self, state : &RenderState, messages : &RenderMessages) -> Result<(), &str> {
 
         let verbose = false;
-
+        if self.packed_vbos.len() < state.packed_chunks.len() {
+            self.packed_vbos.append(&mut vec![false; state.packed_chunks.len()-self.packed_vbos.len()]);
+        }
 
         if verbose {
             println!("Validating render message pack with {} messages!", messages.size());
         }
-        if let Some(capabilities) = &self.capabilities {
+
+        if let Some(capabilities) = &state.capabilities {
 
             let mut chosen_shader = None;
             let mut bound_uniforms = Vec::new();
             let shader_metadata= &capabilities.shader_metadata;
+
+            let mut message_index = 0;
 
             for message in messages.iter() {
                 match message {
@@ -469,7 +487,12 @@ impl RenderState {
                             return Err("Trying to pack into a VBO index that is not available! Out of bounds!");
                         }
                         
-                        //TODO: FIGURE OUT A WAY TO VALIDATE WHETHER VBOS ARE FILLED OR NOT!
+                        if message_index >= messages.old_new_split_index() {
+                            if !self.packed_vbos[*buffer] {
+                                return Err("Trying to clear an empty VBO!");
+                            }
+                            self.packed_vbos[*buffer] = false;
+                        }
 
                         if verbose {
                             println!("Clearing VBO {}", buffer);
@@ -496,7 +519,11 @@ impl RenderState {
                             return Err("Trying to draw without picking a shader first!");
                         }
 
-                        //TODO: FIGURE OUT A WAY TO VALIDATE WHETHER VBOS ARE FILLED OR NOT!
+                        // This one doesn't need to check whether it is above the old/new split, since draw is not a persistent render message.
+                        // So it will always be in the new part.
+                        if !self.packed_vbos[*buffer] {
+                            return Err("Trying to draw an empty VBO!");
+                        }
 
                         if verbose {
                             println!("Drawing buffer {}", buffer);
@@ -513,19 +540,26 @@ impl RenderState {
                         if pack.vertices.len() == 0 {
                             return Err("Trying to fil VBO with empty vertex pack! A VBO is cleared by sending a RenderMessage::ClearArray message!");
                         }
-                        //TODO: FIGURE OUT A WAY TO VALIDATE WHETHER VBOS ARE FILLED OR NOT!
+
+                        if message_index >= messages.old_new_split_index() {
+                            if self.packed_vbos[*buffer] {
+                                return Err("Trying to pack an already filled VBO!");
+                            }
+                            self.packed_vbos[*buffer] = true;
+                        }
 
                         if verbose {
                             println!("filling VBO {}", buffer);
                         }
                     },
                     RenderMessage::Uniforms {uniforms} => {
-                        self.validate_uniforms(uniforms, &chosen_shader, &mut bound_uniforms, capabilities)?;
+                        RenderMessageValidator::validate_uniforms(uniforms, &chosen_shader, &mut bound_uniforms, capabilities)?;
                         if verbose {
                             println!("Filling in uniforms");
                         }
                     }
                 }
+                message_index += 1;
             }
     
             Ok(())
@@ -541,7 +575,7 @@ impl RenderState {
     }
 
     /// Validate a single RenderMessage::Uniforms
-    fn validate_uniforms(&self, uniforms : &UniformData, chosen_shader : &Option<&ShaderMetadata>, bound_uniforms : &mut Vec<String>, capabilities : &GraphicsCapabilities) -> Result<(), &str> {
+    fn validate_uniforms(uniforms : &UniformData, chosen_shader : &Option<&ShaderMetadata>, bound_uniforms : &mut Vec<String>, capabilities : &GraphicsCapabilities) -> Result<(), &'static str> {
 
         //TODO: Enforce uniform type matching to shader known type
 
@@ -585,7 +619,7 @@ impl RenderState {
 
 #[cfg(test)]
 mod tests {
-    use super::RenderState;
+    use super::{RenderState, RenderMessageValidator};
     use crate::graphics::GraphicsCapabilities;
     use crate::graphics::wrapper::{ShaderMetadata, ProgramType, TextureMetadata, TextureFormat};
     use crate::graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
@@ -647,72 +681,80 @@ mod tests {
 
     #[test]
     fn basic_validation() { // Does extremely basic validation
-        let rs = create_render_state(false);
+        let mut rs = create_render_state(false);
 
         let mut render_messages = RenderMessages::new();
+        let mut validator = RenderMessageValidator::new();
 
 
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
 
-        assert!(rs.validate(&render_messages).unwrap() == ());
+        assert!(validator.validate(&mut rs, &render_messages).unwrap() == ());
     }
 
     #[test]
     fn texture_name_validation() { // Ensures that we can only use textures that exist in the graphics capabilities object
-        let rs = create_render_state(false);
+        let mut rs = create_render_state(false);
 
         let mut render_messages = RenderMessages::new();
+        let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test"))]) } );
         render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
 
-        assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-existent uniform name!");
+        assert!(validator.validate(&mut rs, &render_messages).is_err(), "Validate wrongfully accepts non-existent uniform name!");
         let mut render_messages = RenderMessages::new();
+        let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("at"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
 
-        assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-existent texture name!");
+        assert!(validator.validate(&mut rs, &render_messages).is_err(), "Validate wrongfully accepts non-existent texture name!");
 
         let mut render_messages = RenderMessages::new();
+        let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("at"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
 
-        assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-existent texture name!");
+        assert!(validator.validate(&mut rs, &render_messages).is_err(), "Validate wrongfully accepts non-existent texture name!");
     }
 
     #[test]
     fn uniform_validation() { // Ensures that the uniform validation method works correctly
-        let rs = create_render_state(true);
+        let mut rs = create_render_state(true);
 
         let mut render_messages = RenderMessages::new();
+        let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
         render_messages.add_message(RenderMessage::Draw { buffer : 0} );
 
-        assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-filled uniforms!");
+        assert!(validator.validate(&mut rs, &render_messages).is_err(), "Validate wrongfully accepts non-filled uniforms!");
         
         let mut render_messages = RenderMessages::new();
+        let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::Draw { buffer : 0} );
 
-        assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-filled uniforms!");
+        assert!(validator.validate(&mut rs, &render_messages).is_err(), "Validate wrongfully accepts non-filled uniforms!");
 
         
         let mut render_messages = RenderMessages::new();
+        let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![(glm::vec3(0.,0.,0.), String::from("vector"))], vec![(String::from("atlas"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::Draw { buffer : 0} );
-        assert!(rs.validate(&render_messages).is_ok(), "Validate doesn't accept filled out uniforms!");
+        assert!(validator.validate(&mut rs, &render_messages).is_ok(), "Validate doesn't accept filled out uniforms!");
 
         let mut render_messages = RenderMessages::new();
+        let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
@@ -720,9 +762,10 @@ mod tests {
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Draw { buffer : 0} );
 
-        assert!(rs.validate(&render_messages).is_err(), "Validate wrongfully accepts non-filled uniforms after shader swap!");
+        assert!(validator.validate(&mut rs, &render_messages).is_err(), "Validate wrongfully accepts non-filled uniforms after shader swap!");
 
         let mut render_messages = RenderMessages::new();
+        let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader { shader : String::from("s1") } );
         render_messages.add_message(RenderMessage::Pack { buffer : 0, pack : create_quad_pack()} );
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![], vec![(String::from("atlas"), String::from("test_texture"))]) } );
@@ -732,6 +775,6 @@ mod tests {
         render_messages.add_message(RenderMessage::Uniforms { uniforms : UniformData::new(vec![], vec![(glm::vec3(0.,0.,0.), String::from("vector"))], vec![(String::from("atlas"), String::from("test_texture"))]) } );
         render_messages.add_message(RenderMessage::Draw { buffer : 0} );
 
-        assert!(rs.validate(&render_messages).is_ok(), "Validate doesn't accept filled out uniforms after shader swap!");
+        assert!(validator.validate(&mut rs, &render_messages).is_ok(), "Validate doesn't accept filled out uniforms after shader swap!");
     }
 }

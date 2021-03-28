@@ -1,4 +1,4 @@
-use super::pack::{RenderState};
+use super::pack::{RenderState, RenderMessageValidator};
 use crate::channels::*;
 use std::thread::{self, JoinHandle};
 
@@ -8,6 +8,9 @@ pub fn start_packing_thread(
     window_rx: WindowToPackingReceiver,
 ) -> JoinHandle<()> {
     let mut state = RenderState::new();
+    // Only used by debug validation
+    // Keeps all state needed for running validation.
+    let mut validator = RenderMessageValidator::new();
 
     thread::spawn(move || {
         println!("Ready to pack graphics state!");
@@ -32,7 +35,7 @@ pub fn start_packing_thread(
             }
 
             // Validate render messages.
-            debug_assert!(state.validate(&messages).unwrap() == ());
+            debug_assert!(validator.validate(&mut state, &messages).unwrap() == ());
 
             *message_mutex = Some(messages);
         }
