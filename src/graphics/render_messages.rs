@@ -3,6 +3,9 @@ use std::slice::Iter;
 
 pub struct RenderMessages {
     messages: Vec<RenderMessage>,
+    /// TODO: THIS IS SUCH A BAD NAME
+    /// Indicates the index where the first new message occurs. Before this index, only persistent render messages occur.
+    old_new_split_index : usize,
 }
 ///
 /// Holds everything needed for one render pass, but in CPU memory.
@@ -12,7 +15,7 @@ pub struct RenderMessages {
 impl RenderMessages {
     pub fn new() -> RenderMessages {
         let messages = Vec::new();
-        RenderMessages { messages }
+        RenderMessages { messages, old_new_split_index : 0 }
     }
 
     pub fn add_message(&mut self, message: RenderMessage) {
@@ -27,6 +30,10 @@ impl RenderMessages {
         self.messages.len()
     }
 
+    pub fn old_new_split_index(&self) -> usize {
+        self.old_new_split_index
+    }
+
     /// Merges an old, unused render pack into the render pack, putting it first and only keeping persistent render messages
     /// TODO: Make things cancel each other out, like filling and emptying the same vertex array should cancel out - this is probably actually a very inconsequential optimization
     pub fn merge_old(&mut self, old_pack: RenderMessages) {
@@ -35,6 +42,7 @@ impl RenderMessages {
             .into_iter()
             .filter(|x| x.is_persistent())
             .collect();
+        self.old_new_split_index = new_messages.len();
         new_messages.append(&mut self.messages);
         self.messages = new_messages;
     }
@@ -108,21 +116,40 @@ impl VertexPack {
 //TODO: Add mat 3, 2, and vec 3, 2, and f32, u32, i32, and texture
 pub struct UniformData {
     pub mat4s: Vec<(glm::Mat4, String)>,
-    pub vec4s: Vec<(glm::Vec3, String)>,
+    pub vec3s: Vec<(glm::Vec3, String)>,
     /// The first string is the texture name, second is the uniform location name
     pub textures: Vec<(String, String)>,
 }
 
 impl UniformData {
+    ///
+    /// textures = (texture name, uniform location name)
     pub fn new(
         mat4s: Vec<(glm::Mat4, String)>,
-        vec4s: Vec<(glm::Vec3, String)>,
+        vec3s: Vec<(glm::Vec3, String)>,
         textures: Vec<(String, String)>,
     ) -> UniformData {
         UniformData {
             mat4s,
-            vec4s,
+            vec3s,
             textures,
         }
+    }
+
+    /// Gets the list of all uniforms referred to by this set of uniform data.
+    pub fn get_uniform_locations(&self) -> Vec<&String> {
+        let mut res = Vec::new();
+
+        for entry in &self.mat4s {
+            res.push(&entry.1);
+        }
+        for entry in &self.vec3s {
+            res.push(&entry.1);
+        }
+        for entry in &self.textures {
+            res.push(&entry.1);
+        }
+
+        res
     }
 }
