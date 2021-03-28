@@ -1,7 +1,6 @@
 use super::{ShaderManager, TextureManager, Texture, TextureFormat, VertexArray};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
-use std::collections::HashMap;
 
 ///
 /// TODO
@@ -31,9 +30,9 @@ impl RenderCaller {
         // TODO: Which textures are to be available should be loaded from somewhere.
         // Also, this needs to work with frame buffers.
         let mut texture_manager = TextureManager::new();
-        let mut t1 = Texture::new(800, 800, TextureFormat::RGB);
+        let mut t1 = Texture::new(800, 800, TextureFormat::RGB, "atlas");
         t1.fill(crate::utils::read_png("textures/atlas.png"));
-        texture_manager.add_texture(t1, "atlas");
+        texture_manager.add_texture(t1);
 
         RenderCaller {
             vertex_array,
@@ -131,7 +130,11 @@ impl RenderCaller {
         self.vertex_array.get_vbo_count()
     }
 
-    pub fn get_texture_names(&self) -> HashMap<String, usize> {
-        self.texture_manager.get_texture_names()
+    pub fn get_texture_manager(&self) -> &TextureManager {
+        &self.texture_manager
+    }
+
+    pub fn get_shader_manager(&self) -> &ShaderManager {
+        &self.shader_manager
     }
 }

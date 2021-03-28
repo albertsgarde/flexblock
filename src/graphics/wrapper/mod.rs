@@ -3,6 +3,7 @@ use buffer::{ArrayBuffer, ElementBuffer};
 
 mod shader;
 use shader::ShaderManager;
+pub use shader::{ShaderMetadata, ProgramType};
 
 mod vertex_array;
 use vertex_array::VertexArray;
@@ -14,4 +15,5 @@ mod render_caller;
 use render_caller::RenderCaller;
 
 mod texture;
-use texture::{Texture, TextureFormat, TextureManager};
+use texture::{Texture, TextureManager};
+pub use texture::{TextureMetadata, TextureFormat};
