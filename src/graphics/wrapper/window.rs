@@ -65,7 +65,8 @@ impl Window {
         GraphicsCapabilities {
             vbo_count: self.render_caller.get_vbo_count(),
             texture_metadata: self.render_caller.get_texture_manager().get_texture_metadata(),
-            shader_metadata : self.render_caller.get_shader_manager().get_shader_metadata()
+            shader_metadata : self.render_caller.get_shader_manager().get_shader_metadata(),
+            framebuffer_metadata : self.render_caller.get_framebuffer_manager().get_framebuffer_metadata()
         }
     }
 

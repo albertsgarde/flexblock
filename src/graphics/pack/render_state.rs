@@ -653,8 +653,8 @@ mod tests {
         let shader_metadata = create_shader_metadata(extra_uniform);
         let mut texture_metadata = HashMap::new();
         texture_metadata.insert(String::from("atlas"), TextureMetadata {format : TextureFormat::RGB, width : 2, height : 2, name : String::from("atlas")});
-
-        rs.update_capabilities(GraphicsCapabilities {vbo_count : 100, texture_metadata, shader_metadata});
+        let framebuffer_metadata = HashMap::new();
+        rs.update_capabilities(GraphicsCapabilities {vbo_count : 100, texture_metadata, shader_metadata, framebuffer_metadata});
 
         rs
     }

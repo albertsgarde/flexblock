@@ -1,4 +1,4 @@
-use super::{ShaderManager, TextureManager, Texture, TextureFormat, VertexArray};
+use super::{ShaderManager, TextureManager, FramebufferManager, Texture, TextureFormat, VertexArray};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
 
@@ -14,6 +14,7 @@ pub struct RenderCaller {
     vertex_array: VertexArray<Vertex3D>,
     pub shader_manager: ShaderManager,
     texture_manager: TextureManager,
+    framebuffer_manager : FramebufferManager
 }
 
 impl RenderCaller {
@@ -38,6 +39,7 @@ impl RenderCaller {
             vertex_array,
             shader_manager,
             texture_manager,
+            framebuffer_manager : FramebufferManager::new()
         }
     }
 
@@ -136,5 +138,9 @@ impl RenderCaller {
 
     pub fn get_shader_manager(&self) -> &ShaderManager {
         &self.shader_manager
+    }
+
+    pub fn get_framebuffer_manager(&self) -> &FramebufferManager {
+        &self.framebuffer_manager
     }
 }

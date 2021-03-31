@@ -1,6 +1,10 @@
 mod buffer;
 use buffer::{ArrayBuffer, ElementBuffer};
 
+mod framebuffer;
+use framebuffer::{Framebuffer, FramebufferManager};
+pub use framebuffer::FramebufferMetadata;
+
 mod shader;
 use shader::ShaderManager;
 pub use shader::{ShaderMetadata, ProgramType};
