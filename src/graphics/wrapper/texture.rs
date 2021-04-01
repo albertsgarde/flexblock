@@ -97,6 +97,10 @@ impl Texture {
     pub unsafe fn bind(&self) {
         gl::BindTexture(gl::TEXTURE_2D, self.id);
     }
+
+    pub fn get_id(&self) -> u32 {
+        self.id
+    }
 }
 
 #[derive(Clone)]
