@@ -1,4 +1,4 @@
-use super::{ShaderManager, TextureManager, Texture, TextureFormat, VertexArray};
+use super::{ShaderManager, TextureManager, FramebufferManager, Texture, Framebuffer, TextureFormat, VertexArray};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
 
@@ -14,6 +14,7 @@ pub struct RenderCaller {
     vertex_array: VertexArray<Vertex3D>,
     pub shader_manager: ShaderManager,
     texture_manager: TextureManager,
+    framebuffer_manager : FramebufferManager
 }
 
 impl RenderCaller {
@@ -34,10 +35,14 @@ impl RenderCaller {
         t1.fill(crate::utils::read_png("textures/atlas.png"));
         texture_manager.add_texture(t1);
 
+        let mut framebuffer_manager = FramebufferManager::new();
+        framebuffer_manager.add_framebuffer(Framebuffer::new("f1", Some(texture_manager.get_texture("atlas")), None, 800, 800, true).unwrap());
+
         RenderCaller {
             vertex_array,
             shader_manager,
             texture_manager,
+            framebuffer_manager
         }
     }
 
@@ -100,7 +105,12 @@ impl RenderCaller {
                 color_buffer,
                 depth_buffer,
             } => self.clear_buffers(color_buffer, depth_buffer),
+            RenderMessage::ChooseFramebuffer {framebuffer} => self.choose_framebuffer(&framebuffer),
         }
+    }
+
+    pub unsafe fn choose_framebuffer(&mut self, framebuffer : &Option<String>) {
+        self.framebuffer_manager.bind_framebuffer(&framebuffer);
     }
 
     pub unsafe fn render(&mut self, buffer: &usize) {
@@ -136,5 +146,9 @@ impl RenderCaller {
 
     pub fn get_shader_manager(&self) -> &ShaderManager {
         &self.shader_manager
+    }
+
+    pub fn get_framebuffer_manager(&self) -> &FramebufferManager {
+        &self.framebuffer_manager
     }
 }
