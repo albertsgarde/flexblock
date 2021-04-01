@@ -76,7 +76,7 @@ pub struct FramebufferManager {
     framebuffer_names : HashMap<String, usize>
 }
 
-impl<'a> FramebufferManager {
+impl FramebufferManager {
     pub fn new() -> FramebufferManager {
         FramebufferManager {
             framebuffers : Vec::new(),
@@ -98,10 +98,10 @@ impl<'a> FramebufferManager {
     }
 
     ///Passing nothing as the framebuffer will bind the screen - the standard draw buffer.
-    pub unsafe fn bind_framebuffer(&self, framebuffer : Option<String>) {
+    pub unsafe fn bind_framebuffer(&self, framebuffer : &Option<String>) {
         match framebuffer { 
             Some(fb) => {
-                let index = self.framebuffer_names.get(&fb).unwrap();
+                let index = self.framebuffer_names.get(fb).unwrap();
                 self.framebuffers[*index].bind();
             },
             None => {

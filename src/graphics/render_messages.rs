@@ -81,6 +81,10 @@ pub enum RenderMessage {
     Draw {
         buffer: usize,
     },
+    /// framebuffer = which framebuffer to
+    ChooseFramebuffer {
+        framebuffer : Option<String>,
+    },
 }
 
 impl RenderMessage {
@@ -98,6 +102,7 @@ impl RenderMessage {
             RenderMessage::ChooseShader { shader: _ } => false,
             RenderMessage::Uniforms { uniforms: _ } => false,
             RenderMessage::Draw { buffer: _ } => false,
+            RenderMessage::ChooseFramebuffer {framebuffer : _} => false,
         }
     }
 }

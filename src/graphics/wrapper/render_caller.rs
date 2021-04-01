@@ -102,7 +102,12 @@ impl RenderCaller {
                 color_buffer,
                 depth_buffer,
             } => self.clear_buffers(color_buffer, depth_buffer),
+            RenderMessage::ChooseFramebuffer {framebuffer} => self.choose_framebuffer(&framebuffer),
         }
+    }
+
+    pub unsafe fn choose_framebuffer(&mut self, framebuffer : &Option<String>) {
+        self.framebuffer_manager.bind_framebuffer(&framebuffer);
     }
 
     pub unsafe fn render(&mut self, buffer: &usize) {
