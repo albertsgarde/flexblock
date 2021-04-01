@@ -1,4 +1,4 @@
-use super::{ShaderManager, TextureManager, FramebufferManager, Texture, TextureFormat, VertexArray};
+use super::{ShaderManager, TextureManager, FramebufferManager, Texture, Framebuffer, TextureFormat, VertexArray};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
 
@@ -35,11 +35,14 @@ impl RenderCaller {
         t1.fill(crate::utils::read_png("textures/atlas.png"));
         texture_manager.add_texture(t1);
 
+        let mut framebuffer_manager = FramebufferManager::new();
+        framebuffer_manager.add_framebuffer(Framebuffer::new("f1", Some(texture_manager.get_texture("atlas")), None, 800, 800, true).unwrap());
+
         RenderCaller {
             vertex_array,
             shader_manager,
             texture_manager,
-            framebuffer_manager : FramebufferManager::new()
+            framebuffer_manager
         }
     }
 
