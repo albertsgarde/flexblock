@@ -85,9 +85,13 @@ impl FramebufferManager {
         }
     }
 
-    pub fn add_framebuffer(&mut self, framebuffer : Framebuffer) {
+    pub fn add_framebuffer(&mut self, framebuffer : Framebuffer) -> Result<(), String>{
+        if self.framebuffer_names.contains_key(&framebuffer.metadata.name) {
+            return Err(format!("Framebuffer with name {} was just added to FramebufferManager, but it already exists!", &framebuffer.metadata.name));
+        }
         self.framebuffer_names.insert(String::from(&framebuffer.metadata.name), self.framebuffers.len());
         self.framebuffers.push(framebuffer);
+        Ok(())
     }
 
     pub fn get_framebuffer_metadata(&self) -> HashMap<String, FramebufferMetadata> {

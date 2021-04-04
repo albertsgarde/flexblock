@@ -34,7 +34,7 @@ pub unsafe fn load_textures() -> TextureManager {
             let mut t = Texture::new(data.width, data.height, data.format, &entry.1);
             t.fill(data.data);
             println!("Loaded texture {}!", &t.metadata.name);
-            texture_manager.add_texture(t);
+            texture_manager.add_texture(t).unwrap();
         } else if entry.1.ends_with(".json") {
             let metadatas : Vec<TextureMetadata> = match serde_json::from_str( match &std::fs::read_to_string(&entry.0.path()) {
                 Ok(s) => s,
@@ -46,7 +46,7 @@ pub unsafe fn load_textures() -> TextureManager {
 
             for metadata in metadatas {
                 let t = Texture::new(metadata.width, metadata.height, metadata.format, &metadata.name);
-                texture_manager.add_texture(t);
+                texture_manager.add_texture(t).unwrap();
             }
 
         }
@@ -97,19 +97,10 @@ pub unsafe fn load_framebuffers(texture_manager : &TextureManager) -> Framebuffe
                     None => None
                 };
                 println!("{:?}",metadata);
-                framebuffer_manager.add_framebuffer(Framebuffer::new(&metadata.name, ct, dt, metadata.width, metadata.height, metadata.has_depth).unwrap());
+                framebuffer_manager.add_framebuffer(Framebuffer::new(&metadata.name, ct, dt, metadata.width, metadata.height, metadata.has_depth).unwrap()).unwrap();
             }
         }
     }
 
     framebuffer_manager
-}
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn serialize_json() {
-
-    }
 }

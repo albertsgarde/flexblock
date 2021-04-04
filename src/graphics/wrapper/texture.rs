@@ -112,10 +112,14 @@ impl TextureManager {
         res
     }
 
-    pub fn add_texture(&mut self, texture: Texture) {
+    pub fn add_texture(&mut self, texture: Texture) -> Result<(), String>{
+        if self.texture_names.contains_key(&texture.metadata.name) {
+            return Err(format!("Texture with name {} was just added to TextureManager, but it already exists!", &texture.metadata.name));
+        }
         self.texture_names
             .insert(String::from(&texture.metadata.name), self.textures.len());
         self.textures.push(texture);
+        Ok(())
     }
 
     pub fn get_texture(&self, name: &str) -> &Texture {
