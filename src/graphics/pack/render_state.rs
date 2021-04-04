@@ -385,7 +385,7 @@ impl RenderState {
         if self.capabilities.is_some() {
 
             messages.add_message(RenderMessage::ChooseShader {
-                shader: String::from("s1"),
+                shader: String::from("/s1"),
             });
 
             // Draw on the screen.

@@ -1,12 +1,63 @@
-use super::{ShaderManager, TextureManager, Texture, Framebuffer, FramebufferManager, TextureMetadata, FramebufferMetadata};
+use super::{ShaderManager, TextureManager, Texture, Framebuffer, FramebufferManager, TextureMetadata, FramebufferMetadata, Shader};
 use crate::utils::read_png;
 
-pub unsafe fn load_shaders() -> ShaderManager{
-
+pub unsafe fn load_shaders() -> ShaderManager {
     let mut shader_manager = ShaderManager::new();
+    let folder = "graphics/shaders";
 
-    //TODO: This should maybe not be called from the RenderCaller new. Some decision has to be made.
-    shader_manager.load_shaders("graphics/shaders");
+    let mut fragment_shaders: Vec<String> = Vec::new();
+    let mut vertex_shaders: Vec<String> = Vec::new();
+
+    // First, we find every file in the folder we're loading from, and see if it's a shader file
+    
+    let entries = crate::utils::dir_entries(&std::path::Path::new(folder), "");
+    let entries = match entries {
+        Ok(e) => e,
+        Err(error) => { panic!("Could not load shaders! {:?}", error)}
+    };
+
+    for entry in entries {
+        if entry.1.ends_with(".vert") {
+            let name = &entry.1[0..(entry.1.len() - 5)];
+            vertex_shaders.push(String::from(name));
+        } else if entry.1.ends_with(".frag") {
+            let name = &entry.1[0..(entry.1.len() - 5)];
+            fragment_shaders.push(String::from(name));
+        } else {
+            eprintln!("File {:?} does not contain a shader!", &entry.0);
+        }
+    }
+
+    for vs in vertex_shaders {
+        if !fragment_shaders.contains(&vs) {
+            eprintln!(
+                "Vertex shader {} does not have a fragment shader partner!",
+                vs
+            );
+        }
+        fragment_shaders.retain(|x| *x != vs);
+
+        let shader = match Shader::new(
+            &(format!("{}/{}.vert", folder, vs)),
+            &(format!("{}/{}.frag", folder, vs)),
+            &vs,
+        ) {
+            Ok(s) => s,
+            Err(s) => {
+                eprintln!("Loading shader {} failed! Error: {}", vs, s);
+                continue;
+            }
+        };
+
+        shader_manager.add_shader(shader);
+    }
+    // Remaining fragment shaders are the ones that didn't have a vertex shader partner
+    for fs in fragment_shaders {
+        eprintln!(
+            "Fragment shader {} does not have a vertex shader partner!",
+            fs
+        );
+    }
 
     shader_manager
 }
