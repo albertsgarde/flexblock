@@ -1,6 +1,6 @@
-use super::{ShaderManager, TextureManager, FramebufferManager, Texture, Framebuffer, VertexArray};
+use super::{ShaderManager, TextureManager, FramebufferManager, VertexArray};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
-use crate::utils::{Vertex3D, read_png};
+use crate::utils::{Vertex3D};
 
 ///
 /// TODO
@@ -23,9 +23,9 @@ impl RenderCaller {
     pub unsafe fn new() -> RenderCaller {
         let vertex_array = VertexArray::new(Vertex3D::dummy()).unwrap();
 
-        let shader_manager = RenderCaller::load_shaders();
-        let texture_manager = RenderCaller::load_textures();
-        let framebuffer_manager = RenderCaller::load_framebuffers(&texture_manager);
+        let shader_manager = super::loader::load_shaders();
+        let texture_manager = super::loader::load_textures();
+        let framebuffer_manager = super::loader::load_framebuffers(&texture_manager);
 
         RenderCaller {
             vertex_array,
@@ -33,57 +33,6 @@ impl RenderCaller {
             texture_manager,
             framebuffer_manager
         }
-    }
-
-    unsafe fn load_shaders() -> ShaderManager{
-
-        let mut shader_manager = ShaderManager::new();
-
-        //TODO: This should maybe not be called from the RenderCaller new. Some decision has to be made.
-        shader_manager.load_shaders("graphics/shaders");
-
-        shader_manager
-    }
-
-    unsafe fn load_textures() -> TextureManager {
-        let mut texture_manager = TextureManager::new();
-
-        let entries = crate::utils::dir_entries(&std::path::Path::new("./graphics/textures"), "");
-        let entries = match entries {
-            Ok(e) => e,
-            Err(error) => { panic!("Could not load textures! {:?}", error)}
-        };
-        for entry in entries {
-            if entry.1.ends_with(".png") {
-                let data = match read_png(&entry.0.path()) {
-                    Ok(d) => d,
-                    Err(error) => {
-                        println!("Failed to load texture in png file {:?}! Error {:?}",entry.0.path(), error);
-                        continue;
-                    }
-                };
-
-
-                let mut t1 = Texture::new(data.width, data.height, data.format, &entry.1);
-                t1.fill(data.data);
-                println!("Loaded texture {}!", &t1.metadata.name);
-                texture_manager.add_texture(t1);
-            } else if entry.1.ends_with(".json") {
-                todo!("Do .json files!");
-            }
-        }
-        //let mut t1 = Texture::new(800, 800, TextureFormat::RGB, "atlas");
-        //t1.fill(crate::utils::read_png("textures/atlas.png"));
-        //texture_manager.add_texture(t1);
-
-        texture_manager
-    }
-
-    unsafe fn load_framebuffers(texture_manager : &TextureManager) -> FramebufferManager {
-        let mut framebuffer_manager = FramebufferManager::new();
-        framebuffer_manager.add_framebuffer(Framebuffer::new("f1", Some(texture_manager.get_texture("/atlas.png")), None, 800, 800, true).unwrap());
-
-        framebuffer_manager
     }
 
 

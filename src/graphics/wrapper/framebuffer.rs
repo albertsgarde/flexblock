@@ -129,10 +129,13 @@ mod tests {
         println!("{}",j);
     }
 
-
+    #[test]
     fn deserialize_framebuffer_metadata() {
-        let j = r#"{"name":"test","has_depth":false,"width":800,"height":800,"color_texture":"a good name","depth_texture":null}"#;
-        let metadata : FramebufferMetadata = serde_json::from_str(j).unwrap();
+        let j = r#"[
+            {"name":"test","has_depth":false,"width":800,"height":800,"color_texture":"a good name","depth_texture":null},
+            {"name":"test","has_depth":false,"width":800,"height":800,"color_texture":"a good name","depth_texture":null}
+        ]"#;
+        let metadata : Vec<FramebufferMetadata> = serde_json::from_str(j).unwrap();
 
         println!("{:?}",metadata);
     }

@@ -21,3 +21,5 @@ use render_caller::RenderCaller;
 mod texture;
 use texture::{Texture, TextureManager};
 pub use texture::{TextureMetadata};
+
+mod loader;
