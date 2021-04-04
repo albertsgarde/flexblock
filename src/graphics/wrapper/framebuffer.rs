@@ -1,5 +1,6 @@
 use super::Texture;
 use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
 
 pub struct Framebuffer{
     id : u32,
@@ -61,7 +62,7 @@ impl Framebuffer {
     } 
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct FramebufferMetadata {
     pub name : String,
     pub has_depth : bool,
@@ -108,5 +109,31 @@ impl FramebufferManager {
                 gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FramebufferMetadata;
+    fn serialize_framebuffer_metadata() {
+        let metadata = FramebufferMetadata {
+            name : "test".to_owned(),
+            has_depth : false,
+            width : 800,
+            height : 800,
+            color_texture : Some("a good name".to_owned()),
+            depth_texture : None
+        };
+        let j = serde_json::to_string(&metadata).unwrap();
+
+        println!("{}",j);
+    }
+
+
+    fn deserialize_framebuffer_metadata() {
+        let j = r#"{"name":"test","has_depth":false,"width":800,"height":800,"color_texture":"a good name","depth_texture":null}"#;
+        let metadata : FramebufferMetadata = serde_json::from_str(j).unwrap();
+
+        println!("{:?}",metadata);
     }
 }
