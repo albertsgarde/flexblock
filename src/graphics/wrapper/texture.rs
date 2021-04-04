@@ -134,4 +134,8 @@ impl TextureManager {
          };
         self.textures[*index].fill(data);
     }
+
+    pub fn contains_texture(&self, name: &str) -> bool {
+        self.texture_names.contains_key(name)
+    }
 }
