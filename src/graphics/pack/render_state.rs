@@ -341,7 +341,7 @@ impl RenderState {
                 );
 
                 render_messages.add_message(RenderMessage::Uniforms {
-                    uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![], vec![(String::from("atlas"), String::from("test_texture"))]),
+                    uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![], vec![(String::from("/atlas.png"), String::from("test_texture"))]),
                 });
 
                 render_messages.add_message(RenderMessage::Draw { buffer: counter });
@@ -385,7 +385,7 @@ impl RenderState {
         if self.capabilities.is_some() {
 
             messages.add_message(RenderMessage::ChooseShader {
-                shader: String::from("s1"),
+                shader: String::from("/s1"),
             });
 
             // Draw on the screen.
@@ -643,9 +643,10 @@ impl RenderMessageValidator {
 mod tests {
     use super::{RenderState, RenderMessageValidator};
     use crate::graphics::GraphicsCapabilities;
-    use crate::graphics::wrapper::{ShaderMetadata, ProgramType, TextureMetadata, TextureFormat};
+    use crate::graphics::wrapper::{ShaderMetadata, ProgramType, TextureMetadata};
     use crate::graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
     use std::collections::HashMap;
+    use crate::utils::ColorFormat;
 
     fn create_shader_metadata(extra_uniform : bool) -> HashMap<String, ShaderMetadata> {
         let mut res = HashMap::new();
@@ -674,7 +675,7 @@ mod tests {
 
         let shader_metadata = create_shader_metadata(extra_uniform);
         let mut texture_metadata = HashMap::new();
-        texture_metadata.insert(String::from("atlas"), TextureMetadata {format : TextureFormat::RGB, width : 2, height : 2, name : String::from("atlas")});
+        texture_metadata.insert(String::from("atlas"), TextureMetadata {format : ColorFormat::RGB, width : 2, height : 2, name : String::from("atlas")});
         let framebuffer_metadata = HashMap::new();
         rs.update_capabilities(GraphicsCapabilities {vbo_count : 100, texture_metadata, shader_metadata, framebuffer_metadata});
 
