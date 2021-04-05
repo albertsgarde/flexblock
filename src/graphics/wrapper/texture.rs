@@ -1,28 +1,8 @@
 use std::collections::HashMap;
 use std::ptr::null;
+use serde::{Serialize, Deserialize};
+use crate::utils::ColorFormat;
 
-#[derive(Clone)]
-pub enum TextureFormat {
-    RGB,
-    RGBA,
-}
-
-impl TextureFormat {
-    /// Returns the number of bytes that each texel in the texture takes
-    pub fn bytes(&self) -> usize {
-        match self {
-            &TextureFormat::RGB => 3,
-            &TextureFormat::RGBA => 4,
-        }
-    }
-
-    pub fn gl_format(&self) -> u32 {
-        match self {
-            &TextureFormat::RGB => gl::RGB,
-            &TextureFormat::RGBA => gl::RGBA,
-        }
-    }
-}
 pub struct Texture {
     id: u32,
     filled: bool,
@@ -32,7 +12,7 @@ pub struct Texture {
 impl Texture {
     ///
     ///Creates a new, empty texture, with the specified width, height, and format
-    pub unsafe fn new(width: u32, height: u32, format: TextureFormat, name : &str) -> Texture {
+    pub unsafe fn new(width: u32, height: u32, format: ColorFormat, name : &str) -> Texture {
         let glf = format.gl_format();
         let mut id = 0;
 
@@ -103,9 +83,9 @@ impl Texture {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TextureMetadata {
-    pub format : TextureFormat,
+    pub format : ColorFormat,
     pub width : u32,
     pub height : u32,
     pub name : String
@@ -132,20 +112,34 @@ impl TextureManager {
         res
     }
 
-    pub fn add_texture(&mut self, texture: Texture) {
+    pub fn add_texture(&mut self, texture: Texture) -> Result<(), String>{
+        if self.texture_names.contains_key(&texture.metadata.name) {
+            return Err(format!("Texture with name {} was just added to TextureManager, but it already exists!", &texture.metadata.name));
+        }
         self.texture_names
             .insert(String::from(&texture.metadata.name), self.textures.len());
         self.textures.push(texture);
+        Ok(())
     }
 
     pub fn get_texture(&self, name: &str) -> &Texture {
-        let index = self.texture_names.get(name).unwrap();
+        let index = match self.texture_names.get(name) {
+           Some(i) => i,
+           None => panic!("Texture {} was requested, but was not in texture manager!",name) 
+        };
         &self.textures[*index]
     }
 
     /// Fills data into the texture of the given name.
     pub unsafe fn fill_texture(&mut self, name: &str, data: Vec<u8>) {
-        let index = self.texture_names.get(name).unwrap();
+        let index = match self.texture_names.get(name) {
+            Some(i) => i,
+            None => panic!("Texture {} was requested, but was not in texture manager!",name) 
+         };
         self.textures[*index].fill(data);
+    }
+
+    pub fn contains_texture(&self, name: &str) -> bool {
+        self.texture_names.contains_key(name)
     }
 }

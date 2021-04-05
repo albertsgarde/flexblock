@@ -1,6 +1,6 @@
-use super::{ShaderManager, TextureManager, FramebufferManager, Texture, Framebuffer, TextureFormat, VertexArray};
+use super::{ShaderManager, TextureManager, FramebufferManager, VertexArray};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
-use crate::utils::Vertex3D;
+use crate::utils::{Vertex3D};
 
 ///
 /// TODO
@@ -23,20 +23,9 @@ impl RenderCaller {
     pub unsafe fn new() -> RenderCaller {
         let vertex_array = VertexArray::new(Vertex3D::dummy()).unwrap();
 
-        let mut shader_manager = ShaderManager::new();
-
-        //TODO: This should maybe not be called from the RenderCaller new. Some decision has to be made.
-        shader_manager.load_shaders("shaders");
-
-        // TODO: Which textures are to be available should be loaded from somewhere.
-        // Also, this needs to work with frame buffers.
-        let mut texture_manager = TextureManager::new();
-        let mut t1 = Texture::new(800, 800, TextureFormat::RGB, "atlas");
-        t1.fill(crate::utils::read_png("textures/atlas.png"));
-        texture_manager.add_texture(t1);
-
-        let mut framebuffer_manager = FramebufferManager::new();
-        framebuffer_manager.add_framebuffer(Framebuffer::new("f1", Some(texture_manager.get_texture("atlas")), None, 800, 800, true).unwrap());
+        let shader_manager = super::loader::load_shaders();
+        let texture_manager = super::loader::load_textures();
+        let framebuffer_manager = super::loader::load_framebuffers(&texture_manager);
 
         RenderCaller {
             vertex_array,
@@ -45,6 +34,7 @@ impl RenderCaller {
             framebuffer_manager
         }
     }
+
 
     ///
     /// This is supposed to turn a packed render into something that can then be rendered directly. So
