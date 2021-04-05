@@ -440,6 +440,76 @@ impl RenderState {
     
 }
 
+
+
+
+
+pub enum ValidationErrorType {
+    InvalidShader {shader : String},
+    VBOOutOfBounds {vbo : usize},
+    ClearEmptyVBO { vbo : usize},
+    DrawEmptyVBO {vbo : usize},
+    PackFullVBO {vbo : usize},
+    NoClearedBuffers,
+    NoRenderTarget,
+    NoShaderChosen,
+    InvalidFramebuffer {framebuffer : String},
+    WrongTriangleCount,
+    EmptyVertexPack,
+    InvalidTexture {texture : String},
+    UnwantedUniform {uniform : String},
+    UnfilledUniform {uniforms : Vec<String>},
+    NoGraphicsCapabilities,
+}
+
+pub struct ValidationContext<'a> {
+    pub render_messages : &'a RenderMessages,
+    pub message_index : usize
+}
+
+pub struct ValidationError<'a> {
+    pub error_type : ValidationErrorType,
+    pub context : ValidationContext<'a>
+}
+
+use std::fmt;
+impl<'a> fmt::Debug for ValidationError<'a> {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut res = match &self.error_type {
+            ValidationErrorType::InvalidShader { shader } => format!("Trying to choose shader {}, that does not exist!", shader),
+            ValidationErrorType::VBOOutOfBounds {vbo} => format!("Trying to access VBO {}, which is out of bounds.", vbo),
+            ValidationErrorType::ClearEmptyVBO {vbo} => format!("Trying to clear VBO {}, which is already empty!", vbo),
+            ValidationErrorType::NoClearedBuffers => format!("A clear buffers render message is sent, but no buffers are cleared!"),
+            ValidationErrorType::NoRenderTarget => format!("Trying to draw without first picking a render target!"),
+            ValidationErrorType::UnfilledUniform {uniforms } => format!("Trying to draw without supplying all needed uniforms! Missing uniforms: {:?}", uniforms),
+            ValidationErrorType::NoShaderChosen => format!("Trying to draw without picking a shader first!"),
+            ValidationErrorType::DrawEmptyVBO {vbo} => format!("Trying to draw VBO {}, which is empty!", vbo),
+            ValidationErrorType::WrongTriangleCount => format!("Received a vertex pack that does not contain a whole number of triangles!"),
+            ValidationErrorType::EmptyVertexPack => format!("Trying to fill VBO with empty vertex pack! A VBO is cleared by sending a RenderMessage::ClearArray message!"),
+            ValidationErrorType::PackFullVBO {vbo}=> format!("Trying to pack VBO {}, which is already full!", vbo),
+            ValidationErrorType::InvalidFramebuffer {framebuffer} => format!("Trying to bind framebuffer {}, which does not exist", framebuffer),
+            ValidationErrorType::InvalidTexture {texture} => format!("Trying to pass texture {} as shader uniform, but texture does not exist in the graphics capabilities object!", texture),
+            ValidationErrorType::UnwantedUniform {uniform} => format!("Trying to pass uniform {} to a shader that does not want it! (This is non-critical, should maybe be a warning instead)", uniform),
+            ValidationErrorType::NoGraphicsCapabilities => format!("Trying to send RenderMessages with no graphics capabilities!")
+        };
+        res.push_str("\n");
+        let mut counter=0;
+        for message in self.context.render_messages.iter() {
+            if counter == self.context.message_index {
+                res.push_str(&format!("\n{:?} -- ERROR HERE\n\n",message));
+                break;
+            } else {
+                res.push_str(&format!("{:?}|",message));
+            }
+            counter += 1;
+        }
+        res.push_str(&format!("{:?}",self.context.render_messages));
+        f.write_str(
+            &res
+        )
+    }
+}
+
 /// Validates that a set of render messages are legal.
 /// Only used for debug
 pub struct RenderMessageValidator {
@@ -453,9 +523,16 @@ impl RenderMessageValidator {
         RenderMessageValidator { packed_vbos : Vec::new() }
     }
 
+    pub fn capture_context<'a>(&self, _state : &RenderState, messages : &'a RenderMessages, _chosen_shader : Option<&ShaderMetadata>, _has_render_target : bool, _bound_uniforms : Vec<String>, message_index : usize) -> ValidationContext<'a> {
+        ValidationContext {
+            render_messages : messages,
+            message_index
+        }
+    }
+
     /// Validates that this contains only allowed render messages in an allowed order
     /// Note that this cannot be activated in the middle of the program; it is stateful (since vbos are packed and unpacked.)
-    pub fn validate(&mut self, state : &RenderState, messages : &RenderMessages) -> Result<(), &str> {
+    pub fn validate<'a>(&mut self, state : &RenderState, messages : &'a RenderMessages) -> Result<(), ValidationError<'a>> {
 
         let verbose = false;
         if self.packed_vbos.len() < state.packed_chunks.len() {
@@ -483,7 +560,11 @@ impl RenderMessageValidator {
                 match message {
                     RenderMessage::ChooseShader {shader} => {
                         if !shader_metadata.contains_key(shader) {
-                            return Err("A choose shader render message is sent, but the shader does not exist!");
+                            return Err(ValidationError {
+                                error_type : ValidationErrorType::InvalidShader { shader : String::from(shader) },
+                                context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                            })
+                            
                         }
                         chosen_shader = Some(&shader_metadata[shader]);
                         bound_uniforms = Vec::new();
@@ -494,12 +575,20 @@ impl RenderMessageValidator {
                     },
                     RenderMessage::ClearArray {buffer} => {
                         if *buffer >= capabilities.vbo_count {
-                            return Err("Trying to pack into a VBO index that is not available! Out of bounds!");
+                            
+                            return Err(ValidationError {
+                                error_type : ValidationErrorType::VBOOutOfBounds { vbo : *buffer },
+                                context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                            })
                         }
                         
                         if message_index >= messages.old_new_split_index() {
                             if !self.packed_vbos[*buffer] {
-                                return Err("Trying to clear an empty VBO!");
+                                
+                                return Err(ValidationError {
+                                    error_type : ValidationErrorType::ClearEmptyVBO { vbo : *buffer },
+                                    context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                                })
                             }
                             self.packed_vbos[*buffer] = false;
                         }
@@ -510,7 +599,11 @@ impl RenderMessageValidator {
                     },
                     RenderMessage::ClearBuffers {color_buffer, depth_buffer} => {
                         if !color_buffer && !depth_buffer {
-                            return Err("A clear buffers render message is sent, but no buffers are cleared!");
+                            
+                            return Err(ValidationError {
+                                error_type : ValidationErrorType::NoClearedBuffers,
+                                context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                            })
                         }
                         if verbose {
                             println!("Clearing color? {} and depth? {}", color_buffer, depth_buffer);
@@ -518,25 +611,43 @@ impl RenderMessageValidator {
                     },
                     RenderMessage::Draw{buffer} => {
                         if !has_render_target {
-                            return Err("Trying to draw without first picking a render target!");
+                            
+                            return Err(ValidationError {
+                                error_type : ValidationErrorType::NoRenderTarget,
+                                context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                            })
                         }
 
                         if let Some(s) = &chosen_shader {
 
                             for uniform in &s.required_uniforms {
                                 if !bound_uniforms.contains(&uniform.0) {
-                                    return Err("Trying to draw without supplying all needed uniforms!");
+                                    
+                                    return Err(ValidationError {
+                                        error_type : ValidationErrorType::UnfilledUniform { 
+                                            uniforms : (&s.required_uniforms).into_iter().map(|x| String::from(&x.0)).filter(|x|  { !bound_uniforms.contains(&x) }).collect::<Vec<String>>()
+                                        },
+                                        context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                                    })
                                 }
                             }
                         }
                         else {
-                            return Err("Trying to draw without picking a shader first!");
+                            
+                            return Err(ValidationError {
+                                error_type : ValidationErrorType::NoShaderChosen,
+                                context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                            })
                         }
 
                         // This one doesn't need to check whether it is above the old/new split, since draw is not a persistent render message.
                         // So it will always be in the new part.
                         if !self.packed_vbos[*buffer] {
-                            return Err("Trying to draw an empty VBO!");
+                            
+                            return Err(ValidationError {
+                                error_type : ValidationErrorType::DrawEmptyVBO {vbo : *buffer},
+                                context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                            })
                         }
 
                         if verbose {
@@ -545,19 +656,35 @@ impl RenderMessageValidator {
                     },
                     RenderMessage::Pack{buffer, pack} => {
                         if *buffer >= capabilities.vbo_count {
-                            return Err("Trying to pack into a VBO index that is not available! Out of bounds!");
+                            return Err(ValidationError {
+                                error_type : ValidationErrorType::VBOOutOfBounds {vbo : *buffer},
+                                context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                            })
+                            // Trying to pack a VBO out of bounds
                         }
 
                         if pack.elements.len() %3 != 0 || (pack.elements.len() == 0 && pack.vertices.len() % 3 != 0){
-                            return Err("Received a vertex pack that does not contain a whole number of triangles!");
+                            
+                            return Err(ValidationError {
+                                error_type : ValidationErrorType::WrongTriangleCount,
+                                context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                            })
                         }
                         if pack.vertices.len() == 0 {
-                            return Err("Trying to fil VBO with empty vertex pack! A VBO is cleared by sending a RenderMessage::ClearArray message!");
+                            
+                            return Err(ValidationError {
+                                error_type : ValidationErrorType::EmptyVertexPack,
+                                context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                            })
                         }
 
                         if message_index >= messages.old_new_split_index() {
                             if self.packed_vbos[*buffer] {
-                                return Err("Trying to pack an already filled VBO!");
+                                
+                            return Err(ValidationError {
+                                error_type : ValidationErrorType::PackFullVBO { vbo : *buffer },
+                                context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                            })
                             }
                             self.packed_vbos[*buffer] = true;
                         }
@@ -567,7 +694,15 @@ impl RenderMessageValidator {
                         }
                     },
                     RenderMessage::Uniforms {uniforms} => {
-                        RenderMessageValidator::validate_uniforms(uniforms, &chosen_shader, &mut bound_uniforms, capabilities)?;
+                        match RenderMessageValidator::validate_uniforms(uniforms, &chosen_shader, &mut bound_uniforms, capabilities) {
+                            Ok(()) => {},
+                            Err(e) => {
+                                return Err(ValidationError {
+                                    error_type : e,
+                                    context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                                })
+                            } 
+                        }
                         if verbose {
                             println!("Filling in uniforms");
                         }
@@ -575,7 +710,11 @@ impl RenderMessageValidator {
                     RenderMessage::ChooseFramebuffer {framebuffer} => {
                         if let Some(target) = framebuffer {
                             if !capabilities.framebuffer_metadata.contains_key(target) {
-                                return Err("Target framebuffer does not exist!");
+                                
+                            return Err(ValidationError {
+                                error_type : ValidationErrorType::InvalidFramebuffer {framebuffer : String::from(target)},
+                                context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                            })
                             }
                         }
                         has_render_target = true;
@@ -588,7 +727,15 @@ impl RenderMessageValidator {
         }
         else {
             if messages.size() > 0 {
-                Err("Trying to send render messages when no graphics capabilities object is available!")
+                
+                return Err(ValidationError {
+                    error_type : ValidationErrorType::NoGraphicsCapabilities,
+                    context : ValidationContext {
+                        render_messages : messages,
+                        message_index : 0
+                    }
+                })
+                //Err("Trying to send render messages when no graphics capabilities object is available!")
             } else {
                 Ok(())
             }
@@ -597,7 +744,7 @@ impl RenderMessageValidator {
     }
 
     /// Validate a single RenderMessage::Uniforms
-    fn validate_uniforms(uniforms : &UniformData, chosen_shader : &Option<&ShaderMetadata>, bound_uniforms : &mut Vec<String>, capabilities : &GraphicsCapabilities) -> Result<(), &'static str> {
+    fn validate_uniforms(uniforms : &UniformData, chosen_shader : &Option<&ShaderMetadata>, bound_uniforms : &mut Vec<String>, capabilities : &GraphicsCapabilities) -> Result<(), ValidationErrorType> {
 
         //TODO: Enforce uniform type matching to shader known type
 
@@ -606,7 +753,7 @@ impl RenderMessageValidator {
             // Test if every passed texture exists in the graphics capabilities.
             for entry in &uniforms.textures {
                 if !capabilities.texture_metadata.contains_key(&entry.0) {
-                    return Err("Trying to pass a texture as shader uniform that does not exist in the graphics capabilities object!");
+                    return Err(ValidationErrorType::InvalidTexture {texture : String::from(&entry.0)})
                 }
             }
 
@@ -622,7 +769,7 @@ impl RenderMessageValidator {
                 }
 
                 if !contained {
-                    return Err("Trying to pass a uniform to a shader that does not want it! (This is non-critical, should maybe be a warning instead)");
+                    return Err(ValidationErrorType::UnwantedUniform {uniform : String::from(uniform)})
                 }
                 
                 if !bound_uniforms.contains(&uniform) {
@@ -631,7 +778,7 @@ impl RenderMessageValidator {
             }
 
         } else {
-            return Err("Trying to pass uniforms without picking a shader first!");
+            return Err(ValidationErrorType::NoShaderChosen {})
         }
 
         Ok(())
@@ -641,7 +788,8 @@ impl RenderMessageValidator {
 
 #[cfg(test)]
 mod tests {
-    use super::{RenderState, RenderMessageValidator};
+    use super::RenderMessageValidator;
+    use super::super::{RenderState};
     use crate::graphics::GraphicsCapabilities;
     use crate::graphics::wrapper::{ShaderMetadata, ProgramType, TextureMetadata, TextureFormat};
     use crate::graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
