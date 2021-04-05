@@ -1,16 +1,17 @@
-use super::{ShaderManager, TextureManager, Texture, Framebuffer, FramebufferManager, TextureMetadata, FramebufferMetadata, Shader};
+use super::{Framebuffer, FramebufferManager, FramebufferMetadata, Shader, ShaderIdentifier, ShaderManager, Texture, TextureManager, TextureMetadata};
 use crate::utils::read_png;
+use strum::IntoEnumIterator;
 
 pub unsafe fn load_shaders() -> ShaderManager {
-    let mut shader_manager = ShaderManager::new();
     let folder = "graphics/shaders";
 
+    let mut compute_shaders: Vec<String> = Vec::new();
     let mut fragment_shaders: Vec<String> = Vec::new();
     let mut vertex_shaders: Vec<String> = Vec::new();
 
     // First, we find every file in the folder we're loading from, and see if it's a shader file
     
-    let entries = crate::utils::dir_entries(&std::path::Path::new(folder), "");
+    let entries = crate::utils::dir_entries(&std::path::Path::new(folder), folder);
     let entries = match entries {
         Ok(e) => e,
         Err(error) => { panic!("Could not load shaders! {:?}", error)}
@@ -23,43 +24,44 @@ pub unsafe fn load_shaders() -> ShaderManager {
         } else if entry.1.ends_with(".frag") {
             let name = &entry.1[0..(entry.1.len() - 5)];
             fragment_shaders.push(String::from(name));
+        } else if entry.1.ends_with(".comp") {
+            let name = &entry.1[0..(entry.1.len() - 5)];
+            compute_shaders.push(String::from(name));
         } else {
             eprintln!("File {:?} does not contain a shader!", &entry.0);
         }
     }
 
-    for vs in vertex_shaders {
-        if !fragment_shaders.contains(&vs) {
-            eprintln!(
-                "Vertex shader {} does not have a fragment shader partner!",
-                vs
-            );
-        }
-        fragment_shaders.retain(|x| *x != vs);
+    let mut shaders = Vec::new();
+    for identifier in ShaderIdentifier::iter() {
 
         let shader = match Shader::new(
-            &(format!("{}/{}.vert", folder, vs)),
-            &(format!("{}/{}.frag", folder, vs)),
-            &vs,
+            identifier
         ) {
             Ok(s) => s,
             Err(s) => {
-                eprintln!("Loading shader {} failed! Error: {}", vs, s);
+                eprintln!("Loading shader {:?} failed! Error: {}", identifier, s);
                 continue;
             }
         };
+        if identifier.is_compute() {
+            compute_shaders.retain(|x| {x != identifier.path().0});
+        } else {
+            vertex_shaders.retain(|x| {x != identifier.path().0});
+            fragment_shaders.retain(|x| {x != identifier.path().1});
+        }
 
-        shader_manager.add_shader(shader);
+        shaders.push(shader);
     }
-    // Remaining fragment shaders are the ones that didn't have a vertex shader partner
+
+    for vs in vertex_shaders {
+        eprintln!("Vertex shader {} doesn't exist in the shader identifier enum.", vs);
+    }
     for fs in fragment_shaders {
-        eprintln!(
-            "Fragment shader {} does not have a vertex shader partner!",
-            fs
-        );
+        eprintln!("Vertex shader {} doesn't exist in the shader identifier enum.", fs);
     }
 
-    shader_manager
+    ShaderManager::new(shaders)
 }
 
 pub unsafe fn load_textures() -> TextureManager {

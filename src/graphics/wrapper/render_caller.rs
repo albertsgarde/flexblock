@@ -1,4 +1,4 @@
-use super::{ShaderManager, TextureManager, FramebufferManager, VertexArray};
+use super::{ShaderManager, TextureManager, FramebufferManager, VertexArray, ShaderIdentifier};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::{Vertex3D};
 
@@ -63,7 +63,7 @@ impl RenderCaller {
         self.vertex_array.clear(*buffer);
     }
 
-    unsafe fn choose_shader(&mut self, shader: &str) {
+    unsafe fn choose_shader(&mut self, shader: ShaderIdentifier) {
         match self.shader_manager.bind_shader(shader) {
             Err(s) => {
                 println!("{}", s)
@@ -88,7 +88,7 @@ impl RenderCaller {
         match message {
             RenderMessage::Pack { buffer, pack } => self.unpack(buffer, pack),
             RenderMessage::ClearArray { buffer } => self.clear(buffer),
-            RenderMessage::ChooseShader { shader } => self.choose_shader(shader),
+            RenderMessage::ChooseShader { shader } => self.choose_shader(*shader),
             RenderMessage::Uniforms { uniforms } => self.uniforms(uniforms),
             RenderMessage::Draw { buffer } => self.render(buffer),
             RenderMessage::ClearBuffers {

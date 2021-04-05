@@ -9,8 +9,8 @@ pub struct GraphicsCapabilities {
     /// A hashmap of texture names and texture ids
     /// TODO: Convert to same format as shaders
     pub texture_metadata: HashMap<String, TextureMetadata>,
-    /// A hashmap of shader names and their metadata
-    pub shader_metadata: HashMap<String, ShaderMetadata>,
+    /// A vector of shader metadata indexed by identifiers
+    pub shader_metadata: Vec<ShaderMetadata>,
     /// A hashmap of framebuffer names and their metadata
     pub framebuffer_metadata : HashMap<String, FramebufferMetadata>
 }

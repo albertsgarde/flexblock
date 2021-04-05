@@ -1,7 +1,7 @@
-use crate::game::{
+use crate::{game::{
     world::{Chunk, Terrain},
     View,
-};
+}, graphics::wrapper::ShaderIdentifier};
 use crate::graphics::VertexPack;
 use crate::graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
 use std::collections::{VecDeque};
@@ -385,7 +385,7 @@ impl RenderState {
         if self.capabilities.is_some() {
 
             messages.add_message(RenderMessage::ChooseShader {
-                shader: String::from("/s1"),
+                shader: ShaderIdentifier::DefaultShader,
             });
 
             // Draw on the screen.

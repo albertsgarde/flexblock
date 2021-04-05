@@ -7,7 +7,7 @@ pub use framebuffer::FramebufferMetadata;
 
 mod shader;
 use shader::{Shader, ShaderManager};
-pub use shader::{ShaderMetadata, ProgramType};
+pub use shader::{ShaderMetadata, ProgramType, ShaderIdentifier};
 
 mod vertex_array;
 use vertex_array::VertexArray;
