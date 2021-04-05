@@ -1,6 +1,8 @@
 use crate::utils::vertex::Vertex3D;
 use std::slice::Iter;
+use std::fmt;
 
+#[derive(Debug)]
 pub struct RenderMessages {
     messages: Vec<RenderMessage>,
     /// TODO: THIS IS SUCH A BAD NAME
@@ -55,6 +57,7 @@ pub struct VertexPack {
 
 /// One render message to the graphics thread.
 /// TODO: Documentation & contract checking
+#[derive(Debug)]
 pub enum RenderMessage {
     /// buffer = which buffer in the vertex array to target
     Pack {
@@ -118,6 +121,12 @@ impl VertexPack {
     }
 }
 
+impl fmt::Debug for VertexPack {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("VertexPack")
+    }
+}
+
 //TODO: Add mat 3, 2, and vec 3, 2, and f32, u32, i32, and texture
 pub struct UniformData {
     pub mat4s: Vec<(glm::Mat4, String)>,
@@ -156,5 +165,11 @@ impl UniformData {
         }
 
         res
+    }
+}
+
+impl fmt::Debug for UniformData {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("UniformData")
     }
 }

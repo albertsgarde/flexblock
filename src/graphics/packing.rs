@@ -22,7 +22,6 @@ pub fn start_packing_thread(
             }
             let data = logic_rx.graphics_state_model.lock().unwrap();
 
-
             let mut messages = state.create_render_messages(&data);
 
             /* Framebuffer test code (renders a red triangle to the texture bound to framebuffer f1)
