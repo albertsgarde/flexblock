@@ -146,18 +146,9 @@ impl BFS {
 /// Contains state information that is needed by the packing thread.
 pub struct RenderState {
     /// Contains a list of packed chunk locations. The index is which buffer they're packed into. None means no chunk is packed into that buffer.
-    packed_chunks: Vec<Option<glm::IVec3>>,
+    pub(super) packed_chunks: Vec<Option<glm::IVec3>>,
     chunk_search: Option<BFS>,
-    capabilities: Option<GraphicsCapabilities>,
-}
-
-///Exists for implementation privacy. TODO: IS THERE A BETTER WAY TO MAKE RENDER_MESSAGE_VALIDATOR ACCESS THIS??
-pub fn get_packed_chunks(state : &RenderState) -> &Vec<Option<glm::IVec3>> {
-    &state.packed_chunks
-}
-///Exists for implementation privacy. TODO: IS THERE A BETTER WAY TO MAKE RENDER_MESSAGE_VALIDATOR ACCESS THIS??
-pub fn get_capabilities(state : &RenderState) -> &Option<GraphicsCapabilities> {
-    &state.capabilities
+    pub(super) capabilities: Option<GraphicsCapabilities>,
 }
 
 

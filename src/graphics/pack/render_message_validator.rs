@@ -3,6 +3,7 @@ use crate::graphics::{RenderMessages, RenderMessage, wrapper::ShaderMetadata, Un
 use super::RenderState;
 use std::fmt;
 
+///Types of validator errors.
 pub enum ValidationErrorType {
     InvalidShader {shader : String},
     VBOOutOfBounds {vbo : usize},
@@ -20,12 +21,14 @@ pub enum ValidationErrorType {
     UnfilledUniform {uniforms : Vec<String>},
     NoGraphicsCapabilities,
 }
-
+/// Context for an error from the validator (What are the render messages, which is the current message, yadayadayada)
 pub struct ValidationContext<'a> {
     pub render_messages : &'a RenderMessages,
     pub message_index : usize
 }
-
+/// An error from the validator.
+/// Contains both its type and a context for the error.
+/// 
 pub struct ValidationError<'a> {
     pub error_type : ValidationErrorType,
     pub context : ValidationContext<'a>
@@ -83,6 +86,7 @@ impl RenderMessageValidator {
         RenderMessageValidator { packed_vbos : Vec::new() }
     }
 
+    /// Captures context for a ValidationError so it can give a more detailed report.
     pub fn capture_context<'a>(&self, _state : &RenderState, messages : &'a RenderMessages, _chosen_shader : Option<&ShaderMetadata>, _has_render_target : bool, _bound_uniforms : Vec<String>, message_index : usize) -> ValidationContext<'a> {
         ValidationContext {
             render_messages : messages,
@@ -94,17 +98,16 @@ impl RenderMessageValidator {
     /// Note that this cannot be activated in the middle of the program; it is stateful (since vbos are packed and unpacked.)
     pub fn validate<'a>(&mut self, state : &RenderState, messages : &'a RenderMessages) -> Result<(), ValidationError<'a>> {
 
-        use crate::graphics::pack;
         let verbose = false;
-        if self.packed_vbos.len() < pack::render_state::get_packed_chunks(state).len() {
-            self.packed_vbos.append(&mut vec![false; pack::render_state::get_packed_chunks(state).len()-self.packed_vbos.len()]);
+        if self.packed_vbos.len() < state.packed_chunks.len() {
+            self.packed_vbos.append(&mut vec![false; state.packed_chunks.len()-self.packed_vbos.len()]);
         }
 
         if verbose {
             println!("Validating render message pack with {} messages!", messages.size());
         }
 
-        if let Some(capabilities) = &pack::render_state::get_capabilities(state) {
+        if let Some(capabilities) = &state.capabilities {
 
             //What shader is currently chosen
             let mut chosen_shader = None;
