@@ -6,7 +6,7 @@ use framebuffer::{Framebuffer, FramebufferManager};
 pub use framebuffer::FramebufferMetadata;
 
 mod shader;
-use shader::ShaderManager;
+use shader::{Shader, ShaderManager};
 pub use shader::{ShaderMetadata, ProgramType};
 
 mod vertex_array;
@@ -20,4 +20,6 @@ use render_caller::RenderCaller;
 
 mod texture;
 use texture::{Texture, TextureManager};
-pub use texture::{TextureMetadata, TextureFormat};
+pub use texture::{TextureMetadata};
+
+mod loader;

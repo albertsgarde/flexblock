@@ -341,7 +341,7 @@ impl RenderState {
                 );
 
                 render_messages.add_message(RenderMessage::Uniforms {
-                    uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![], vec![(String::from("atlas"), String::from("test_texture"))]),
+                    uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![], vec![(String::from("/atlas.png"), String::from("test_texture"))]),
                 });
 
                 render_messages.add_message(RenderMessage::Draw { buffer: counter });
@@ -385,7 +385,7 @@ impl RenderState {
         if self.capabilities.is_some() {
 
             messages.add_message(RenderMessage::ChooseShader {
-                shader: String::from("s1"),
+                shader: String::from("/s1"),
             });
 
             // Draw on the screen.

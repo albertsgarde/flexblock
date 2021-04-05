@@ -350,14 +350,15 @@ impl RenderMessageValidator {
 }
 
 
+
 #[cfg(test)]
 mod tests {
-    use super::RenderMessageValidator;
-    use super::super::{RenderState};
+    use super::{RenderState, RenderMessageValidator};
     use crate::graphics::GraphicsCapabilities;
-    use crate::graphics::wrapper::{ShaderMetadata, ProgramType, TextureMetadata, TextureFormat};
+    use crate::graphics::wrapper::{ShaderMetadata, ProgramType, TextureMetadata};
     use crate::graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
     use std::collections::HashMap;
+    use crate::utils::ColorFormat;
 
     fn create_shader_metadata(extra_uniform : bool) -> HashMap<String, ShaderMetadata> {
         let mut res = HashMap::new();
@@ -386,7 +387,7 @@ mod tests {
 
         let shader_metadata = create_shader_metadata(extra_uniform);
         let mut texture_metadata = HashMap::new();
-        texture_metadata.insert(String::from("atlas"), TextureMetadata {format : TextureFormat::RGB, width : 2, height : 2, name : String::from("atlas")});
+        texture_metadata.insert(String::from("atlas"), TextureMetadata {format : ColorFormat::RGB, width : 2, height : 2, name : String::from("atlas")});
         let framebuffer_metadata = HashMap::new();
         rs.update_capabilities(GraphicsCapabilities {vbo_count : 100, texture_metadata, shader_metadata, framebuffer_metadata});
 

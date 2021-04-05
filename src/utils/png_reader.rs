@@ -1,18 +1,53 @@
+use std::path::Path;
+use super::ColorFormat;
 
+/// Contains the info you get when you load a png
+pub struct PngData {
+    pub width : u32,
+    pub height : u32,
+    pub data : Vec<u8>,
+    pub format : ColorFormat, 
+}
+
+#[derive(Debug)]
+pub enum PngLoadError {
+    InvalidFormat,
+    Decoding(png::DecodingError),
+    IO(std::io::Error),
+}
 
 /// TODO: MAKE THIS GIVE ERRORS CORRECTLY
-pub fn read_png(path : &str) -> Vec<u8>{
+pub fn read_png(path : &Path) -> Result<PngData, PngLoadError> {
     
     use std::fs::File;
 
-    let decoder = png::Decoder::new(File::open(path).unwrap());
-    let (info, mut reader) = decoder.read_info().unwrap();
+    let file = match File::open(path) {
+        Ok(f) => f,
+        Err(error) => return Err(PngLoadError::IO(error))
+    };
+
+    let decoder = png::Decoder::new(file);
+
+    let (info, mut reader) = match decoder.read_info() {
+        Ok(ir) => ir,
+        Err(error) => return Err(PngLoadError::Decoding(error))
+    };
+
     // Allocate the output buffer.
     let mut buf = vec![0; info.buffer_size()];
     // Read the next frame. An APNG might contain multiple frames.
-    reader.next_frame(&mut buf).unwrap();
+    match reader.next_frame(&mut buf) {
+        Ok(_) => (),
+        Err(error) => return Err(PngLoadError::Decoding(error))
+    };
 
-    buf
+    let format = match info.color_type {
+        png::ColorType::RGB => ColorFormat::RGB,
+        png::ColorType::RGBA => ColorFormat::RGBA,
+        _ => {return Err(PngLoadError::InvalidFormat)}
+    };
+    
+    Ok(PngData {width : info.width, height : info.height, data : buf, format})
 }
 
 #[cfg(test)]

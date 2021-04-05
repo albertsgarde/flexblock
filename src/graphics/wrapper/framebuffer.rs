@@ -1,5 +1,6 @@
 use super::Texture;
 use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
 
 pub struct Framebuffer{
     id : u32,
@@ -61,7 +62,7 @@ impl Framebuffer {
     } 
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct FramebufferMetadata {
     pub name : String,
     pub has_depth : bool,
@@ -84,9 +85,13 @@ impl FramebufferManager {
         }
     }
 
-    pub fn add_framebuffer(&mut self, framebuffer : Framebuffer) {
+    pub fn add_framebuffer(&mut self, framebuffer : Framebuffer) -> Result<(), String>{
+        if self.framebuffer_names.contains_key(&framebuffer.metadata.name) {
+            return Err(format!("Framebuffer with name {} was just added to FramebufferManager, but it already exists!", &framebuffer.metadata.name));
+        }
         self.framebuffer_names.insert(String::from(&framebuffer.metadata.name), self.framebuffers.len());
         self.framebuffers.push(framebuffer);
+        Ok(())
     }
 
     pub fn get_framebuffer_metadata(&self) -> HashMap<String, FramebufferMetadata> {
@@ -108,5 +113,33 @@ impl FramebufferManager {
                 gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FramebufferMetadata;
+    fn serialize_framebuffer_metadata() {
+        let metadata = FramebufferMetadata {
+            name : "test".to_owned(),
+            has_depth : false,
+            width : 800,
+            height : 800,
+            color_texture : Some("a good name".to_owned()),
+            depth_texture : None
+        };
+        let j = serde_json::to_string(&metadata).unwrap();
+
+        println!("{}",j);
+    }
+
+    fn deserialize_framebuffer_metadata() {
+        let j = r#"[
+            {"name":"test","has_depth":false,"width":800,"height":800,"color_texture":"a good name","depth_texture":null},
+            {"name":"test","has_depth":false,"width":800,"height":800,"color_texture":"a good name","depth_texture":null}
+        ]"#;
+        let metadata : Vec<FramebufferMetadata> = serde_json::from_str(j).unwrap();
+
+        println!("{:?}",metadata);
     }
 }
