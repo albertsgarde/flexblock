@@ -39,7 +39,7 @@ impl FramebufferIdentifier {
     }
 
     /// TODO: Figure out a way to make dimensions in terms of screen dimensions.
-    pub fn dimensions(&self) -> (usize,usize) {
+    pub fn dimensions(&self, _screen_dimensions : (u32,u32)) -> (u32,u32) {
         match self {
             FramebufferIdentifier::FirstPassFramebuffer => (800,800)
         }
@@ -53,36 +53,45 @@ pub struct Framebuffer{
 
 impl Framebuffer {
 
-    pub unsafe fn new(identifier :FramebufferIdentifier, texture_manager : &TextureManager) -> Result<Framebuffer, &'static str>{
-        // TODO: VERYIFY THAT TEXTURE SIZES CORRESPOND TO FRAMEBUFFER SIZE
+    pub unsafe fn new(identifier :FramebufferIdentifier, texture_manager : &TextureManager, screen_dimensions : (u32, u32)) -> Result<Framebuffer, String>{
         
         if identifier.depth_texture().is_none() && identifier.color_texture().is_none() {
-            return Err("A framebuffer cannot be instantiated with neither a color texture nor a depth texture!");
+            return Err("A framebuffer cannot be instantiated with neither a color texture nor a depth texture!".to_owned());
         }
 
         if identifier.depth_texture().is_some() && !identifier.has_depth() {
-            return Err("Framebuffer told to not have depth, but a depth texture is provided!");
+            return Err("Framebuffer told to not have depth, but a depth texture is provided!".to_owned());
         }
 
         let mut id = 0;
+        let (width,height) = identifier.dimensions(screen_dimensions);
 
         gl::GenFramebuffers(1, &mut id);
         gl::BindFramebuffer(gl::FRAMEBUFFER, id);
+
         if let Some(dt) = identifier.depth_texture() {
             let dt = texture_manager.get_texture(dt);
+
+            if dt.metadata.width != width || dt.metadata.height != height {
+                return Err(format!("Instantiating framebuffer {:?} with depth texture {:?} that does not match framebuffer dimensions! {:?} != {:?}!", identifier, dt.metadata.name, (width,height), (dt.metadata.width, dt.metadata.height)));
+            }
+
             gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::TEXTURE_2D, dt.get_id(), 0);
         } else {
             if identifier.has_depth() {
                 let mut depth_render_buffer = 0;
                 gl::GenRenderbuffers(1, &mut depth_render_buffer);
                 gl::BindRenderbuffer(gl::RENDERBUFFER, depth_render_buffer);
-                gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT, identifier.dimensions().0 as i32, identifier.dimensions().1 as i32);
+                gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT, width as i32, height as i32);
                 gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT, gl::RENDERBUFFER, depth_render_buffer);
             }
         }
 
         if let Some(ct) = identifier.color_texture() {
             let ct = texture_manager.get_texture(ct);
+            if ct.metadata.width != width || ct.metadata.height != height {
+                return Err(format!("Instantiating framebuffer {:?} with depth texture {:?} that does not match framebuffer dimensions! {:?} != {:?}!", identifier, ct.metadata.name, (width,height), (ct.metadata.width, ct.metadata.height)));
+            }
             gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, gl::TEXTURE_2D, ct.get_id(), 0);
             //TODO: DO COLOR TEXTURES WORK??
         } else {
@@ -93,7 +102,7 @@ impl Framebuffer {
         Ok(Framebuffer {
             id,
             metadata : FramebufferMetadata {
-                identifier, width : identifier.dimensions().0 as u32, height : identifier.dimensions().1 as u32,
+                identifier, width, height,
             }
         })
     }

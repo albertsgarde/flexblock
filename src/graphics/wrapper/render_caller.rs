@@ -14,24 +14,26 @@ pub struct RenderCaller {
     vertex_array: VertexArray<Vertex3D>,
     pub shader_manager: ShaderManager,
     texture_manager: TextureManager,
-    framebuffer_manager : FramebufferManager
+    framebuffer_manager : FramebufferManager,
+    screen_dimensions : (u32,u32)
 }
 
 impl RenderCaller {
     ///
     /// Marked as unsafe because it calls GL code
-    pub unsafe fn new() -> RenderCaller {
+    pub unsafe fn new(screen_dimensions : (u32,u32)) -> RenderCaller {
         let vertex_array = VertexArray::new(Vertex3D::dummy()).unwrap();
 
         let shader_manager = super::loader::load_shaders();
         let texture_manager = super::loader::load_textures();
-        let framebuffer_manager = super::loader::load_framebuffers(&texture_manager);
+        let framebuffer_manager = super::loader::load_framebuffers(&texture_manager, screen_dimensions);
 
         RenderCaller {
             vertex_array,
             shader_manager,
             texture_manager,
-            framebuffer_manager
+            framebuffer_manager,
+            screen_dimensions
         }
     }
 

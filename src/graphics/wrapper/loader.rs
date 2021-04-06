@@ -58,7 +58,7 @@ pub unsafe fn load_shaders() -> ShaderManager {
         eprintln!("Vertex shader {} doesn't exist in the shader identifier enum.", vs);
     }
     for fs in fragment_shaders {
-        eprintln!("Vertex shader {} doesn't exist in the shader identifier enum.", fs);
+        eprintln!("Fragment shader {} doesn't exist in the shader identifier enum.", fs);
     }
 
     ShaderManager::new(shaders)
@@ -111,57 +111,11 @@ pub unsafe fn load_textures() -> TextureManager {
     texture_manager
 }
 
-pub unsafe fn load_framebuffers(texture_manager : &TextureManager) -> FramebufferManager {
+pub unsafe fn load_framebuffers(texture_manager : &TextureManager, screen_dimensions : (u32,u32)) -> FramebufferManager {
     let mut framebuffers = Vec::new();
 
-    
-    /*
-    let framebuffer_files = Vec::new();
-
-    let entries = crate::utils::dir_entries(&std::path::Path::new("./graphics/framebuffers"), "./graphics/framebuffers");
-    let entries = match entries {
-        Ok(e) => e,
-        Err(error) => { panic!("Could not load textures! {:?}", error)}
-    };
-
-    for entry in entries {
-        if entry.1.ends_with(".json") {
-            framebuffer_files.push(entry.1);
-
-            /*let metadatas : Vec<FramebufferMetadata> = match serde_json::from_str( match &std::fs::read_to_string(&entry.0.path()) {
-                Ok(s) => s,
-                Err(e) => panic!("Failed reading file {:?}! Error {:?}",&entry.0,&e),
-            }) {
-                Ok(v) => v,
-                Err(e) => panic!("Json error in file {:?}! Error {:?}", &entry.0, &e),
-            };
-
-            for metadata in metadatas {
-                let ct = match &metadata.color_texture {
-                    Some(t) => {
-                        if !texture_manager.contains_texture(t) {
-                            panic!("Color texture \"{}\" referenced by framebuffer {} does not exist in texture manager!", t, metadata.name);
-                        }
-                        Some(texture_manager.get_texture(t))
-                    }
-                    None => None
-                };
-                let dt = match &metadata.depth_texture {
-                    Some(t) => {
-                        if !texture_manager.contains_texture(t) {
-                            panic!("Depth texture \"{}\" referenced by framebuffer {} does not exist in texture manager!", t, metadata.name);
-                        }
-                        Some(texture_manager.get_texture(t))
-                    }
-                    None => None
-                };
-                println!("{:?}",metadata);
-                framebuffer_manager.add_framebuffer(Framebuffer::new(&metadata.name, ct, dt, metadata.width, metadata.height, metadata.has_depth).unwrap()).unwrap();
-            }*/
-        }
-    }*/
     for identifier in FramebufferIdentifier::iter() {
-        framebuffers.push(Framebuffer::new(identifier, texture_manager).unwrap());
+        framebuffers.push(Framebuffer::new(identifier, texture_manager, screen_dimensions).unwrap());
     }
 
     FramebufferManager::new(framebuffers)

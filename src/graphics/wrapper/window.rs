@@ -43,8 +43,8 @@ impl Window {
         gl::Enable(gl::CULL_FACE);
         gl::CullFace(gl::BACK);
 
-        let render_caller = RenderCaller::new();
-        //unsafe { render_caller.load_shaders("shaders") };
+        let screen_dimensions = (windowed_context.window().inner_size().width, windowed_context.window().inner_size().height);
+        let render_caller = RenderCaller::new(screen_dimensions);
 
         let res = Window {
             event_loop: Some(el),
