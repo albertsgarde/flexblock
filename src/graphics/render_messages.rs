@@ -2,6 +2,8 @@ use crate::utils::vertex::Vertex3D;
 use std::slice::Iter;
 use std::fmt;
 
+use super::wrapper::{ShaderIdentifier, FramebufferIdentifier};
+
 #[derive(Debug)]
 pub struct RenderMessages {
     messages: Vec<RenderMessage>,
@@ -75,7 +77,7 @@ pub enum RenderMessage {
         depth_buffer: bool,
     },
     ChooseShader {
-        shader: String,
+        shader: ShaderIdentifier,
     },
     Uniforms {
         uniforms: UniformData,
@@ -86,7 +88,7 @@ pub enum RenderMessage {
     },
     /// framebuffer = which framebuffer to
     ChooseFramebuffer {
-        framebuffer : Option<String>,
+        framebuffer : Option<FramebufferIdentifier>,
     },
 }
 
