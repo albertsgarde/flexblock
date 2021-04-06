@@ -448,8 +448,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn one_shader_too_many_test() {
+    fn right_shader_count_test() {
         let mut shaders = Vec::new();
         for identifier in ShaderIdentifier::iter() {
             shaders.push(Shader {
@@ -462,10 +461,12 @@ mod tests {
                 }
             });
         }
+        ShaderManager::new(shaders);
     }
 
     #[test]
-    fn right_shader_count_test() {
+    #[should_panic]
+    fn one_shader_too_many_test() {
         let mut shaders = Vec::new();
         for identifier in ShaderIdentifier::iter() {
             shaders.push(Shader {
