@@ -53,10 +53,7 @@ impl Window {
             render_messages: rx,
             capabilities_sender: packing_tx,
         };
-        res.capabilities_sender
-            .channel_sender
-            .send(res.get_capabilities())
-            .unwrap();
+        res.send_capabilities();
 
         res
     }
@@ -66,13 +63,20 @@ impl Window {
             vbo_count: self.render_caller.get_vbo_count(),
             texture_metadata: self.render_caller.get_texture_manager().get_texture_metadata(),
             shader_metadata : self.render_caller.get_shader_manager().get_shader_metadata(),
-            framebuffer_metadata : self.render_caller.get_framebuffer_manager().get_framebuffer_metadata()
+            framebuffer_metadata : self.render_caller.get_framebuffer_manager().get_framebuffer_metadata(),
+            screen_dimensions :  (self.context.window().inner_size().width, self.context.window().inner_size().height)
         }
+    }
+
+    fn send_capabilities(&self) {
+        self.capabilities_sender
+            .channel_sender
+            .send(self.get_capabilities())
+            .unwrap();
     }
 
     unsafe fn render(&mut self) {
         // Try getting the lock; only render if there's render messages available.
-        // TODO: THIS HAS CHANGED BECAUSE NEW RENDER SENDER SYSTEM
         let render_messages = self.render_messages.render_pack.try_lock();
 
         if let Ok(_) = render_messages {
@@ -89,13 +93,20 @@ impl Window {
         }
     }
 
+    unsafe fn update_screen_dimensions(&mut self, screen_dimensions : (u32,u32)) {
+        gl::Viewport(0,0,screen_dimensions.0 as i32, screen_dimensions.1 as i32);
+        self.render_caller.update_screen_dimensions(screen_dimensions);
+        self.send_capabilities();
+    }
+
     ///
     /// Starts this graphics object
     ///
     /// NOTE: THE EXECUTION GOES TO THE GRAPHICS OBJECT WHEN THIS IS CALLED!
     ///
     pub unsafe fn run(mut self, mut event_handler: EventHandler) {
-        self.context.window().set_cursor_grab(true).unwrap();
+        //Ignore the result from the function.
+        let _ = self.context.window().set_cursor_grab(true);
         self.context.window().set_cursor_visible(false);
         if let Some(el) = self.event_loop.take() {
             el.run(move |event, _, control_flow| {
@@ -104,7 +115,10 @@ impl Window {
                 match event {
                     Event::LoopDestroyed => return,
                     Event::WindowEvent { window_id, event } => match event {
-                        WindowEvent::Resized(physical_size) => self.context.resize(physical_size),
+                        WindowEvent::Resized(physical_size) => {
+                            self.context.resize(physical_size);
+                            self.update_screen_dimensions((physical_size.width, physical_size.height));
+                        },
                         WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                         _ => event_handler(Event::WindowEvent { window_id, event }),
                     },

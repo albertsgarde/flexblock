@@ -162,6 +162,16 @@ impl FramebufferManager {
             }
         }
     }
+
+    pub unsafe fn update_screen_dimensions(&mut self, texture_manager : &TextureManager, screen_dimensions : (u32,u32)) {
+        for i in 0..self.framebuffers.len() {
+            let old_dimensions = (self.framebuffers[i].metadata.width, self.framebuffers[i].metadata.height);
+            let new_dimensions = self.framebuffers[i].metadata.identifier.dimensions(screen_dimensions);
+            if old_dimensions != new_dimensions {
+                self.framebuffers[i] = Framebuffer::new(self.framebuffers[i].metadata.identifier, texture_manager, screen_dimensions).unwrap();
+            }
+        }
+    }
 }
 
 #[cfg(test)]

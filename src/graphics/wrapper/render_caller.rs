@@ -37,6 +37,11 @@ impl RenderCaller {
         }
     }
 
+    pub unsafe fn update_screen_dimensions(&mut self, screen_dimensions : (u32,u32)) {
+        self.screen_dimensions = screen_dimensions;
+        self.texture_manager.update_screen_dimensions(screen_dimensions);
+        self.framebuffer_manager.update_screen_dimensions(&self.texture_manager, screen_dimensions);
+    }
 
     ///
     /// This is supposed to turn a packed render into something that can then be rendered directly. So

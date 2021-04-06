@@ -150,6 +150,15 @@ impl TextureManager {
     pub fn contains_texture(&self, name: &str) -> bool {
         self.texture_names.contains_key(name)
     }
+
+    pub unsafe fn update_screen_dimensions(&mut self, screen_dimensions : (u32,u32)) {
+        for i in 0..self.textures.len() {
+            if self.textures[i].metadata.screen_dependant_dimensions {
+                let old_metadata = self.textures[i].metadata.clone();
+                self.textures[i] = Texture::new(None, old_metadata.format, &old_metadata.name, screen_dimensions);
+            }
+        }
+    }
 }
 
 

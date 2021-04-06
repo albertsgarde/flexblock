@@ -71,7 +71,9 @@ fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
 
 /// Returns the view * projection matrix of the supplied camera.
 /// Doesn't get us all the way to mvp (multiply this by the model matrix, and you're there boyo).
-pub fn get_vp_matrix(view: &View) -> glm::Mat4 {
+pub fn get_vp_matrix(view: &View, screen_dimensions : (u32,u32)) -> glm::Mat4 {
+    let (width,height) = screen_dimensions;
+
     let direction = view.view_direction();
     let chunk = &view.location().chunk;
     let position: glm::Vec3 = view.location().position
@@ -88,7 +90,7 @@ pub fn get_vp_matrix(view: &View) -> glm::Mat4 {
         &glm::vec3(center[0], center[1], center[2]),
         &glm::vec3(up[0], up[1], up[2]),
     );
-    let p: glm::Mat4 = glm::perspective_fov(90. / 180. * 3.1415, 600., 400., 0.1, 100.0); //TODO: CORRECT FOV, WIDTH, AND HEIGHT
+    let p: glm::Mat4 = glm::perspective_fov(90. / 180. * 3.1415, width as f32, height as f32, 0.1, 100.0); //TODO: CORRECT FOV, WIDTH, AND HEIGHT
 
     p * v
 }
@@ -383,6 +385,11 @@ impl RenderState {
         let mut messages = RenderMessages::new();
 
         if self.capabilities.is_some() {
+            
+            let (width,height) = match &self.capabilities {
+                Some(cap) => cap.screen_dimensions,
+                None => unreachable!()
+            };
 
             messages.add_message(RenderMessage::ChooseShader {
                 shader: ShaderIdentifier::DefaultShader,
@@ -432,7 +439,7 @@ impl RenderState {
 
             self.clear_distant_chunks(data.view.location().chunk, &mut messages);
 
-            let vp = get_vp_matrix(&data.view);
+            let vp = get_vp_matrix(&data.view, (width,height));
             self.render_packed_chunks(&mut messages, &vp);
         }
         messages
