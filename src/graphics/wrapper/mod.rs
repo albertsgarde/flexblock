@@ -3,7 +3,7 @@ use buffer::{ArrayBuffer, ElementBuffer};
 
 mod framebuffer;
 use framebuffer::{Framebuffer, FramebufferManager};
-pub use framebuffer::FramebufferMetadata;
+pub use framebuffer::{FramebufferMetadata, FramebufferIdentifier};
 
 mod shader;
 use shader::{Shader, ShaderManager};

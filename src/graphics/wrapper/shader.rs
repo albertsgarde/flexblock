@@ -18,15 +18,16 @@ pub struct Shader {
     metadata : ShaderMetadata
 }
 
+
 #[derive(Clone, Copy, Debug, EnumCount, EnumIter)]
 pub enum ShaderIdentifier {
     DefaultShader
 }
 
 impl ShaderIdentifier {
-    pub fn path(&self) -> (&'static str, &'static str) {
+    pub fn extensionless_path(&self) -> &'static str  {
         match self {
-            ShaderIdentifier::DefaultShader => ("graphics/shaders/s1.vert", "graphics/shaders/s1.frag")
+            ShaderIdentifier::DefaultShader => "graphics/shaders/s1"
         }
     }
 
@@ -128,13 +129,15 @@ impl Shader {
             return Err(format!("Compute shader identifier {} passed as graphical!", identifier.name()))
         }
         let name = identifier.name();
-        let (vertex_file, fragment_file) = identifier.path();
+        let extensionless_path = identifier.extensionless_path();
+        let vertex_file = format!("{}.vert",extensionless_path);
+        let fragment_file = format!("{}.frag",extensionless_path);
         println!("Loading shader {}", name);
-        let (vsid, mut vsuniforms) = match Self::load_shader(vertex_file, gl::VERTEX_SHADER) {
+        let (vsid, mut vsuniforms) = match Self::load_shader(&vertex_file, gl::VERTEX_SHADER) {
             Ok(id) => id,
             Err(s) => return Err(s),
         };
-        let (fsid, mut fsuniforms) = match Self::load_shader(fragment_file, gl::FRAGMENT_SHADER) {
+        let (fsid, mut fsuniforms) = match Self::load_shader(&fragment_file, gl::FRAGMENT_SHADER) {
             Ok(id) => id,
             Err(s) => return Err(s),
         };
@@ -213,8 +216,9 @@ impl Shader {
         if identifier.is_compute() {
             return Err(format!("Graphical shader identifier {} passed as compute!", identifier.name()))
         }
-        let compute_file = identifier.path().0;
-        let (id, required_uniforms) = match Self::load_shader(compute_file, gl::COMPUTE_SHADER) {
+        let extensionless_path = identifier.extensionless_path();
+        let compute_file = format!("{}.comp",extensionless_path);
+        let (id, required_uniforms) = match Self::load_shader(&compute_file, gl::COMPUTE_SHADER) {
             Ok(id) => id,
             Err(s) => return Err(s),
         };
@@ -445,27 +449,19 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn two_shader_test() {
-        ShaderManager::new( vec![
-            Shader {
+    fn one_shader_too_many_test() {
+        let mut shaders = Vec::new();
+        for identifier in ShaderIdentifier::iter() {
+            shaders.push(Shader {
                 program_id : 0,
                 uniform_locations : HashMap::new(),
                 metadata : ShaderMetadata {
-                    identifier : ShaderIdentifier::DefaultShader,
+                    identifier : identifier,
                     required_uniforms : Vec::new(),
-                    shader_type : if ShaderIdentifier::DefaultShader.is_compute() {ProgramType::Compute} else { ProgramType::Graphics}
+                    shader_type : if identifier.is_compute() {ProgramType::Compute} else { ProgramType::Graphics}
                 }
-            },
-            Shader {
-                program_id : 0,
-                uniform_locations : HashMap::new(),
-                metadata : ShaderMetadata {
-                    identifier : ShaderIdentifier::DefaultShader,
-                    required_uniforms : Vec::new(),
-                    shader_type : if ShaderIdentifier::DefaultShader.is_compute() {ProgramType::Compute} else { ProgramType::Graphics}
-                }
-            }
-        ]);
+            });
+        }
     }
 
     #[test]
@@ -482,5 +478,15 @@ mod tests {
                 }
             });
         }
+        shaders.push(Shader {
+            program_id : 0,
+            uniform_locations : HashMap::new(),
+            metadata : ShaderMetadata {
+                identifier : ShaderIdentifier::DefaultShader,
+                required_uniforms : Vec::new(),
+                shader_type : if ShaderIdentifier::DefaultShader.is_compute() {ProgramType::Compute} else { ProgramType::Graphics}
+            }
+        });
+        ShaderManager::new(shaders);
     }
 }

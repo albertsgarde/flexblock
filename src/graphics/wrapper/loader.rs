@@ -1,4 +1,4 @@
-use super::{Framebuffer, FramebufferManager, FramebufferMetadata, Shader, ShaderIdentifier, ShaderManager, Texture, TextureManager, TextureMetadata};
+use super::{Framebuffer, FramebufferManager, Shader, ShaderIdentifier, ShaderManager, Texture, TextureManager, TextureMetadata, framebuffer::FramebufferIdentifier};
 use crate::utils::read_png;
 use strum::IntoEnumIterator;
 
@@ -45,10 +45,10 @@ pub unsafe fn load_shaders() -> ShaderManager {
             }
         };
         if identifier.is_compute() {
-            compute_shaders.retain(|x| {x != identifier.path().0});
+            compute_shaders.retain(|x| {x != identifier.extensionless_path()});
         } else {
-            vertex_shaders.retain(|x| {x != identifier.path().0});
-            fragment_shaders.retain(|x| {x != identifier.path().1});
+            vertex_shaders.retain(|x| {x != identifier.extensionless_path()});
+            fragment_shaders.retain(|x| {x != identifier.extensionless_path()});
         }
 
         shaders.push(shader);
@@ -112,17 +112,23 @@ pub unsafe fn load_textures() -> TextureManager {
 }
 
 pub unsafe fn load_framebuffers(texture_manager : &TextureManager) -> FramebufferManager {
-    let mut framebuffer_manager = FramebufferManager::new();
+    let mut framebuffers = Vec::new();
 
     
-    let entries = crate::utils::dir_entries(&std::path::Path::new("./graphics/framebuffers"), "");
+    /*
+    let framebuffer_files = Vec::new();
+
+    let entries = crate::utils::dir_entries(&std::path::Path::new("./graphics/framebuffers"), "./graphics/framebuffers");
     let entries = match entries {
         Ok(e) => e,
         Err(error) => { panic!("Could not load textures! {:?}", error)}
     };
+
     for entry in entries {
         if entry.1.ends_with(".json") {
-            let metadatas : Vec<FramebufferMetadata> = match serde_json::from_str( match &std::fs::read_to_string(&entry.0.path()) {
+            framebuffer_files.push(entry.1);
+
+            /*let metadatas : Vec<FramebufferMetadata> = match serde_json::from_str( match &std::fs::read_to_string(&entry.0.path()) {
                 Ok(s) => s,
                 Err(e) => panic!("Failed reading file {:?}! Error {:?}",&entry.0,&e),
             }) {
@@ -151,9 +157,12 @@ pub unsafe fn load_framebuffers(texture_manager : &TextureManager) -> Framebuffe
                 };
                 println!("{:?}",metadata);
                 framebuffer_manager.add_framebuffer(Framebuffer::new(&metadata.name, ct, dt, metadata.width, metadata.height, metadata.has_depth).unwrap()).unwrap();
-            }
+            }*/
         }
+    }*/
+    for identifier in FramebufferIdentifier::iter() {
+        framebuffers.push(Framebuffer::new(identifier, texture_manager).unwrap());
     }
 
-    framebuffer_manager
+    FramebufferManager::new(framebuffers)
 }

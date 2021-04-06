@@ -265,8 +265,8 @@ impl RenderMessageValidator {
                             println!("Filling in uniforms");
                         }
                     },
-                    RenderMessage::ChooseFramebuffer {framebuffer} => {
-                        if let Some(target) = framebuffer {
+                    RenderMessage::ChooseFramebuffer {framebuffer: _} => {
+                        /*if let Some(target) = framebuffer {
                             if !capabilities.framebuffer_metadata.contains_key(target) {
                                 
                             return Err(ValidationError {
@@ -274,7 +274,7 @@ impl RenderMessageValidator {
                                 context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
                             })
                             }
-                        }
+                        }*/
                         has_render_target = true;
                     }
                 }
@@ -382,7 +382,7 @@ mod tests {
         let shader_metadata = create_shader_metadata(extra_uniform);
         let mut texture_metadata = HashMap::new();
         texture_metadata.insert(String::from("atlas"), TextureMetadata {format : ColorFormat::RGB, width : 2, height : 2, name : String::from("atlas")});
-        let framebuffer_metadata = HashMap::new();
+        let framebuffer_metadata = Vec::new();
         rs.update_capabilities(GraphicsCapabilities {vbo_count : 100, texture_metadata, shader_metadata, framebuffer_metadata});
 
         rs

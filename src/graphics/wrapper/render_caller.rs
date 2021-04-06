@@ -1,4 +1,4 @@
-use super::{ShaderManager, TextureManager, FramebufferManager, VertexArray, ShaderIdentifier};
+use super::{FramebufferIdentifier, FramebufferManager, ShaderIdentifier, ShaderManager, TextureManager, VertexArray};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::{Vertex3D};
 
@@ -99,7 +99,7 @@ impl RenderCaller {
         }
     }
 
-    pub unsafe fn choose_framebuffer(&mut self, framebuffer : &Option<String>) {
+    pub unsafe fn choose_framebuffer(&mut self, framebuffer : &Option<FramebufferIdentifier>) {
         self.framebuffer_manager.bind_framebuffer(&framebuffer);
     }
 

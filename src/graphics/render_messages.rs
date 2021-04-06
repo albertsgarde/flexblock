@@ -2,7 +2,7 @@ use crate::utils::vertex::Vertex3D;
 use std::slice::Iter;
 use std::fmt;
 
-use super::wrapper::ShaderIdentifier;
+use super::wrapper::{ShaderIdentifier, FramebufferIdentifier};
 
 #[derive(Debug)]
 pub struct RenderMessages {
@@ -88,7 +88,7 @@ pub enum RenderMessage {
     },
     /// framebuffer = which framebuffer to
     ChooseFramebuffer {
-        framebuffer : Option<String>,
+        framebuffer : Option<FramebufferIdentifier>,
     },
 }
 
