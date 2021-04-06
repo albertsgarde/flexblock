@@ -39,9 +39,9 @@ impl FramebufferIdentifier {
     }
 
     /// TODO: Figure out a way to make dimensions in terms of screen dimensions.
-    pub fn dimensions(&self, _screen_dimensions : (u32,u32)) -> (u32,u32) {
+    pub fn dimensions(&self, screen_dimensions : (u32,u32)) -> (u32,u32) {
         match self {
-            FramebufferIdentifier::FirstPassFramebuffer => (800,800)
+            FramebufferIdentifier::FirstPassFramebuffer => screen_dimensions
         }
     }
 }

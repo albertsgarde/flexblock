@@ -25,7 +25,7 @@ impl RenderCaller {
         let vertex_array = VertexArray::new(Vertex3D::dummy()).unwrap();
 
         let shader_manager = super::loader::load_shaders();
-        let texture_manager = super::loader::load_textures();
+        let texture_manager = super::loader::load_textures(screen_dimensions);
         let framebuffer_manager = super::loader::load_framebuffers(&texture_manager, screen_dimensions);
 
         RenderCaller {

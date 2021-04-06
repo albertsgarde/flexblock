@@ -490,4 +490,5 @@ mod tests {
         });
         ShaderManager::new(shaders);
     }
+
 }

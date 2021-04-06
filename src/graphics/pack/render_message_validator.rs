@@ -381,7 +381,7 @@ mod tests {
 
         let shader_metadata = create_shader_metadata(extra_uniform);
         let mut texture_metadata = HashMap::new();
-        texture_metadata.insert(String::from("atlas"), TextureMetadata {format : ColorFormat::RGB, width : 2, height : 2, name : String::from("atlas")});
+        texture_metadata.insert(String::from("atlas"), TextureMetadata {format : ColorFormat::RGB, width : 2, height : 2, name : String::from("atlas"), screen_dependant_dimensions : false});
         let framebuffer_metadata = Vec::new();
         rs.update_capabilities(GraphicsCapabilities {vbo_count : 100, texture_metadata, shader_metadata, framebuffer_metadata});
 

@@ -12,10 +12,15 @@ pub struct Texture {
 impl Texture {
     ///
     ///Creates a new, empty texture, with the specified width, height, and format
-    pub unsafe fn new(width: u32, height: u32, format: ColorFormat, name : &str) -> Texture {
+    /// If width and height are None, then 
+    pub unsafe fn new(dimensions : Option<(u32, u32)>, format: ColorFormat, name : &str, screen_dimensions : (u32,u32)) -> Texture {
         let glf = format.gl_format();
         let mut id = 0;
 
+        let (width,height) = match dimensions {
+            Some(d) => d,
+            None => screen_dimensions
+        };
         gl::GenTextures(1, &mut id);
         gl::BindTexture(gl::TEXTURE_2D, id);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32); //TODO: WHAT THE HELL IS GOING ON WITH THIS CONVERSION TO I32???
@@ -39,7 +44,7 @@ impl Texture {
         Texture {
             id,
             filled: false,
-            metadata : TextureMetadata { format, width, height, name : String::from(name)} 
+            metadata : TextureMetadata { format, width, height, name : String::from(name), screen_dependant_dimensions : dimensions.is_none()} 
         }
     }
 
@@ -88,7 +93,10 @@ pub struct TextureMetadata {
     pub format : ColorFormat,
     pub width : u32,
     pub height : u32,
-    pub name : String
+    pub name : String,
+    /// Whether this texture changes size depending on the screen dimensions.
+    /// TODO: IMPLEMENT ALTERNATE SCREEN DEPENDENCIES THAN JUST TEXTURE_DIM = SCREEN_DIM
+    pub screen_dependant_dimensions : bool,
 }
 
 pub struct TextureManager {
@@ -141,5 +149,25 @@ impl TextureManager {
 
     pub fn contains_texture(&self, name: &str) -> bool {
         self.texture_names.contains_key(name)
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::TextureMetadata;
+    use crate::utils::ColorFormat;
+
+    fn serialize_texture_metadata() {
+        let metadata = TextureMetadata {
+            format : ColorFormat::RGB,
+            width: 0,
+            height: 0,
+            name: "bob".to_owned(),
+            screen_dependant_dimensions: true,
+        };
+        let j = serde_json::to_string(&metadata).unwrap();
+
+        println!("{}",j);
     }
 }
