@@ -1,3 +1,3 @@
 [
-    {"name":"test","width":800,"height":800,"format" : "RGB"}
+    {"format":"RGB","width":0,"height":0,"name":"fpfcolor","screen_dependant_dimensions":true}
 ]

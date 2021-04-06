@@ -1,4 +1,4 @@
-use super::{ShaderManager, TextureManager, FramebufferManager, VertexArray};
+use super::{FramebufferIdentifier, FramebufferManager, ShaderIdentifier, ShaderManager, TextureManager, VertexArray};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::{Vertex3D};
 
@@ -14,27 +14,34 @@ pub struct RenderCaller {
     vertex_array: VertexArray<Vertex3D>,
     pub shader_manager: ShaderManager,
     texture_manager: TextureManager,
-    framebuffer_manager : FramebufferManager
+    framebuffer_manager : FramebufferManager,
+    screen_dimensions : (u32,u32)
 }
 
 impl RenderCaller {
     ///
     /// Marked as unsafe because it calls GL code
-    pub unsafe fn new() -> RenderCaller {
+    pub unsafe fn new(screen_dimensions : (u32,u32)) -> RenderCaller {
         let vertex_array = VertexArray::new(Vertex3D::dummy()).unwrap();
 
         let shader_manager = super::loader::load_shaders();
-        let texture_manager = super::loader::load_textures();
-        let framebuffer_manager = super::loader::load_framebuffers(&texture_manager);
+        let texture_manager = super::loader::load_textures(screen_dimensions);
+        let framebuffer_manager = super::loader::load_framebuffers(&texture_manager, screen_dimensions);
 
         RenderCaller {
             vertex_array,
             shader_manager,
             texture_manager,
-            framebuffer_manager
+            framebuffer_manager,
+            screen_dimensions
         }
     }
 
+    pub unsafe fn update_screen_dimensions(&mut self, screen_dimensions : (u32,u32)) {
+        self.screen_dimensions = screen_dimensions;
+        self.texture_manager.update_screen_dimensions(screen_dimensions);
+        self.framebuffer_manager.update_screen_dimensions(&self.texture_manager, screen_dimensions);
+    }
 
     ///
     /// This is supposed to turn a packed render into something that can then be rendered directly. So
@@ -63,7 +70,7 @@ impl RenderCaller {
         self.vertex_array.clear(*buffer);
     }
 
-    unsafe fn choose_shader(&mut self, shader: &str) {
+    unsafe fn choose_shader(&mut self, shader: ShaderIdentifier) {
         match self.shader_manager.bind_shader(shader) {
             Err(s) => {
                 println!("{}", s)
@@ -88,7 +95,7 @@ impl RenderCaller {
         match message {
             RenderMessage::Pack { buffer, pack } => self.unpack(buffer, pack),
             RenderMessage::ClearArray { buffer } => self.clear(buffer),
-            RenderMessage::ChooseShader { shader } => self.choose_shader(shader),
+            RenderMessage::ChooseShader { shader } => self.choose_shader(*shader),
             RenderMessage::Uniforms { uniforms } => self.uniforms(uniforms),
             RenderMessage::Draw { buffer } => self.render(buffer),
             RenderMessage::ClearBuffers {
@@ -99,7 +106,7 @@ impl RenderCaller {
         }
     }
 
-    pub unsafe fn choose_framebuffer(&mut self, framebuffer : &Option<String>) {
+    pub unsafe fn choose_framebuffer(&mut self, framebuffer : &Option<FramebufferIdentifier>) {
         self.framebuffer_manager.bind_framebuffer(&framebuffer);
     }
 
