@@ -6,3 +6,6 @@ mod cube_faces;
 
 mod render_message_validator;
 pub use render_message_validator::{RenderMessageValidator};
+
+mod compute_pipeline;
+pub use compute_pipeline::{ComputeDispatch,ComputePipeline};

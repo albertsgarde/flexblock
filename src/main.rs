@@ -5,6 +5,8 @@ mod channels;
 mod game;
 mod graphics;
 mod utils;
+#[macro_use]
+extern crate macros;
 
 extern crate nalgebra_glm as glm;
 #[macro_use]
