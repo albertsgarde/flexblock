@@ -23,37 +23,15 @@ pub struct Shader {
 
 #[derive(Clone, Copy, Debug, EnumCount, EnumIter, ShaderId)]
 pub enum ShaderIdentifier {
-    #[name("default shader")]
+    #[name("Default shader")]
     #[extensionless_path("graphics/shaders/s1")]
     #[is_compute(false)]
     DefaultShader,
-    #[name("sobel shader")]
+    #[name("Sobel shader")]
     #[extensionless_path("graphics/shaders/sobel")]
     #[is_compute(true)]
     SobelShader,
 }
-/*impl ShaderIdentifier {
-    //pub fn extensionless_path(&self) -> &'static str  {
-    //    match self {
-    //        ShaderIdentifier::DefaultShader => "graphics/shaders/s1",
-    //        ShaderIdentifier::SobelShader => "graphics/shaders/sobel"
-    //    }
-    //}
-
-    pub fn name(&self) -> &'static str {
-        match self {
-            ShaderIdentifier::DefaultShader => "default shader",
-            ShaderIdentifier::SobelShader => "Sobel"
-        }
-    }
-
-    pub fn is_compute(&self) -> bool {
-        match self {
-            ShaderIdentifier::DefaultShader => false,
-            ShaderIdentifier::SobelShader => true
-        }
-    }
-}*/
 
 #[derive(Clone)]
 pub struct ShaderMetadata {
