@@ -293,6 +293,8 @@ impl RenderMessageValidator {
                     },
                     RenderMessage::Compute { output_texture, dimensions : _ } => {
                         
+                        //TODO: ENFORCE TEXTURE FORMAT FIT
+
                         if !capabilities.texture_metadata.contains_key(output_texture) {
                             return Err(ValidationError {
                                 error_type : ValidationErrorType::InvalidTexture {texture : String::from(output_texture)},
@@ -394,7 +396,7 @@ impl RenderMessageValidator {
 #[cfg(test)]
 mod tests {
     use super::{RenderState, RenderMessageValidator};
-    use crate::graphics::GraphicsCapabilities;
+    use crate::graphics::{GraphicsCapabilities, wrapper::InternalFormat};
     use crate::graphics::wrapper::{ShaderMetadata, ProgramType, TextureMetadata, ShaderIdentifier};
     use crate::graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
     use std::collections::HashMap;
@@ -427,7 +429,7 @@ mod tests {
 
         let shader_metadata = create_shader_metadata(extra_uniform);
         let mut texture_metadata = HashMap::new();
-        texture_metadata.insert(String::from("atlas"), TextureMetadata {format : ColorFormat::RGB, width : 2, height : 2, name : String::from("atlas"), screen_dependant_dimensions : false});
+        texture_metadata.insert(String::from("atlas"), TextureMetadata {format : ColorFormat::RGB, internal_format : InternalFormat::RGB8, width : 2, height : 2, name : String::from("atlas"), screen_dependant_dimensions : false});
         let framebuffer_metadata = Vec::new();
         rs.update_capabilities(GraphicsCapabilities {vbo_count : 100, texture_metadata, shader_metadata, framebuffer_metadata, screen_dimensions : (2,2)});
 

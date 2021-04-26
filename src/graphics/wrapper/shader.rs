@@ -145,7 +145,6 @@ impl Shader {
 
         if success == 0 {
             let mut len: gl::types::GLint = 0;
-            //println!("No luck here!");
             gl::GetProgramiv(program_id, gl::INFO_LOG_LENGTH, &mut len);
 
             let error = create_whitespace_cstring_with_len(len as usize);
@@ -223,7 +222,6 @@ impl Shader {
 
         if success == 0 {
             let mut len: gl::types::GLint = 0;
-            //println!("No luck here!");
             gl::GetProgramiv(program_id, gl::INFO_LOG_LENGTH, &mut len);
 
             let error = create_whitespace_cstring_with_len(len as usize);
@@ -238,7 +236,7 @@ impl Shader {
             return Err(error.to_string_lossy().into_owned());
         }
 
-        gl::DetachShader(program_id, id);
+        //gl::DetachShader(program_id, id);
         gl::DeleteShader(id);
 
         let mut uniform_locations: HashMap<String, i32> = HashMap::new();
@@ -340,7 +338,7 @@ impl<'a> ShaderManager {
             count += 1;
         }
         if count < ShaderIdentifier::COUNT {
-            panic!("Not enough shaders were supplied for the shader manager")
+            panic!("Not enough shaders were supplied for the shader manager. Likely some loading failed; look further up for compilation errors.")
         }
         ShaderManager {
             shaders,

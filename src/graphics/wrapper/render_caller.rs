@@ -136,9 +136,8 @@ impl RenderCaller {
 
     pub unsafe fn dispatch_compute(&mut self, output_texture : &String, dimensions : &(u32,u32,u32)) {
         let tex = self.texture_manager.get_texture(output_texture);
-        gl::BindImageTexture(0, tex.get_id(), 0, gl::FALSE, 0, gl::WRITE_ONLY, tex.metadata.format.gl_format());
-        gl::DispatchCompute(dimensions.0, dimensions.1, dimensions.2);
-        
+        gl::BindImageTexture(0, tex.get_id(), 0, gl::FALSE, 0, gl::WRITE_ONLY, tex.metadata.internal_format.to_gl());
+        gl::DispatchCompute(dimensions.0, dimensions.1, 1);
     }
 
     pub fn get_vbo_count(&self) -> usize {

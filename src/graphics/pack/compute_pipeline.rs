@@ -19,7 +19,7 @@ impl ComputePipeline {
         }
     }
 
-    pub fn add_dispatch(mut self, dispatch : ComputeDispatch) {
+    pub fn add_dispatch(&mut self, dispatch : ComputeDispatch) {
         self.dispatches.push(dispatch);
     }
 

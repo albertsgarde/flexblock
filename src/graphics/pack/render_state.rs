@@ -341,7 +341,6 @@ impl RenderState {
                         location.z as f32 * 16.,
                     ),
                 );
-
                 render_messages.add_message(RenderMessage::Uniforms {
                     uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![], vec![(String::from("/atlas.png"), String::from("test_texture"))]),
                 });
@@ -372,6 +371,10 @@ impl RenderState {
 
     pub fn is_render_ready(&self) -> bool {
         return self.capabilities.is_some();
+    }
+
+    pub fn render_capabilities(&self) -> &Option<GraphicsCapabilities> {
+        return &self.capabilities
     }
 
     /// Fills in world render messages for a tick

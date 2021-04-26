@@ -1,9 +1,27 @@
 #version 430 core
 
 layout(local_size_x=1, local_size_y=1) in;
-layout(rgba32f, binding=0) uniform image2D img_output;
+layout(rgba8, binding=0) uniform image2D img_output;
 uniform sampler2D fromTex;
 
 void main() {
-	
+	ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+
+    //while(true) {
+
+    //}
+    uvec2 nwg = gl_NumWorkGroups.xy;
+    vec2 scale = vec2(1./int(nwg.x), 1./int(nwg.y));
+
+    vec4 m1 = texture(fromTex, (pixel_coords+ivec2(-1,-1))*scale);
+    vec4 m2 = texture(fromTex, (pixel_coords+ivec2(-1,0))*scale);
+    vec4 m3 = texture(fromTex, (pixel_coords+ivec2(-1,1))*scale);
+
+    vec4 p1 = texture(fromTex, (pixel_coords+ivec2(1,-1))*scale);
+    vec4 p2 = texture(fromTex, (pixel_coords+ivec2(1,0))*scale);
+    vec4 p3 = texture(fromTex, (pixel_coords+ivec2(1,1))*scale);
+
+    vec3 res = abs((p1+p2*2+p3)-(m1+m2*2+m3)).xyz;
+
+    imageStore(img_output, pixel_coords, vec4(res,1));
 }
