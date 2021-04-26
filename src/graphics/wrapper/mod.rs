@@ -20,6 +20,6 @@ use render_caller::RenderCaller;
 
 mod texture;
 use texture::{Texture, TextureManager};
-pub use texture::{TextureMetadata};
+pub use texture::{TextureMetadata, InternalFormat};
 
 mod loader;

@@ -103,6 +103,7 @@ impl RenderCaller {
                 depth_buffer,
             } => self.clear_buffers(color_buffer, depth_buffer),
             RenderMessage::ChooseFramebuffer {framebuffer} => self.choose_framebuffer(&framebuffer),
+            RenderMessage::Compute {output_texture, dimensions} => self.dispatch_compute(output_texture, dimensions)
         }
     }
 
@@ -131,6 +132,12 @@ impl RenderCaller {
                 0
             }),
         );
+    }
+
+    pub unsafe fn dispatch_compute(&mut self, output_texture : &String, dimensions : &(u32,u32,u32)) {
+        let tex = self.texture_manager.get_texture(output_texture);
+        gl::BindImageTexture(0, tex.get_id(), 0, gl::FALSE, 0, gl::WRITE_ONLY, tex.metadata.internal_format.to_gl());
+        gl::DispatchCompute(dimensions.0, dimensions.1, 1);
     }
 
     pub fn get_vbo_count(&self) -> usize {

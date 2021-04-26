@@ -5,6 +5,8 @@ use std::ffi::{CStr, CString};
 use std::fs;
 use strum::{EnumCount, EnumIter};
 use crate::graphics::UniformData;
+use macros::ShaderId;
+
 #[derive(Clone)]
 pub enum ProgramType {
     Graphics,
@@ -19,29 +21,20 @@ pub struct Shader {
 }
 
 
-#[derive(Clone, Copy, Debug, EnumCount, EnumIter)]
+#[derive(Clone, Copy, Debug, EnumCount, EnumIter, ShaderId)]
 pub enum ShaderIdentifier {
-    DefaultShader
-}
-
-impl ShaderIdentifier {
-    pub fn extensionless_path(&self) -> &'static str  {
-        match self {
-            ShaderIdentifier::DefaultShader => "graphics/shaders/s1"
-        }
-    }
-
-    pub fn name(&self) -> &'static str {
-        match self {
-            ShaderIdentifier::DefaultShader => "default shader"
-        }
-    }
-
-    pub fn is_compute(&self) -> bool {
-        match self {
-            &ShaderIdentifier::DefaultShader => false
-        }
-    }
+    #[name("Default shader")]
+    #[extensionless_path("graphics/shaders/s1")]
+    #[is_compute(false)]
+    DefaultShader,
+    #[name("Sobel shader")]
+    #[extensionless_path("graphics/shaders/sobel")]
+    #[is_compute(true)]
+    SobelShader,
+    #[name("Simple Shader")]
+    #[extensionless_path("graphics/shaders/simple")]
+    #[is_compute(false)]
+    SimpleShader,
 }
 
 #[derive(Clone)]
@@ -156,7 +149,6 @@ impl Shader {
 
         if success == 0 {
             let mut len: gl::types::GLint = 0;
-            //println!("No luck here!");
             gl::GetProgramiv(program_id, gl::INFO_LOG_LENGTH, &mut len);
 
             let error = create_whitespace_cstring_with_len(len as usize);
@@ -213,7 +205,7 @@ impl Shader {
     }
 
     unsafe fn new_compute(identifier : ShaderIdentifier) -> Result<Shader, String> {
-        if identifier.is_compute() {
+        if !identifier.is_compute() {
             return Err(format!("Graphical shader identifier {} passed as compute!", identifier.name()))
         }
         let extensionless_path = identifier.extensionless_path();
@@ -234,7 +226,6 @@ impl Shader {
 
         if success == 0 {
             let mut len: gl::types::GLint = 0;
-            //println!("No luck here!");
             gl::GetProgramiv(program_id, gl::INFO_LOG_LENGTH, &mut len);
 
             let error = create_whitespace_cstring_with_len(len as usize);
@@ -249,7 +240,7 @@ impl Shader {
             return Err(error.to_string_lossy().into_owned());
         }
 
-        gl::DetachShader(program_id, id);
+        //gl::DetachShader(program_id, id);
         gl::DeleteShader(id);
 
         let mut uniform_locations: HashMap<String, i32> = HashMap::new();
@@ -351,7 +342,7 @@ impl<'a> ShaderManager {
             count += 1;
         }
         if count < ShaderIdentifier::COUNT {
-            panic!("Not enough shaders were supplied for the shader manager")
+            panic!("Not enough shaders were supplied for the shader manager. Likely some loading failed; look further up for compilation errors.")
         }
         ShaderManager {
             shaders,

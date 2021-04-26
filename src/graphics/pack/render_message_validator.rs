@@ -20,6 +20,8 @@ pub enum ValidationErrorType {
     UnwantedUniform {uniform : String},
     UnfilledUniform {uniforms : Vec<String>},
     NoGraphicsCapabilities,
+    NonComputeShader {shader : String},
+    NonGraphicsShader {shader : String},
 }
 /// Context for an error from the validator (What are the render messages, which is the current message, yadayadayada)
 pub struct ValidationContext<'a> {
@@ -53,7 +55,9 @@ impl<'a> fmt::Debug for ValidationError<'a> {
             ValidationErrorType::InvalidFramebuffer {framebuffer} => format!("Trying to bind framebuffer {}, which does not exist", framebuffer),
             ValidationErrorType::InvalidTexture {texture} => format!("Trying to pass texture {} as shader uniform, but texture does not exist in the graphics capabilities object!", texture),
             ValidationErrorType::UnwantedUniform {uniform} => format!("Trying to pass uniform {} to a shader that does not want it! (This is non-critical, should maybe be a warning instead)", uniform),
-            ValidationErrorType::NoGraphicsCapabilities => format!("Trying to send RenderMessages with no graphics capabilities!")
+            ValidationErrorType::NoGraphicsCapabilities => format!("Trying to send RenderMessages with no graphics capabilities!"),
+            ValidationErrorType::NonComputeShader {shader}=> format!("Trying to run a compute dispatch with graphics shader {}!", shader),
+            ValidationErrorType::NonGraphicsShader {shader}=> format!("Trying to render with compute shader {}!", shader),
         };
         res.push_str("\n");
         let mut counter=0;
@@ -95,7 +99,7 @@ impl RenderMessageValidator {
     }
 
     /// Validates that this contains only allowed render messages in an allowed order
-    /// Note that this cannot be activated in the middle of the program; it is stateful (since vbos are packed and unpacked.)
+    /// Note that this cannot be turned on in the middle of the program; it is stateful (since vbos are packed and unpacked.)
     pub fn validate<'a>(&mut self, state : &RenderState, messages : &'a RenderMessages) -> Result<(), ValidationError<'a>> {
 
         let verbose = false;
@@ -177,6 +181,16 @@ impl RenderMessageValidator {
                         }
 
                         if let Some(s) = &chosen_shader {
+
+                            if s.identifier.is_compute() {
+                                
+                                return Err(ValidationError {
+                                    error_type : ValidationErrorType::NonGraphicsShader { 
+                                        shader : String::from(s.identifier.name())
+                                    },
+                                    context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                                })
+                            }
 
                             for uniform in &s.required_uniforms {
                                 if !bound_uniforms.contains(&uniform.0) {
@@ -276,6 +290,40 @@ impl RenderMessageValidator {
                             }
                         }*/
                         has_render_target = true;
+                    },
+                    RenderMessage::Compute { output_texture, dimensions : _ } => {
+                        
+                        //TODO: ENFORCE TEXTURE FORMAT FIT
+
+                        if !capabilities.texture_metadata.contains_key(output_texture) {
+                            return Err(ValidationError {
+                                error_type : ValidationErrorType::InvalidTexture {texture : String::from(output_texture)},
+                                context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                            })
+                        }
+
+                        if let Some(s) = chosen_shader {
+                            if !s.identifier.is_compute() {
+                                return Err(ValidationError {
+                                    error_type : ValidationErrorType::NonComputeShader { shader : String::from(s.identifier.name())},
+                                    context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                                })
+                            }
+                            
+                            for uniform in &s.required_uniforms {
+                                if !bound_uniforms.contains(&uniform.0) {
+                                    
+                                    return Err(ValidationError {
+                                        error_type : ValidationErrorType::UnfilledUniform { 
+                                            uniforms : (&s.required_uniforms).into_iter().map(|x| String::from(&x.0)).filter(|x|  { !bound_uniforms.contains(&x) }).collect::<Vec<String>>()
+                                        },
+                                        context : self.capture_context(state, messages, chosen_shader, has_render_target, bound_uniforms, message_index)
+                                    })
+                                }
+                            }
+                        }
+                        
+
                     }
                 }
                 message_index += 1;
@@ -348,7 +396,7 @@ impl RenderMessageValidator {
 #[cfg(test)]
 mod tests {
     use super::{RenderState, RenderMessageValidator};
-    use crate::graphics::GraphicsCapabilities;
+    use crate::graphics::{GraphicsCapabilities, wrapper::InternalFormat};
     use crate::graphics::wrapper::{ShaderMetadata, ProgramType, TextureMetadata, ShaderIdentifier};
     use crate::graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
     use std::collections::HashMap;
@@ -381,7 +429,7 @@ mod tests {
 
         let shader_metadata = create_shader_metadata(extra_uniform);
         let mut texture_metadata = HashMap::new();
-        texture_metadata.insert(String::from("atlas"), TextureMetadata {format : ColorFormat::RGB, width : 2, height : 2, name : String::from("atlas"), screen_dependant_dimensions : false});
+        texture_metadata.insert(String::from("atlas"), TextureMetadata {format : ColorFormat::RGB, internal_format : InternalFormat::RGB8, width : 2, height : 2, name : String::from("atlas"), screen_dependant_dimensions : false});
         let framebuffer_metadata = Vec::new();
         rs.update_capabilities(GraphicsCapabilities {vbo_count : 100, texture_metadata, shader_metadata, framebuffer_metadata, screen_dimensions : (2,2)});
 

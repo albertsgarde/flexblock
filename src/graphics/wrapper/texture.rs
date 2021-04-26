@@ -3,17 +3,38 @@ use std::ptr::null;
 use serde::{Serialize, Deserialize};
 use crate::utils::ColorFormat;
 
+#[derive(Clone,Copy,Debug, Serialize, Deserialize)]
+pub enum InternalFormat {
+    RGBA8,
+    RGB8,
+}
+
+impl InternalFormat {
+    pub fn to_gl(&self) -> u32 {
+        match self {
+            InternalFormat::RGB8 => gl::RGB8,
+            InternalFormat::RGBA8 => gl::RGBA8,
+        }
+    }
+}
+
 pub struct Texture {
     id: u32,
     filled: bool,
     pub metadata : TextureMetadata
 }
 
+impl Drop for Texture {
+    fn drop(&mut self) {
+        unsafe { gl::DeleteTextures(1, &self.id as *const u32) };
+    }
+}
+
 impl Texture {
     ///
     ///Creates a new, empty texture, with the specified width, height, and format
     /// If width and height are None, then 
-    pub unsafe fn new(dimensions : Option<(u32, u32)>, format: ColorFormat, name : &str, screen_dimensions : (u32,u32)) -> Texture {
+    pub unsafe fn new(dimensions : Option<(u32, u32)>, format: ColorFormat, internal_format : InternalFormat, name : &str, screen_dimensions : (u32,u32)) -> Texture {
         let glf = format.gl_format();
         let mut id = 0;
 
@@ -31,7 +52,7 @@ impl Texture {
         gl::TexImage2D(
             gl::TEXTURE_2D,
             0,
-            glf as i32,
+            internal_format.to_gl() as i32,
             width as i32,
             height as i32,
             0,
@@ -44,7 +65,7 @@ impl Texture {
         Texture {
             id,
             filled: false,
-            metadata : TextureMetadata { format, width, height, name : String::from(name), screen_dependant_dimensions : dimensions.is_none()} 
+            metadata : TextureMetadata { format, internal_format, width, height, name : String::from(name), screen_dependant_dimensions : dimensions.is_none()} 
         }
     }
 
@@ -91,6 +112,7 @@ impl Texture {
 #[derive(Clone, Serialize, Deserialize)]
 pub struct TextureMetadata {
     pub format : ColorFormat,
+    pub internal_format : InternalFormat,
     pub width : u32,
     pub height : u32,
     pub name : String,
@@ -155,7 +177,7 @@ impl TextureManager {
         for i in 0..self.textures.len() {
             if self.textures[i].metadata.screen_dependant_dimensions {
                 let old_metadata = self.textures[i].metadata.clone();
-                self.textures[i] = Texture::new(None, old_metadata.format, &old_metadata.name, screen_dimensions);
+                self.textures[i] = Texture::new(None, old_metadata.format, old_metadata.internal_format, &old_metadata.name, screen_dimensions);
             }
         }
     }
@@ -166,10 +188,12 @@ impl TextureManager {
 mod tests {
     use super::TextureMetadata;
     use crate::utils::ColorFormat;
+    use super::super::InternalFormat;
 
     fn serialize_texture_metadata() {
         let metadata = TextureMetadata {
             format : ColorFormat::RGB,
+            internal_format : InternalFormat::RGB8,
             width: 0,
             height: 0,
             name: "bob".to_owned(),

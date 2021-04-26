@@ -50,6 +50,12 @@ impl RenderMessages {
         new_messages.append(&mut self.messages);
         self.messages = new_messages;
     }
+
+    /// Merges a current render pack onto the end of this one.
+    pub fn merge_current(&mut self, new_pack :RenderMessages) {
+        let mut new_pack = new_pack;
+        self.messages.append(&mut new_pack.messages);
+    }
 }
 
 pub struct VertexPack {
@@ -86,10 +92,14 @@ pub enum RenderMessage {
     Draw {
         buffer: usize,
     },
-    /// framebuffer = which framebuffer to
+    /// framebuffer = which framebuffer to draw to. None for the screen.
     ChooseFramebuffer {
         framebuffer : Option<FramebufferIdentifier>,
     },
+    Compute {
+        output_texture : String,
+        dimensions : (u32,u32,u32),
+    }
 }
 
 impl RenderMessage {
@@ -108,6 +118,7 @@ impl RenderMessage {
             RenderMessage::Uniforms { uniforms: _ } => false,
             RenderMessage::Draw { buffer: _ } => false,
             RenderMessage::ChooseFramebuffer {framebuffer : _} => false,
+            RenderMessage::Compute {output_texture : _, dimensions : _} => false
         }
     }
 }

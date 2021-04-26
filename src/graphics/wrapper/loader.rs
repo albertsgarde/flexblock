@@ -83,8 +83,14 @@ pub unsafe fn load_textures(screen_dimensions : (u32,u32)) -> TextureManager {
                 }
             };
 
+            use crate::utils::ColorFormat;
+            use super::InternalFormat;
+            let int_format = match data.format {
+                ColorFormat::RGB => InternalFormat::RGB8,
+                ColorFormat::RGBA => InternalFormat::RGBA8,
+            };
 
-            let mut t = Texture::new(Some((data.width, data.height)), data.format, &entry.1, screen_dimensions);
+            let mut t = Texture::new(Some((data.width, data.height)), data.format, int_format, &entry.1, screen_dimensions);
             t.fill(data.data);
             println!("Loaded texture {}!", &t.metadata.name);
             texture_manager.add_texture(t).unwrap();
@@ -100,7 +106,7 @@ pub unsafe fn load_textures(screen_dimensions : (u32,u32)) -> TextureManager {
             for metadata in metadatas {
                 let t = Texture::new(match metadata.screen_dependant_dimensions {
                     false => Some((metadata.width, metadata.height)),
-                    true => None} , metadata.format, &metadata.name, screen_dimensions);
+                    true => None} , metadata.format, metadata.internal_format, &metadata.name, screen_dimensions);
                 texture_manager.add_texture(t).unwrap();
             }
 
