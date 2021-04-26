@@ -53,26 +53,25 @@ pub fn start_packing_thread(
                 }
 
                 // Framebuffer test code (Renders the texture sobel_output to screen)
-                if messages.size() > 0 {
-                    messages.add_message(RenderMessage::ChooseShader{shader : ShaderIdentifier::SimpleShader});
-                    messages.add_message(RenderMessage::Uniforms{uniforms : UniformData::new(vec![], vec![], vec![("sobel_output".to_owned(), "tex".to_owned())])});
-                    messages.add_message(RenderMessage::ChooseFramebuffer{framebuffer : None});
-                    messages.add_message(RenderMessage::ClearBuffers{color_buffer : true, depth_buffer : true});
-                    messages.add_message(RenderMessage::Pack {
-                        buffer : 80,
-                        pack : VertexPack::new(
-                            vec![
-                                Vertex3D {x:-1., y:-1., z:-1., r:1., g:1., b:1., u:0., v:0.},
-                                Vertex3D {x:1., y:-1., z:-1., r:1., g:1., b:1., u:1., v:0.},
-                                Vertex3D {x:1., y:1., z:-1., r:1., g:1., b:1., u:1., v:1.},
-                                Vertex3D {x:-1., y:1., z:-1., r:1., g:1., b:1., u:0., v:1.},
-                                ],
-                            Some(vec![0, 1, 2, 0, 2, 3])
-                        )
-                    });
-                    messages.add_message(RenderMessage::Draw {buffer : 80});
-                    messages.add_message(RenderMessage::ClearArray {buffer : 80});
-                }
+                messages.add_message(RenderMessage::ChooseShader{shader : ShaderIdentifier::SimpleShader});
+                messages.add_message(RenderMessage::Uniforms{uniforms : UniformData::new(vec![], vec![], vec![("sobel_output".to_owned(), "tex".to_owned())])});
+                messages.add_message(RenderMessage::ChooseFramebuffer{framebuffer : None});
+                messages.add_message(RenderMessage::ClearBuffers{color_buffer : true, depth_buffer : true});
+                messages.add_message(RenderMessage::Pack {
+                    buffer : 80,
+                    pack : VertexPack::new(
+                        vec![
+                            Vertex3D {x:-1., y:-1., z:-1., r:1., g:1., b:1., u:0., v:0.},
+                            Vertex3D {x:1., y:-1., z:-1., r:1., g:1., b:1., u:1., v:0.},
+                            Vertex3D {x:1., y:1., z:-1., r:1., g:1., b:1., u:1., v:1.},
+                            Vertex3D {x:-1., y:1., z:-1., r:1., g:1., b:1., u:0., v:1.},
+                            ],
+                        Some(vec![0, 1, 2, 0, 2, 3])
+                    )
+                });
+                messages.add_message(RenderMessage::Draw {buffer : 80});
+                messages.add_message(RenderMessage::ClearArray {buffer : 80});
+            
             }
 
             let mut message_mutex = tx.render_pack.lock().unwrap();
