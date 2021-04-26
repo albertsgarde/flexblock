@@ -52,7 +52,7 @@ pub fn start_packing_thread(
                     messages.merge_current(cp.get_messages());
                 }
 
-                // Framebuffer test code (renders a red triangle to the texture bound to framebuffer f1)
+                // Framebuffer test code (Renders the texture sobel_output to screen)
                 if messages.size() > 0 {
                     messages.add_message(RenderMessage::ChooseShader{shader : ShaderIdentifier::SimpleShader});
                     messages.add_message(RenderMessage::Uniforms{uniforms : UniformData::new(vec![], vec![], vec![("sobel_output".to_owned(), "tex".to_owned())])});
