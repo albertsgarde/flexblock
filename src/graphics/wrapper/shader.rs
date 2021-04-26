@@ -31,6 +31,10 @@ pub enum ShaderIdentifier {
     #[extensionless_path("graphics/shaders/sobel")]
     #[is_compute(true)]
     SobelShader,
+    #[name("Simple Shader")]
+    #[extensionless_path("graphics/shaders/simple")]
+    #[is_compute(false)]
+    SimpleShader,
 }
 
 #[derive(Clone)]

@@ -54,8 +54,8 @@ pub fn start_packing_thread(
 
                 // Framebuffer test code (renders a red triangle to the texture bound to framebuffer f1)
                 if messages.size() > 0 {
-                    messages.add_message(RenderMessage::ChooseShader{shader : ShaderIdentifier::DefaultShader});
-                    messages.add_message(RenderMessage::Uniforms{uniforms : UniformData::new(vec![(glm::identity(), "MVP".to_owned())], vec![], vec![("sobel_output".to_owned(), "test_texture".to_owned())])});
+                    messages.add_message(RenderMessage::ChooseShader{shader : ShaderIdentifier::SimpleShader});
+                    messages.add_message(RenderMessage::Uniforms{uniforms : UniformData::new(vec![], vec![], vec![("sobel_output".to_owned(), "tex".to_owned())])});
                     messages.add_message(RenderMessage::ChooseFramebuffer{framebuffer : None});
                     messages.add_message(RenderMessage::ClearBuffers{color_buffer : true, depth_buffer : true});
                     messages.add_message(RenderMessage::Pack {
