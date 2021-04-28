@@ -1,12 +1,12 @@
-use std::path::Path;
 use super::ColorFormat;
+use std::path::Path;
 
 /// Contains the info you get when you load a png
 pub struct PngData {
-    pub width : u32,
-    pub height : u32,
-    pub data : Vec<u8>,
-    pub format : ColorFormat, 
+    pub width: u32,
+    pub height: u32,
+    pub data: Vec<u8>,
+    pub format: ColorFormat,
 }
 
 #[derive(Debug)]
@@ -17,20 +17,19 @@ pub enum PngLoadError {
 }
 
 /// TODO: MAKE THIS GIVE ERRORS CORRECTLY
-pub fn read_png(path : &Path) -> Result<PngData, PngLoadError> {
-    
+pub fn read_png(path: &Path) -> Result<PngData, PngLoadError> {
     use std::fs::File;
 
     let file = match File::open(path) {
         Ok(f) => f,
-        Err(error) => return Err(PngLoadError::IO(error))
+        Err(error) => return Err(PngLoadError::IO(error)),
     };
 
     let decoder = png::Decoder::new(file);
 
     let (info, mut reader) = match decoder.read_info() {
         Ok(ir) => ir,
-        Err(error) => return Err(PngLoadError::Decoding(error))
+        Err(error) => return Err(PngLoadError::Decoding(error)),
     };
 
     // Allocate the output buffer.
@@ -38,16 +37,21 @@ pub fn read_png(path : &Path) -> Result<PngData, PngLoadError> {
     // Read the next frame. An APNG might contain multiple frames.
     match reader.next_frame(&mut buf) {
         Ok(_) => (),
-        Err(error) => return Err(PngLoadError::Decoding(error))
+        Err(error) => return Err(PngLoadError::Decoding(error)),
     };
 
     let format = match info.color_type {
         png::ColorType::RGB => ColorFormat::RGB,
         png::ColorType::RGBA => ColorFormat::RGBA,
-        _ => {return Err(PngLoadError::InvalidFormat)}
+        _ => return Err(PngLoadError::InvalidFormat),
     };
-    
-    Ok(PngData {width : info.width, height : info.height, data : buf, format})
+
+    Ok(PngData {
+        width: info.width,
+        height: info.height,
+        data: buf,
+        format,
+    })
 }
 
 #[cfg(test)]
@@ -69,9 +73,9 @@ mod tests {
     #[ignore]
     fn write_png() {
         // For reading and opening files
-        use std::path::Path;
         use std::fs::File;
         use std::io::BufWriter;
+        use std::path::Path;
 
         let path = Path::new(r"textures/write.png");
         let file = File::create(path).unwrap();
