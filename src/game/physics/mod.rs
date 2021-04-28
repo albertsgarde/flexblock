@@ -1,2 +1,2 @@
-mod rigidbody;
-pub use rigidbody::RigidBody;
+mod aabb;
+pub use aabb::AABB;

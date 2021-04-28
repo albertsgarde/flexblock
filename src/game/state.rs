@@ -1,4 +1,4 @@
-use crate::game::{world, GraphicsStateModel, StateInputEvent, View};
+use crate::game::{world, GraphicsStateModel, StateInputEvent, Player};
 use serde::{Deserialize, Serialize};
 
 /// Holds the entire world state.
@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize)]
 pub struct State {
     terrain: world::Terrain,
-    view: View,
+    player: Player,
     cur_tick: u64,
 }
 
@@ -15,7 +15,7 @@ impl State {
     pub fn new() -> State {
         let mut state = State {
             terrain: world::Terrain::new(),
-            view: View::default(),
+            player: Player::default(),
             cur_tick: 0,
         };
         state.terrain.set_voxel_type(
@@ -38,11 +38,8 @@ impl State {
         self.cur_tick += 1;
         for event in events {
             match *event {
-                StateInputEvent::RotateView { delta } => self.view.turn(delta),
-                StateInputEvent::MovePlayerRelative { delta } => {
-                    let move_vec = self.view.view_to_world(delta);
-                    self.view.translate(move_vec * 0.05);
-                }
+                StateInputEvent::RotateView { delta } => self.player.turn(delta),
+                StateInputEvent::MovePlayerRelative { delta } => self.player.collide_move_relative(delta * 0.05, &self.terrain),
             }
         }
     }
@@ -54,6 +51,6 @@ impl State {
     /// `graphics_state_model` - A mutable reference to the model to update.
     pub fn update_graphics_state_model(&self, graphics_state_model: &mut GraphicsStateModel) {
         graphics_state_model.terrain = self.terrain.clone();
-        graphics_state_model.view = self.view.clone();
+        graphics_state_model.view = self.player.view();
     }
 }

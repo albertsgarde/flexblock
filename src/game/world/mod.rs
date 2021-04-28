@@ -1,10 +1,10 @@
 mod chunk;
-mod raytrace;
+pub mod raytrace;
 mod terrain;
 mod voxel;
 
-pub use chunk::Chunk;
 pub use chunk::chunk_index_to_position;
+pub use chunk::Chunk;
 pub use terrain::Terrain;
 pub use voxel::Voxel;
 pub use voxel::VoxelType;
@@ -12,7 +12,21 @@ pub use voxel::VoxelType;
 use crate::utils::maths;
 use glm::{IVec3, Vec3};
 use serde::{Deserialize, Serialize};
-use std::ops::{Add, Sub};
+use std::ops::{Add, AddAssign, Sub};
+
+#[derive(PartialEq, PartialOrd, Clone, Copy, Debug)]
+pub struct LocationCoordinate {
+    pub chunk: i32,
+    pub position: f32,
+}
+
+impl Sub<LocationCoordinate> for LocationCoordinate {
+    type Output = f32;
+
+    fn sub(self, rhs: LocationCoordinate) -> f32 {
+        self.position - rhs.position + self.chunk as f32 - rhs.chunk as f32
+    }
+}
 
 /// Defines a integer location in the world.
 /// Specifies a voxel.
@@ -50,6 +64,34 @@ impl Location {
     /// 0 on all coordinates.
     pub fn origin() -> Location {
         Location::new(IVec3::new(0, 0, 0), Vec3::new(0., 0., 0.))
+    }
+
+    pub fn x(&self) -> LocationCoordinate {
+        LocationCoordinate {
+            chunk: self.chunk.x,
+            position: self.position.x,
+        }
+    }
+
+    pub fn y(&self) -> LocationCoordinate {
+        LocationCoordinate {
+            chunk: self.chunk.y,
+            position: self.position.y,
+        }
+    }
+
+    pub fn z(&self) -> LocationCoordinate {
+        LocationCoordinate {
+            chunk: self.chunk.z,
+            position: self.position.z,
+        }
+    }
+
+    pub fn coord(&self, index: usize) -> LocationCoordinate {
+        LocationCoordinate {
+            chunk: self.chunk[index],
+            position: self.position[index],
+        }
     }
 
     /// If the position is out of bounds, the chunk will be moved to correct for it.
@@ -116,25 +158,17 @@ impl Add<Vec3> for Location {
     }
 }
 
+impl AddAssign<Vec3> for Location {
+    fn add_assign(&mut self, other: Vec3) {
+        *self = *self + other;
+    }
+}
+
 impl Sub<Location> for Location {
     type Output = Vec3;
 
     fn sub(self, rhs: Location) -> Vec3 {
         self.position - rhs.position + (self.chunk - rhs.chunk).map(|x| x as f32 * 16.)
-    }
-}
-
-impl std::ops::Index<usize> for Location {
-    type Output = (i32, f32);
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &(self.chunk[index], self.position[index])
-    }
-}
-
-impl std::ops::IndexMut<usize> for Location {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut (self.chunk[index], self.position[index])
     }
 }
 
@@ -189,5 +223,18 @@ mod tests {
         assert!(result.x > 1341.999 && result.x < 1342.001);
         assert!(result.y > -198.8701 && result.y < -198.8699);
         assert!(result.z > -21.001 && result.z < -20.999);
+    }
+
+    #[test]
+    fn location_coordinate_comparison() {
+        assert!(
+            LocationCoordinate {
+                chunk: 2,
+                position: 5.
+            } > LocationCoordinate {
+                chunk: 1,
+                position: 6.
+            }
+        );
     }
 }

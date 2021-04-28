@@ -39,7 +39,11 @@ impl From<Vec3> for ChunkLocation {
 }
 
 pub fn chunk_index_to_position(chunk_index: IVec3) -> Vec3 {
-    Vec3::new(chunk_index.x as f32, chunk_index.y as f32, chunk_index.z as f32) * CHUNK_SIZE_F
+    Vec3::new(
+        chunk_index.x as f32,
+        chunk_index.y as f32,
+        chunk_index.z as f32,
+    ) * CHUNK_SIZE_F
 }
 
 /// Represents a cube-shaped block of voxels.
@@ -82,6 +86,7 @@ impl Chunk {
     ///
     /// * `loc` - Will find the type of the voxel at this location in the chunk.
     pub fn voxel_type_unchecked(&self, loc: ChunkLocation) -> VoxelType {
+        debug_assert!(loc.index < CHUNK_LENGTH);
         match self {
             Chunk::SingleType(voxel_type) => *voxel_type,
             Chunk::MultiType(array, _) => array[loc.index],
@@ -167,10 +172,14 @@ impl Chunk {
                 //raytrace::round(ray.point_at(raytrace::voxel_exit(ray.origin, ray.direction, Vector3::zero(), CHUNK_SIZE_F) + 1e-4))
                 None
             } else {
-                Some(raytrace::voxel_exit_voxel(origin, direction, raytrace::round(origin), 1.).unwrap())
+                Some(
+                    raytrace::voxel_exit_voxel(origin, direction, raytrace::round(origin), 1.)
+                        .unwrap(),
+                )
             }
         } else {
-            let mut voxel = raytrace::voxel_exit_voxel(origin, direction, raytrace::round(origin), 1.).unwrap();
+            let mut voxel =
+                raytrace::voxel_exit_voxel(origin, direction, raytrace::round(origin), 1.).unwrap();
             while Chunk::within_chunk(voxel) {
                 if !self.ignore_voxel(voxel.into()) {
                     return Some(voxel);

@@ -17,3 +17,6 @@ mod state;
 
 mod view;
 pub use view::View;
+
+mod player;
+pub use player::Player;

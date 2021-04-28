@@ -1,13 +1,33 @@
-use crate::game::world::{
-    chunk::Chunk,
-    voxel::{Voxel, VoxelType},
-    Location, *,
+use std::mem::swap;
+
+use crate::{
+    game::world::{
+        chunk::Chunk,
+        voxel::{Voxel, VoxelType},
+        Location, *,
+    },
+    utils::mesh_iterator::MeshIterator,
 };
 use glm::{IVec3, Vec3};
 use hashbrown::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
 
 const CHUNK_SIZE: f32 = super::chunk::CHUNK_SIZE as f32;
+
+pub struct VoxelTypeBoxIterator<'a> {
+    lower_bound: Location,
+    mesh_iterator: MeshIterator<f32>,
+    terrain: &'a Terrain,
+}
+
+impl Iterator for VoxelTypeBoxIterator<'_> {
+    type Item = VoxelType;
+
+    fn next(&mut self) -> Option<VoxelType> {
+        let cur_voxel = self.lower_bound + self.mesh_iterator.next()?;
+        Some(self.terrain.voxel_type(cur_voxel))
+    }
+}
 
 /// Struct that stores all voxels in the world.
 #[derive(Serialize, Deserialize, Clone)]
@@ -99,9 +119,7 @@ impl Terrain {
         let mut chunks = 0;
         while chunks < 100 {
             loc.coerce();
-            println!("Coerced loc: {:?}", loc);
             if let Some(chunk) = self.chunks.get(&loc.chunk) {
-                println!("Some chunk");
                 let origin = loc.position;
                 if let Some(position) = chunk.trace_ray(origin, direction) {
                     loc.position = position;
@@ -115,7 +133,6 @@ impl Terrain {
                         ) + 1e-4);
                 }
             } else {
-                println!("Empty chunk");
                 loc.position += direction
                     * (raytrace::voxel_exit_t(
                         loc.position,
@@ -130,6 +147,24 @@ impl Terrain {
             chunks += 1;
         }
         None
+    }
+
+    pub fn voxel_type_iterator(
+        &self,
+        mut vec1: Location,
+        mut vec2: Location,
+    ) -> VoxelTypeBoxIterator {
+        for i in 0..3 {
+            if vec1.coord(i) > vec2.coord(i) {
+                swap(&mut vec1.chunk[i], &mut vec2.chunk[i]);
+                swap(&mut vec1.position[i], &mut vec2.position[i]);
+            }
+        }
+        VoxelTypeBoxIterator {
+            lower_bound: vec1,
+            mesh_iterator: MeshIterator::create(vec2 - vec1),
+            terrain: &self,
+        }
     }
 }
 
