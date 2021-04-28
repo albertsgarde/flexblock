@@ -1,14 +1,21 @@
-use crate::game::{world::{Location, Terrain}, physics::AABB, View};
+use crate::game::{
+    physics::AABB,
+    world::{Location, Terrain},
+    View,
+};
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
 
 macro_rules! PLAYER_SIZE {
-    () => {Vec3::new(0.6, 1.8, 0.6)}
+    () => {
+        Vec3::new(0.6, 1.8, 0.6)
+    };
 }
 macro_rules! PLAYER_VIEW_LOC {
-    () => {Vec3::new(0.3, 1.5, 0.3)}
+    () => {
+        Vec3::new(0.3, 1.5, 0.3)
+    };
 }
-
 
 #[derive(Deserialize, Serialize)]
 pub struct Player {
@@ -18,10 +25,17 @@ pub struct Player {
 
 impl Player {
     pub fn new(location: Location, view_direction: Vec3) -> Player {
-        Player{aabb: AABB::new(location, PLAYER_SIZE!()), view: View::new(location + PLAYER_VIEW_LOC!(), view_direction, Vec3::new(0., 1., 0.))}
+        Player {
+            aabb: AABB::new(location, PLAYER_SIZE!()),
+            view: View::new(
+                location + PLAYER_VIEW_LOC!(),
+                view_direction,
+                Vec3::new(0., 1., 0.),
+            ),
+        }
     }
 
-    pub fn default () -> Player {
+    pub fn default() -> Player {
         Player::new(Location::origin(), Vec3::new(0., 0., -1.))
     }
 
@@ -43,7 +57,7 @@ impl Player {
         let move_vec = self.view.view_to_world(vec);
         let move_distance = self.aabb.collide_distance(move_vec, terrain);
         let move_vec = move_vec * (move_distance.unwrap_or(1.) * 0.999);
-        let move_vec = move_vec.map(|coord| if coord.abs() < 1e-5 {0.} else {coord});
+        let move_vec = move_vec.map(|coord| if coord.abs() < 1e-5 { 0. } else { coord });
         self.translate(move_vec);
     }
 

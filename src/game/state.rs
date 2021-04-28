@@ -1,4 +1,4 @@
-use crate::game::{world, GraphicsStateModel, StateInputEvent, Player};
+use crate::game::{world, GraphicsStateModel, Player, StateInputEvent};
 use serde::{Deserialize, Serialize};
 
 /// Holds the entire world state.
@@ -39,7 +39,9 @@ impl State {
         for event in events {
             match *event {
                 StateInputEvent::RotateView { delta } => self.player.turn(delta),
-                StateInputEvent::MovePlayerRelative { delta } => self.player.collide_move_relative(delta * 0.05, &self.terrain),
+                StateInputEvent::MovePlayerRelative { delta } => self
+                    .player
+                    .collide_move_relative(delta * 0.05, &self.terrain),
             }
         }
     }
