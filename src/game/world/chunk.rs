@@ -1,5 +1,4 @@
 use crate::game::world::{
-    raytrace::Ray,
     voxel::{Voxel, VoxelType},
     *,
 };
@@ -37,6 +36,14 @@ impl From<Vec3> for ChunkLocation {
         Chunk::debug_assert_within_chunk(position);
         ChunkLocation::new(position.x as u32, position.y as u32, position.z as u32)
     }
+}
+
+pub fn chunk_index_to_position(chunk_index: IVec3) -> Vec3 {
+    Vec3::new(
+        chunk_index.x as f32,
+        chunk_index.y as f32,
+        chunk_index.z as f32,
+    ) * CHUNK_SIZE_F
 }
 
 /// Represents a cube-shaped block of voxels.
@@ -79,6 +86,7 @@ impl Chunk {
     ///
     /// * `loc` - Will find the type of the voxel at this location in the chunk.
     pub fn voxel_type_unchecked(&self, loc: ChunkLocation) -> VoxelType {
+        debug_assert!(loc.index < CHUNK_LENGTH);
         match self {
             Chunk::SingleType(voxel_type) => *voxel_type,
             Chunk::MultiType(array, _) => array[loc.index],
@@ -157,22 +165,26 @@ impl Chunk {
     /// Traces a ray within the chunk returning the first non-ignored voxel hit or the
     /// first position outside the chunk if none is hit.
     /// Undefined behaviour occurs if the ray origin is outside chunk bounds.
-    pub fn trace_ray(&self, ray: Ray) -> Option<Vec3> {
-        Chunk::debug_assert_within_chunk(ray.origin);
+    pub fn trace_ray(&self, origin: Vec3, direction: Vec3) -> Option<Vec3> {
+        Chunk::debug_assert_within_chunk(origin);
         if let Chunk::SingleType(voxel_type) = self {
             if raytrace::ignore_voxel_type(*voxel_type) {
                 //raytrace::round(ray.point_at(raytrace::voxel_exit(ray.origin, ray.direction, Vector3::zero(), CHUNK_SIZE_F) + 1e-4))
                 None
             } else {
-                Some(ray.voxel_exit(raytrace::round(ray.origin), 1.).unwrap())
+                Some(
+                    raytrace::voxel_exit_voxel(origin, direction, raytrace::round(origin), 1.)
+                        .unwrap(),
+                )
             }
         } else {
-            let mut voxel = ray.voxel_exit(raytrace::round(ray.origin), 1.).unwrap();
+            let mut voxel =
+                raytrace::voxel_exit_voxel(origin, direction, raytrace::round(origin), 1.).unwrap();
             while Chunk::within_chunk(voxel) {
                 if !self.ignore_voxel(voxel.into()) {
                     return Some(voxel);
                 }
-                voxel = ray.voxel_exit(voxel, 1.).unwrap();
+                voxel = raytrace::voxel_exit_voxel(origin, direction, voxel, 1.).unwrap();
             }
             None
         }

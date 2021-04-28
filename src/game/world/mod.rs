@@ -1,8 +1,9 @@
 mod chunk;
-mod raytrace;
+pub mod raytrace;
 mod terrain;
 mod voxel;
 
+pub use chunk::chunk_index_to_position;
 pub use chunk::Chunk;
 pub use terrain::Terrain;
 pub use voxel::Voxel;
@@ -11,7 +12,21 @@ pub use voxel::VoxelType;
 use crate::utils::maths;
 use glm::{IVec3, Vec3};
 use serde::{Deserialize, Serialize};
-use std::ops::Add;
+use std::ops::{Add, AddAssign, Sub};
+
+#[derive(PartialEq, PartialOrd, Clone, Copy, Debug)]
+pub struct LocationCoordinate {
+    pub chunk: i32,
+    pub position: f32,
+}
+
+impl Sub<LocationCoordinate> for LocationCoordinate {
+    type Output = f32;
+
+    fn sub(self, rhs: LocationCoordinate) -> f32 {
+        self.position - rhs.position + self.chunk as f32 - rhs.chunk as f32
+    }
+}
 
 /// Defines a integer location in the world.
 /// Specifies a voxel.
@@ -49,6 +64,34 @@ impl Location {
     /// 0 on all coordinates.
     pub fn origin() -> Location {
         Location::new(IVec3::new(0, 0, 0), Vec3::new(0., 0., 0.))
+    }
+
+    pub fn x(&self) -> LocationCoordinate {
+        LocationCoordinate {
+            chunk: self.chunk.x,
+            position: self.position.x,
+        }
+    }
+
+    pub fn y(&self) -> LocationCoordinate {
+        LocationCoordinate {
+            chunk: self.chunk.y,
+            position: self.position.y,
+        }
+    }
+
+    pub fn z(&self) -> LocationCoordinate {
+        LocationCoordinate {
+            chunk: self.chunk.z,
+            position: self.position.z,
+        }
+    }
+
+    pub fn coord(&self, index: usize) -> LocationCoordinate {
+        LocationCoordinate {
+            chunk: self.chunk[index],
+            position: self.position[index],
+        }
     }
 
     /// If the position is out of bounds, the chunk will be moved to correct for it.
@@ -115,6 +158,20 @@ impl Add<Vec3> for Location {
     }
 }
 
+impl AddAssign<Vec3> for Location {
+    fn add_assign(&mut self, other: Vec3) {
+        *self = *self + other;
+    }
+}
+
+impl Sub<Location> for Location {
+    type Output = Vec3;
+
+    fn sub(self, rhs: Location) -> Vec3 {
+        self.position - rhs.position + (self.chunk - rhs.chunk).map(|x| x as f32 * 16.)
+    }
+}
+
 impl std::fmt::Display for Location {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -156,5 +213,28 @@ mod tests {
         assert!(loc.position.x > 1.999 && loc.position.x < 2.001);
         assert!(loc.position.y > 12.999 && loc.position.y < 13.001);
         assert!(loc.position.z > 3.999 && loc.position.z < 4.001);
+    }
+
+    #[test]
+    fn subtract() {
+        let loc1 = Location::from_coords(1321., -231., 21.);
+        let loc2 = Location::from_coords(-21., -32.13, 42.);
+        let result = loc1 - loc2;
+        assert!(result.x > 1341.999 && result.x < 1342.001);
+        assert!(result.y > -198.8701 && result.y < -198.8699);
+        assert!(result.z > -21.001 && result.z < -20.999);
+    }
+
+    #[test]
+    fn location_coordinate_comparison() {
+        assert!(
+            LocationCoordinate {
+                chunk: 2,
+                position: 5.
+            } > LocationCoordinate {
+                chunk: 1,
+                position: 6.
+            }
+        );
     }
 }

@@ -11,139 +11,156 @@ pub fn round(position: Vec3) -> Vec3 {
     position.map(|x| x.floor())
 }
 
-pub struct Ray {
-    pub origin: Vec3,
-    pub direction: Vec3,
-}
-
-impl Ray {
-    pub fn new(origin: Vec3, direction: Vec3) -> Ray {
-        Ray { origin, direction }
+/// Returns the entry and exit t's for all dimensions of the given ray through the given voxel.
+///
+/// # Panics
+///
+/// Panics if `direction` is the zero vector.
+fn voxel_entry_exit(
+    origin: Vec3,
+    direction: Vec3,
+    voxel_corner: Vec3,
+    voxel_size: f32,
+) -> (Vec3, Vec3) {
+    let mut t_min: Vec3 = Vec3::new(0., 0., 0.);
+    let mut t_max: Vec3 = Vec3::new(0., 0., 0.);
+    // Compare with t_min to not create a new vector.
+    if direction == t_min {
+        panic!("Direction may not be the 0 vector.")
     }
-
-    pub fn point_at(&self, t: f32) -> Vec3 {
-        self.origin + self.direction * t
-    }
-
-    /// After entering the voxel with the specified corner, returns the voxel the ray exits into or None if the ray never hits the voxel.
-    ///
-    /// # Arguments
-    ///
-    /// `voxel_corner` - The corner of the voxel with lowest coordinates.
-    /// `voxel_size` - The size of voxels. Should usually be 1.
-    pub fn voxel_exit(&self, voxel_corner: Vec3, voxel_size: f32) -> Option<Vec3> {
-        println!("Origin: {:?}  Direction: {:?}", self.origin, self.direction);
-        println!("Helleflynder: {:?}", voxel_corner);
-        let (mut t_min_x, mut t_max_x) = if self.direction.x == 0. {
-            (-std::f32::INFINITY, std::f32::INFINITY)
+    for i in 0..3 {
+        if direction[i] == 0. {
+            t_min[i] = -std::f32::INFINITY;
+            t_max[i] = std::f32::INFINITY;
         } else {
-            (
-                (voxel_corner.x - self.origin.x) / self.direction.x,
-                (voxel_corner.x + voxel_size - self.origin.x) / self.direction.x,
-            )
-        };
-        if t_min_x > t_max_x {
-            swap(&mut t_min_x, &mut t_max_x);
-        }
-        let mut max_min = t_min_x;
-
-        let (mut t_min_y, mut t_max_y) = if self.direction.y == 0. {
-            (-std::f32::INFINITY, std::f32::INFINITY)
-        } else {
-            (
-                (voxel_corner.y - self.origin.y) / self.direction.y,
-                (voxel_corner.y + voxel_size - self.origin.y) / self.direction.y,
-            )
-        };
-        if t_min_y > t_max_y {
-            swap(&mut t_min_y, &mut t_max_y);
-        }
-        if t_min_y > max_min {
-            max_min = t_min_y;
-        }
-
-        let (mut t_min_z, mut t_max_z) = if self.direction.z == 0. {
-            (-std::f32::INFINITY, std::f32::INFINITY)
-        } else {
-            (
-                (voxel_corner.z - self.origin.z) / self.direction.z,
-                (voxel_corner.z + voxel_size - self.origin.z) / self.direction.z,
-            )
-        };
-        if t_min_z > t_max_z {
-            swap(&mut t_min_z, &mut t_max_z);
-        }
-        if t_min_z > max_min {
-            max_min = t_min_z;
-        }
-        if max_min > t_max_x || max_min > t_max_y || max_min > t_max_z {
-            return None;
-        }
-        let mut result = voxel_corner;
-        if t_max_x < t_max_y {
-            if t_max_x < t_max_z {
-                result.x += voxel_size.copysign(self.direction.x);
-            } else {
-                result.z += voxel_size.copysign(self.direction.z);
+            t_min[i] = (voxel_corner[i] - origin[i]) / direction[i];
+            t_max[i] = (voxel_corner[i] + voxel_size - origin[i]) / direction[i];
+            if t_min[i] > t_max[i] {
+                swap(&mut t_min[i], &mut t_max[i]);
             }
-        } else if t_max_y < t_max_z {
-            result.y += voxel_size.copysign(self.direction.y);
-        } else {
-            result.z += voxel_size.copysign(self.direction.z);
         }
-        Some(result)
     }
+    (t_min, t_max)
 }
 
 /// After entering the voxel with the specified corner, returns the voxel the ray exits into or None if the ray never hits the voxel.
+/// Returns None if the ray never hits the voxel.
 ///
-/// # Arguments
+/// # Panics
 ///
-/// `voxel_corner` - The corner of the voxel with lowest coordinates.
-/// `voxel_size` - The size of voxels. Should usually be 1.
-pub fn voxel_exit(origin: Vec3, direction: Vec3, voxel_corner: Vec3, voxel_size: f32) -> f32 {
-    let (mut t_min_x, mut t_max_x) = if direction.x == 0. {
-        (-std::f32::INFINITY, std::f32::INFINITY)
-    } else {
-        (
-            (voxel_corner.x - origin.x) / direction.x,
-            (voxel_corner.x + voxel_size - origin.x) / direction.x,
-        )
-    };
-    if t_min_x > t_max_x {
-        swap(&mut t_min_x, &mut t_max_x);
-    }
-    let mut min_max = t_max_x;
+/// Panics if `direction` is the zero vector.
+pub fn voxel_exit_voxel(
+    origin: Vec3,
+    direction: Vec3,
+    voxel_corner: Vec3,
+    voxel_size: f32,
+) -> Option<Vec3> {
+    let (t_min, t_max): (Vec3, Vec3) =
+        voxel_entry_exit(origin, direction, voxel_corner, voxel_size);
+    // Find t for entry and exit on the x-axis.
 
-    let (mut t_min_y, mut t_max_y) = if direction.y == 0. {
-        (-std::f32::INFINITY, std::f32::INFINITY)
-    } else {
-        (
-            (voxel_corner.y - origin.y) / direction.y,
-            (voxel_corner.y + voxel_size - origin.y) / direction.y,
-        )
-    };
-    if t_min_y > t_max_y {
-        swap(&mut t_min_y, &mut t_max_y);
-    }
-    if t_max_y < min_max {
-        min_max = t_max_y;
+    // Define variable for the latest entry point,
+    // which is the t the ray actually enters the voxel.
+    let max_min = t_min.iter().fold(-f32::INFINITY, |a, &b| a.max(b));
+
+    // If the entry point is later than any of the exit points, the ray never enters the voxel.
+    if t_max.iter().any(|t| max_min > *t) {
+        return None;
     }
 
-    let (mut t_min_z, mut t_max_z) = if direction.z == 0. {
-        (-std::f32::INFINITY, std::f32::INFINITY)
+    let mut result = voxel_corner;
+    if t_max.x < t_max.y {
+        if t_max.x < t_max.z {
+            result.x += voxel_size.copysign(direction.x);
+        } else {
+            result.z += voxel_size.copysign(direction.z);
+        }
+    } else if t_max.y < t_max.z {
+        result.y += voxel_size.copysign(direction.y);
     } else {
-        (
-            (voxel_corner.z - origin.z) / direction.z,
-            (voxel_corner.z + voxel_size - origin.z) / direction.z,
-        )
-    };
-    if t_min_z > t_max_z {
-        swap(&mut t_min_z, &mut t_max_z);
+        result.z += voxel_size.copysign(direction.z);
     }
-    if t_max_z < min_max {
-        min_max = t_max_z;
-    }
-    debug_assert!(!(min_max < t_min_x || min_max < t_min_y || min_max < t_min_z));
+    Some(result)
+}
+
+/// Returns how far from the ray origin the ray exits the voxel with the given corner.
+///
+/// # Panics
+///
+/// Panics if `direction` is the zero vector or the ray never enters the voxel.
+pub fn voxel_exit_t(origin: Vec3, direction: Vec3, voxel_corner: Vec3, voxel_size: f32) -> f32 {
+    let (t_min, t_max): (Vec3, Vec3) =
+        voxel_entry_exit(origin, direction, voxel_corner, voxel_size);
+
+    // Define variable for the earliest exit point,
+    // which is the t the ray actually exits the voxel.
+    let min_max = t_max.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+    // If the exit point is earlier than any of the entry points, the ray never enters the voxel.
+    debug_assert!(!t_min.iter().any(|t| min_max < *t));
     min_max
+}
+
+pub fn voxel_exit_dimension_t(
+    origin: Vec3,
+    direction: Vec3,
+    voxel_corner: Vec3,
+    voxel_size: f32,
+) -> (usize, f32) {
+    let (t_min, t_max): (Vec3, Vec3) =
+        voxel_entry_exit(origin, direction, voxel_corner, voxel_size);
+
+    // Define variable for the earliest exit point,
+    // which is the t the ray actually exits the voxel.
+    let min_max = t_max.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+    // If the exit point is earlier than any of the entry points, the ray never enters the voxel.
+    debug_assert!(!t_min.iter().any(|t| min_max < *t));
+
+    if t_max.x < t_max.y {
+        if t_max.x < t_max.z {
+            (0, min_max)
+        } else {
+            (2, min_max)
+        }
+    } else if t_max.y < t_max.z {
+        (1, min_max)
+    } else {
+        (2, min_max)
+    }
+}
+
+/// If the ray enters the voxel, returns both how far from the ray origin the ray exits the voxel with the given corner,
+/// and the position og the voxel exited into.
+///
+/// # Panics
+///
+/// Panics if `directions` is the zero vector.
+pub fn voxel_exit(
+    origin: Vec3,
+    direction: Vec3,
+    voxel_corner: Vec3,
+    voxel_size: f32,
+) -> Option<(f32, Vec3)> {
+    let (t_min, t_max): (Vec3, Vec3) =
+        voxel_entry_exit(origin, direction, voxel_corner, voxel_size);
+
+    // Define variable for the earliest exit point,
+    // which is the t the ray actually exits the voxel.
+    let min_max = t_max.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+    if t_min.iter().any(|t| min_max < *t) {
+        None
+    } else {
+        let mut result = voxel_corner;
+        if t_max.x < t_max.y {
+            if t_max.x < t_max.z {
+                result.x += voxel_size.copysign(direction.x);
+            } else {
+                result.z += voxel_size.copysign(direction.z);
+            }
+        } else if t_max.y < t_max.z {
+            result.y += voxel_size.copysign(direction.y);
+        } else {
+            result.z += voxel_size.copysign(direction.z);
+        }
+        Some((min_max, result))
+    }
 }
