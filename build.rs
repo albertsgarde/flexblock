@@ -1,4 +1,4 @@
-use std::process::{exit, Command};
+use std::process::Command;
 
 fn main() {
     Command::new("cargo")
