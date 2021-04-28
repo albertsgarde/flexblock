@@ -26,8 +26,8 @@ pub struct V3C3UV {
     pub r: f32,
     pub g: f32,
     pub b: f32,
-    pub u : f32,
-    pub v : f32
+    pub u: f32,
+    pub v: f32,
 }
 
 ///
@@ -67,8 +67,8 @@ impl V3C3UV {
             r: 0.0,
             g: 0.0,
             b: 0.0,
-            u : 0.0,
-            v : 0.0
+            u: 0.0,
+            v: 0.0,
         }
     }
 }

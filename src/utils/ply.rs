@@ -1,29 +1,29 @@
-use std::fs::{File};
+use std::cmp::PartialEq;
+use std::fs::File;
 use std::io::BufReader;
 use std::io::{self, Read};
 use std::path::Path;
 use std::slice;
-use std::cmp::PartialEq;
 
 #[derive(PartialEq)]
 enum PlyTypes {
     FLOAT,
-    UCHAR
+    UCHAR,
 }
 
 impl PlyTypes {
-    fn type_from_string(s : &str) -> Result<PlyTypes, &str> {
+    fn type_from_string(s: &str) -> Result<PlyTypes, &str> {
         match s {
             "float" => Ok(PlyTypes::FLOAT),
             "uchar" => Ok(PlyTypes::UCHAR),
-            _ => Err("Unsupported type!")
+            _ => Err("Unsupported type!"),
         }
     }
 
-    fn size(&self) -> usize{
+    fn size(&self) -> usize {
         match self {
             PlyTypes::FLOAT => 4,
-            PlyTypes::UCHAR => 1
+            PlyTypes::UCHAR => 1,
         }
     }
 }
@@ -45,9 +45,7 @@ struct Vert {
     nz: f32,
 }
 
-
 impl PlyVert for Vert {
-    
     fn types() -> Vec<PlyTypes> {
         return vec![
             PlyTypes::FLOAT,
@@ -59,7 +57,7 @@ impl PlyVert for Vert {
             PlyTypes::FLOAT,
             PlyTypes::FLOAT,
             PlyTypes::FLOAT,
-        ]
+        ];
     }
 }
 
@@ -68,14 +66,14 @@ pub enum PlyError {
     IOError(io::Error),
     UnsupportedElement(String),
     UnknownHeaderElement(String),
-    DataLeftInFile {bytes : usize},
+    DataLeftInFile { bytes: usize },
     UnsupportedType(String),
     WrongTypeAmount,
-    TypesNotMatching{type_index : usize}
+    TypesNotMatching { type_index: usize },
 }
 
 impl From<io::Error> for PlyError {
-    fn from(e : io::Error) -> PlyError {
+    fn from(e: io::Error) -> PlyError {
         PlyError::IOError(e)
     }
 }
@@ -99,7 +97,7 @@ fn read_line(reader: &mut BufReader<std::fs::File>) -> io::Result<(String, usize
 /// ONLY READS BINARY PLY IN SAME ENDIAN AS SYSTEM!!
 /// DOESN'T HANDLE FACES; EDGES
 /// T is vertex type
-fn read_ply<T : PlyVert, P: AsRef<Path>>(path: P) -> Result<Vec<T>, PlyError> {
+fn read_ply<T: PlyVert, P: AsRef<Path>>(path: P) -> Result<Vec<T>, PlyError> {
     let path = path.as_ref();
     let struct_size = ::std::mem::size_of::<T>();
     let mut reader = BufReader::new(File::open(path)?);
@@ -122,24 +120,28 @@ fn read_ply<T : PlyVert, P: AsRef<Path>>(path: P) -> Result<Vec<T>, PlyError> {
             let line_buffer = String::from(&line_buffer[15..len]);
             println!("Reading {} vertices!", line_buffer);
             num_vertices = line_buffer.parse::<usize>().unwrap();
-
         } else if line_buffer.starts_with("property ") {
             let mut iter = line_buffer.split(' ');
             iter.next();
             if let Some(type_name) = iter.next() {
                 match PlyTypes::type_from_string(type_name) {
                     Ok(t) => types_in_file.push(t),
-                    Err(_) => return Err(PlyError::UnsupportedType(type_name.to_owned()))
+                    Err(_) => return Err(PlyError::UnsupportedType(type_name.to_owned())),
                 }
             }
         } else if line_buffer.starts_with("element face ") {
-            return Err(PlyError::UnsupportedElement(format!("read_ply only reads points, does not support faces!")))
+            return Err(PlyError::UnsupportedElement(format!(
+                "read_ply only reads points, does not support faces!"
+            )));
         } else if line_buffer.starts_with("element edge ") {
-            return Err(PlyError::UnsupportedElement(format!("read_ply only reads points, does not support edges!")))
-        } else if !(line_buffer.starts_with("ply") ||
-            line_buffer.starts_with("format ") ||
-            line_buffer.starts_with("comment ") ||
-            line_buffer.starts_with("obj_info ")) {
+            return Err(PlyError::UnsupportedElement(format!(
+                "read_ply only reads points, does not support edges!"
+            )));
+        } else if !(line_buffer.starts_with("ply")
+            || line_buffer.starts_with("format ")
+            || line_buffer.starts_with("comment ")
+            || line_buffer.starts_with("obj_info "))
+        {
             return Err(PlyError::UnknownHeaderElement(line_buffer));
         }
     }
@@ -150,7 +152,7 @@ fn read_ply<T : PlyVert, P: AsRef<Path>>(path: P) -> Result<Vec<T>, PlyError> {
     }
     for i in 0..types_in_file.len() {
         if types_in_file[i] != T::types()[i] {
-            return Err(PlyError::TypesNotMatching{type_index : i});
+            return Err(PlyError::TypesNotMatching { type_index: i });
         }
     }
 
@@ -165,12 +167,11 @@ fn read_ply<T : PlyVert, P: AsRef<Path>>(path: P) -> Result<Vec<T>, PlyError> {
     let mut rest: Vec<u8> = Vec::new();
     reader.read_to_end(&mut rest)?;
     if rest.len() > 0 {
-        return Err(PlyError::DataLeftInFile {bytes : rest.len()});
+        return Err(PlyError::DataLeftInFile { bytes: rest.len() });
     }
 
     Ok(vert)
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -180,25 +181,31 @@ mod tests {
     fn load_simple() {
         let result = read_ply::<Vert, &str>("graphics/ply/test/minimal.ply");
         if let Err(result) = &result {
-            println!("{:?}",result);
+            println!("{:?}", result);
         }
-        assert!(result.is_ok(), "read_ply cannot read simple .ply point cloud!");
+        assert!(
+            result.is_ok(),
+            "read_ply cannot read simple .ply point cloud!"
+        );
     }
     #[test]
     fn load_infinite_header() {
-        assert!(match read_ply::<Vert, &str>("graphics/ply/test/infinite_header.ply") {
-            Ok(_) => false,
-            Err(e) => match e {
-                PlyError::UnknownHeaderElement(_) => true,
-                _ => false
-            }
-        }, "read_ply doesn't notice when the header is infinite!");
+        assert!(
+            match read_ply::<Vert, &str>("graphics/ply/test/infinite_header.ply") {
+                Ok(_) => false,
+                Err(e) => match e {
+                    PlyError::UnknownHeaderElement(_) => true,
+                    _ => false,
+                },
+            },
+            "read_ply doesn't notice when the header is infinite!"
+        );
     }
     #[test]
     fn load_size_mismatch_too_long() {
         let result = read_ply::<Vert, &str>("graphics/ply/test/size_mismatch_too_long.ply");
         if let Err(e) = &result {
-            println!("{:?}",e);
+            println!("{:?}", e);
         }
         assert!(match result {
             Ok(_) => false,
@@ -228,23 +235,29 @@ mod tests {
     #[test]
     fn types_not_matching() {
         let result = read_ply::<Vert, &str>("graphics/ply/test/types_not_matching.ply");
-        assert!(match result {
-            Ok(_) => false,
-            Err(e) => match e {
-                PlyError::TypesNotMatching {type_index : _} => true,
-                _ => false
-            }
-        }, "read_ply accepts a file with non-matching types!");
+        assert!(
+            match result {
+                Ok(_) => false,
+                Err(e) => match e {
+                    PlyError::TypesNotMatching { type_index: _ } => true,
+                    _ => false,
+                },
+            },
+            "read_ply accepts a file with non-matching types!"
+        );
     }
     #[test]
     fn too_many_types() {
         let result = read_ply::<Vert, &str>("graphics/ply/test/too_many_types.ply");
-        assert!(match result {
-            Ok(_) => false,
-            Err(e) => match e {
-                PlyError::WrongTypeAmount => true,
-                _ => false
-            }
-        }, "read_ply accepts a file with too many types!");
+        assert!(
+            match result {
+                Ok(_) => false,
+                Err(e) => match e {
+                    PlyError::WrongTypeAmount => true,
+                    _ => false,
+                },
+            },
+            "read_ply accepts a file with too many types!"
+        );
     }
 }

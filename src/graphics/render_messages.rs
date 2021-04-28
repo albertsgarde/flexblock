@@ -1,15 +1,15 @@
 use crate::utils::vertex::Vertex3D;
-use std::slice::Iter;
 use std::fmt;
+use std::slice::Iter;
 
-use super::wrapper::{ShaderIdentifier, FramebufferIdentifier};
+use super::wrapper::{FramebufferIdentifier, ShaderIdentifier};
 
 #[derive(Debug)]
 pub struct RenderMessages {
     messages: Vec<RenderMessage>,
     /// TODO: THIS IS SUCH A BAD NAME
     /// Indicates the index where the first new message occurs. Before this index, only persistent render messages occur.
-    old_new_split_index : usize,
+    old_new_split_index: usize,
 }
 ///
 /// Holds everything needed for one render pass, but in CPU memory.
@@ -19,7 +19,10 @@ pub struct RenderMessages {
 impl RenderMessages {
     pub fn new() -> RenderMessages {
         let messages = Vec::new();
-        RenderMessages { messages, old_new_split_index : 0 }
+        RenderMessages {
+            messages,
+            old_new_split_index: 0,
+        }
     }
 
     pub fn add_message(&mut self, message: RenderMessage) {
@@ -52,7 +55,7 @@ impl RenderMessages {
     }
 
     /// Merges a current render pack onto the end of this one.
-    pub fn merge_current(&mut self, new_pack :RenderMessages) {
+    pub fn merge_current(&mut self, new_pack: RenderMessages) {
         let mut new_pack = new_pack;
         self.messages.append(&mut new_pack.messages);
     }
@@ -94,12 +97,12 @@ pub enum RenderMessage {
     },
     /// framebuffer = which framebuffer to draw to. None for the screen.
     ChooseFramebuffer {
-        framebuffer : Option<FramebufferIdentifier>,
+        framebuffer: Option<FramebufferIdentifier>,
     },
     Compute {
-        output_texture : String,
-        dimensions : (u32,u32,u32),
-    }
+        output_texture: String,
+        dimensions: (u32, u32, u32),
+    },
 }
 
 impl RenderMessage {
@@ -117,8 +120,11 @@ impl RenderMessage {
             RenderMessage::ChooseShader { shader: _ } => false,
             RenderMessage::Uniforms { uniforms: _ } => false,
             RenderMessage::Draw { buffer: _ } => false,
-            RenderMessage::ChooseFramebuffer {framebuffer : _} => false,
-            RenderMessage::Compute {output_texture : _, dimensions : _} => false
+            RenderMessage::ChooseFramebuffer { framebuffer: _ } => false,
+            RenderMessage::Compute {
+                output_texture: _,
+                dimensions: _,
+            } => false,
         }
     }
 }
@@ -135,7 +141,7 @@ impl VertexPack {
 }
 
 impl fmt::Debug for VertexPack {
-    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("VertexPack")
     }
 }
@@ -182,7 +188,7 @@ impl UniformData {
 }
 
 impl fmt::Debug for UniformData {
-    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("UniformData")
     }
 }

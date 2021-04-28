@@ -3,11 +3,11 @@ use buffer::{ArrayBuffer, ElementBuffer};
 
 mod framebuffer;
 use framebuffer::{Framebuffer, FramebufferManager};
-pub use framebuffer::{FramebufferMetadata, FramebufferIdentifier};
+pub use framebuffer::{FramebufferIdentifier, FramebufferMetadata};
 
 mod shader;
+pub use shader::{ProgramType, ShaderIdentifier, ShaderMetadata};
 use shader::{Shader, ShaderManager};
-pub use shader::{ShaderMetadata, ProgramType, ShaderIdentifier};
 
 mod vertex_array;
 use vertex_array::VertexArray;
@@ -19,7 +19,7 @@ mod render_caller;
 use render_caller::RenderCaller;
 
 mod texture;
+pub use texture::{InternalFormat, TextureMetadata};
 use texture::{Texture, TextureManager};
-pub use texture::{TextureMetadata, InternalFormat};
 
 mod loader;

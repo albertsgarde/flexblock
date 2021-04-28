@@ -1,12 +1,15 @@
-use crate::{game::{
-    world::{Chunk, Terrain},
-    View,
-}, graphics::wrapper::ShaderIdentifier};
+use crate::game::GraphicsStateModel;
 use crate::graphics::VertexPack;
 use crate::graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
-use std::collections::{VecDeque};
+use crate::{
+    game::{
+        world::{Chunk, Terrain},
+        View,
+    },
+    graphics::wrapper::ShaderIdentifier,
+};
+use std::collections::VecDeque;
 use std::sync::MutexGuard;
-use crate::game::GraphicsStateModel;
 
 /// This creates the vertex pack for a specific chunk. It just goes through all the voxels and adds their faces.
 fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
@@ -71,8 +74,8 @@ fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
 
 /// Returns the view * projection matrix of the supplied camera.
 /// Doesn't get us all the way to mvp (multiply this by the model matrix, and you're there boyo).
-pub fn get_vp_matrix(view: &View, screen_dimensions : (u32,u32)) -> glm::Mat4 {
-    let (width,height) = screen_dimensions;
+pub fn get_vp_matrix(view: &View, screen_dimensions: (u32, u32)) -> glm::Mat4 {
+    let (width, height) = screen_dimensions;
 
     let direction = view.view_direction();
     let chunk = &view.location().chunk;
@@ -90,7 +93,8 @@ pub fn get_vp_matrix(view: &View, screen_dimensions : (u32,u32)) -> glm::Mat4 {
         &glm::vec3(center[0], center[1], center[2]),
         &glm::vec3(up[0], up[1], up[2]),
     );
-    let p: glm::Mat4 = glm::perspective_fov(90. / 180. * 3.1415, width as f32, height as f32, 0.1, 100.0); //TODO: CORRECT FOV, WIDTH, AND HEIGHT
+    let p: glm::Mat4 =
+        glm::perspective_fov(90. / 180. * 3.1415, width as f32, height as f32, 0.1, 100.0); //TODO: CORRECT FOV, WIDTH, AND HEIGHT
 
     p * v
 }
@@ -153,7 +157,6 @@ pub struct RenderState {
     pub(super) capabilities: Option<GraphicsCapabilities>,
 }
 
-
 /// Keeps track of all state necessary to correctly supply graphics calls to the window each frame.
 impl RenderState {
     pub fn new() -> RenderState {
@@ -163,7 +166,7 @@ impl RenderState {
         RenderState {
             packed_chunks,
             chunk_search: None,
-            capabilities: None
+            capabilities: None,
         }
     }
 
@@ -342,7 +345,11 @@ impl RenderState {
                     ),
                 );
                 render_messages.add_message(RenderMessage::Uniforms {
-                    uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![], vec![(String::from("/atlas.png"), String::from("test_texture"))]),
+                    uniforms: UniformData::new(
+                        vec![(mvp, String::from("MVP"))],
+                        vec![],
+                        vec![(String::from("/atlas.png"), String::from("test_texture"))],
+                    ),
                 });
 
                 render_messages.add_message(RenderMessage::Draw { buffer: counter });
@@ -362,9 +369,7 @@ impl RenderState {
             self.packed_chunks
                 .append(&mut vec![None; capabilities.vbo_count - vbo_count]);
         } else if capabilities.vbo_count < vbo_count {
-            panic!(
-                "There is currently no support for a shrink in the number of available VBOs"
-            );
+            panic!("There is currently no support for a shrink in the number of available VBOs");
         }
         self.capabilities = Some(capabilities);
     }
@@ -374,12 +379,14 @@ impl RenderState {
     }
 
     pub fn render_capabilities(&self) -> &Option<GraphicsCapabilities> {
-        return &self.capabilities
+        return &self.capabilities;
     }
 
     /// Fills in world render messages for a tick
-    pub fn create_render_messages(&mut self, data : &MutexGuard<GraphicsStateModel>) -> RenderMessages{
-
+    pub fn create_render_messages(
+        &mut self,
+        data: &MutexGuard<GraphicsStateModel>,
+    ) -> RenderMessages {
         // What should happen:
         // 1. Clear color and depth buffer
         // 2. Supply commmon uniforms
@@ -395,9 +402,9 @@ impl RenderState {
             return messages;
         }
 
-        let (width,height) = match &self.capabilities {
+        let (width, height) = match &self.capabilities {
             Some(cap) => cap.screen_dimensions,
-            None => unreachable!()
+            None => unreachable!(),
         };
 
         messages.add_message(RenderMessage::ChooseShader {
@@ -443,13 +450,8 @@ impl RenderState {
 
         self.clear_distant_chunks(data.view.location().chunk, &mut messages);
 
-        let vp = get_vp_matrix(&data.view, (width,height));
+        let vp = get_vp_matrix(&data.view, (width, height));
         self.render_packed_chunks(&mut messages, &vp);
         messages
     }
-    
 }
-
-
-
-

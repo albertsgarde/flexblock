@@ -21,8 +21,8 @@ pub fn left(
         r,
         g,
         b,
-        u : 0.0,
-        v : 0.0
+        u: 0.0,
+        v: 0.0,
     });
     vertices.push(Vertex3D {
         x,
@@ -31,8 +31,8 @@ pub fn left(
         r,
         g,
         b,
-        u : 1.0,
-        v : 0.0
+        u: 1.0,
+        v: 0.0,
     });
     vertices.push(Vertex3D {
         x,
@@ -41,8 +41,8 @@ pub fn left(
         r,
         g,
         b,
-        u : 0.0,
-        v : 1.0
+        u: 0.0,
+        v: 1.0,
     });
     vertices.push(Vertex3D {
         x,
@@ -51,8 +51,8 @@ pub fn left(
         r,
         g,
         b,
-        u : 1.0,
-        v : 1.0
+        u: 1.0,
+        v: 1.0,
     });
 
     let elements = vec![
@@ -87,8 +87,8 @@ pub fn right(
         r,
         g,
         b,
-        u : 0.0,
-        v : 0.0
+        u: 0.0,
+        v: 0.0,
     });
     vertices.push(Vertex3D {
         x,
@@ -97,8 +97,8 @@ pub fn right(
         r,
         g,
         b,
-        u : 1.0,
-        v : 0.0
+        u: 1.0,
+        v: 0.0,
     });
     vertices.push(Vertex3D {
         x,
@@ -107,8 +107,8 @@ pub fn right(
         r,
         g,
         b,
-        u : 0.0,
-        v : 1.0
+        u: 0.0,
+        v: 1.0,
     });
     vertices.push(Vertex3D {
         x,
@@ -117,8 +117,8 @@ pub fn right(
         r,
         g,
         b,
-        u : 1.0,
-        v : 1.0
+        u: 1.0,
+        v: 1.0,
     });
 
     let elements = vec![
@@ -154,8 +154,8 @@ pub fn top(
         r,
         g,
         b,
-        u : 0.0,
-        v : 0.0,
+        u: 0.0,
+        v: 0.0,
     });
     vertices.push(Vertex3D {
         x: x1,
@@ -164,8 +164,8 @@ pub fn top(
         r,
         g,
         b,
-        u : 1.0,
-        v : 0.0,
+        u: 1.0,
+        v: 0.0,
     });
     vertices.push(Vertex3D {
         x: x0,
@@ -174,8 +174,8 @@ pub fn top(
         r,
         g,
         b,
-        u : 0.0,
-        v : 1.0,
+        u: 0.0,
+        v: 1.0,
     });
     vertices.push(Vertex3D {
         x: x1,
@@ -184,8 +184,8 @@ pub fn top(
         r,
         g,
         b,
-        u : 1.0,
-        v : 1.0,
+        u: 1.0,
+        v: 1.0,
     });
 
     let elements = vec![
@@ -221,8 +221,8 @@ pub fn bottom(
         r,
         g,
         b,
-        u : 0.0,
-        v : 0.0,
+        u: 0.0,
+        v: 0.0,
     });
     vertices.push(Vertex3D {
         x: x1,
@@ -231,8 +231,8 @@ pub fn bottom(
         r,
         g,
         b,
-        u : 1.0,
-        v : 0.0,
+        u: 1.0,
+        v: 0.0,
     });
     vertices.push(Vertex3D {
         x: x0,
@@ -241,8 +241,8 @@ pub fn bottom(
         r,
         g,
         b,
-        u : 0.0,
-        v : 1.0,
+        u: 0.0,
+        v: 1.0,
     });
     vertices.push(Vertex3D {
         x: x1,
@@ -251,8 +251,8 @@ pub fn bottom(
         r,
         g,
         b,
-        u : 1.0,
-        v : 1.0,
+        u: 1.0,
+        v: 1.0,
     });
 
     let elements = vec![
@@ -288,8 +288,8 @@ pub fn front(
         r,
         g,
         b,
-        u : 0.0,
-        v : 0.0,
+        u: 0.0,
+        v: 0.0,
     });
     vertices.push(Vertex3D {
         x: x1,
@@ -298,8 +298,8 @@ pub fn front(
         r,
         g,
         b,
-        u : 1.0,
-        v : 0.0,
+        u: 1.0,
+        v: 0.0,
     });
     vertices.push(Vertex3D {
         x: x0,
@@ -308,8 +308,8 @@ pub fn front(
         r,
         g,
         b,
-        u : 0.0,
-        v : 1.0,
+        u: 0.0,
+        v: 1.0,
     });
     vertices.push(Vertex3D {
         x: x1,
@@ -318,8 +318,8 @@ pub fn front(
         r,
         g,
         b,
-        u : 1.0,
-        v : 1.0,
+        u: 1.0,
+        v: 1.0,
     });
 
     let elements = vec![
@@ -355,8 +355,8 @@ pub fn back(
         r,
         g,
         b,
-        u : 0.0,
-        v : 0.0,
+        u: 0.0,
+        v: 0.0,
     });
     vertices.push(Vertex3D {
         x: x1,
@@ -365,8 +365,8 @@ pub fn back(
         r,
         g,
         b,
-        u : 1.0,
-        v : 0.0,
+        u: 1.0,
+        v: 0.0,
     });
     vertices.push(Vertex3D {
         x: x0,
@@ -375,8 +375,8 @@ pub fn back(
         r,
         g,
         b,
-        u : 0.0,
-        v : 1.0,
+        u: 0.0,
+        v: 1.0,
     });
     vertices.push(Vertex3D {
         x: x1,
@@ -385,8 +385,8 @@ pub fn back(
         r,
         g,
         b,
-        u : 1.0,
-        v : 1.0,
+        u: 1.0,
+        v: 1.0,
     });
 
     let elements = vec![

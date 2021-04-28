@@ -1,11 +1,10 @@
-
 use super::TextureManager;
+use crate::graphics::UniformData;
+use macros::ShaderId;
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::fs;
 use strum::{EnumCount, EnumIter};
-use crate::graphics::UniformData;
-use macros::ShaderId;
 
 #[derive(Clone)]
 pub enum ProgramType {
@@ -17,9 +16,8 @@ pub enum ProgramType {
 pub struct Shader {
     program_id: u32,
     uniform_locations: HashMap<String, i32>,
-    metadata : ShaderMetadata
+    metadata: ShaderMetadata,
 }
-
 
 #[derive(Clone, Copy, Debug, EnumCount, EnumIter, ShaderId)]
 pub enum ShaderIdentifier {
@@ -39,7 +37,7 @@ pub enum ShaderIdentifier {
 
 #[derive(Clone)]
 pub struct ShaderMetadata {
-    pub identifier : ShaderIdentifier,
+    pub identifier: ShaderIdentifier,
     /// The uniforms that this shader needs filled out
     /// First string is the name of the uniform, second is the file and line at which it is found (for error reports)
     pub required_uniforms: Vec<(String, String)>,
@@ -107,9 +105,7 @@ impl Shader {
         Ok((id, Self::find_uniforms(&shader_source, file)))
     }
 
-    pub unsafe fn new(
-        identifier : ShaderIdentifier
-    ) -> Result<Shader, String> {
+    pub unsafe fn new(identifier: ShaderIdentifier) -> Result<Shader, String> {
         if identifier.is_compute() {
             Shader::new_compute(identifier)
         } else {
@@ -117,14 +113,17 @@ impl Shader {
         }
     }
 
-    unsafe fn new_graphical(identifier : ShaderIdentifier) -> Result<Shader, String> {
+    unsafe fn new_graphical(identifier: ShaderIdentifier) -> Result<Shader, String> {
         if identifier.is_compute() {
-            return Err(format!("Compute shader identifier {} passed as graphical!", identifier.name()))
+            return Err(format!(
+                "Compute shader identifier {} passed as graphical!",
+                identifier.name()
+            ));
         }
         let name = identifier.name();
         let extensionless_path = identifier.extensionless_path();
-        let vertex_file = format!("{}.vert",extensionless_path);
-        let fragment_file = format!("{}.frag",extensionless_path);
+        let vertex_file = format!("{}.vert", extensionless_path);
+        let fragment_file = format!("{}.frag", extensionless_path);
         println!("Loading shader {}", name);
         let (vsid, mut vsuniforms) = match Self::load_shader(&vertex_file, gl::VERTEX_SHADER) {
             Ok(id) => id,
@@ -191,25 +190,26 @@ impl Shader {
         }
         gl::UseProgram(0);
 
-
-
         Ok(Shader {
             program_id,
             uniform_locations: uniform_locations,
-            metadata : ShaderMetadata {
+            metadata: ShaderMetadata {
                 identifier,
                 required_uniforms,
                 shader_type: ProgramType::Graphics,
-            }
+            },
         })
     }
 
-    unsafe fn new_compute(identifier : ShaderIdentifier) -> Result<Shader, String> {
+    unsafe fn new_compute(identifier: ShaderIdentifier) -> Result<Shader, String> {
         if !identifier.is_compute() {
-            return Err(format!("Graphical shader identifier {} passed as compute!", identifier.name()))
+            return Err(format!(
+                "Graphical shader identifier {} passed as compute!",
+                identifier.name()
+            ));
         }
         let extensionless_path = identifier.extensionless_path();
-        let compute_file = format!("{}.comp",extensionless_path);
+        let compute_file = format!("{}.comp", extensionless_path);
         let (id, required_uniforms) = match Self::load_shader(&compute_file, gl::COMPUTE_SHADER) {
             Ok(id) => id,
             Err(s) => return Err(s),
@@ -260,11 +260,11 @@ impl Shader {
         Ok(Shader {
             program_id,
             uniform_locations,
-            metadata : ShaderMetadata {
+            metadata: ShaderMetadata {
                 identifier,
                 required_uniforms,
                 shader_type: ProgramType::Graphics,
-            }
+            },
         })
     }
 
@@ -333,8 +333,8 @@ pub struct ShaderManager {
 }
 
 impl<'a> ShaderManager {
-    pub fn new(shaders : Vec<Shader>) -> ShaderManager {
-        let mut count=0;
+    pub fn new(shaders: Vec<Shader>) -> ShaderManager {
+        let mut count = 0;
         for shader in &shaders {
             if shader.metadata.identifier as usize != count {
                 panic!("Loading shaders into the shader manager out of order!")
@@ -355,7 +355,6 @@ impl<'a> ShaderManager {
     //}
 
     pub unsafe fn bind_shader(&mut self, shader: ShaderIdentifier) -> Result<String, String> {
-        
         if let Some(s) = self.bound_shader.take() {
             self.shaders[s as usize].unbind();
         }
@@ -423,13 +422,11 @@ impl<'a> ShaderManager {
         }
         res
     }
-
 }
-
 
 #[cfg(test)]
 mod tests {
-    use super::{Shader, ShaderIdentifier, ShaderManager, ShaderMetadata, ProgramType};
+    use super::{ProgramType, Shader, ShaderIdentifier, ShaderManager, ShaderMetadata};
     use std::collections::HashMap;
     use strum::IntoEnumIterator;
     #[test]
@@ -443,13 +440,17 @@ mod tests {
         let mut shaders = Vec::new();
         for identifier in ShaderIdentifier::iter() {
             shaders.push(Shader {
-                program_id : 0,
-                uniform_locations : HashMap::new(),
-                metadata : ShaderMetadata {
-                    identifier : identifier,
-                    required_uniforms : Vec::new(),
-                    shader_type : if identifier.is_compute() {ProgramType::Compute} else { ProgramType::Graphics}
-                }
+                program_id: 0,
+                uniform_locations: HashMap::new(),
+                metadata: ShaderMetadata {
+                    identifier: identifier,
+                    required_uniforms: Vec::new(),
+                    shader_type: if identifier.is_compute() {
+                        ProgramType::Compute
+                    } else {
+                        ProgramType::Graphics
+                    },
+                },
             });
         }
         ShaderManager::new(shaders);
@@ -461,25 +462,32 @@ mod tests {
         let mut shaders = Vec::new();
         for identifier in ShaderIdentifier::iter() {
             shaders.push(Shader {
-                program_id : 0,
-                uniform_locations : HashMap::new(),
-                metadata : ShaderMetadata {
-                    identifier : identifier,
-                    required_uniforms : Vec::new(),
-                    shader_type : if identifier.is_compute() {ProgramType::Compute} else { ProgramType::Graphics}
-                }
+                program_id: 0,
+                uniform_locations: HashMap::new(),
+                metadata: ShaderMetadata {
+                    identifier: identifier,
+                    required_uniforms: Vec::new(),
+                    shader_type: if identifier.is_compute() {
+                        ProgramType::Compute
+                    } else {
+                        ProgramType::Graphics
+                    },
+                },
             });
         }
         shaders.push(Shader {
-            program_id : 0,
-            uniform_locations : HashMap::new(),
-            metadata : ShaderMetadata {
-                identifier : ShaderIdentifier::DefaultShader,
-                required_uniforms : Vec::new(),
-                shader_type : if ShaderIdentifier::DefaultShader.is_compute() {ProgramType::Compute} else { ProgramType::Graphics}
-            }
+            program_id: 0,
+            uniform_locations: HashMap::new(),
+            metadata: ShaderMetadata {
+                identifier: ShaderIdentifier::DefaultShader,
+                required_uniforms: Vec::new(),
+                shader_type: if ShaderIdentifier::DefaultShader.is_compute() {
+                    ProgramType::Compute
+                } else {
+                    ProgramType::Graphics
+                },
+            },
         });
         ShaderManager::new(shaders);
     }
-
 }
