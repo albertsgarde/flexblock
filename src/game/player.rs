@@ -48,19 +48,18 @@ impl Player {
     /// Moves the player as far along the vector as possible without colliding with the terrain.
     pub fn collide_move(&mut self, vec: Vec3, terrain: &Terrain) {
         let move_distance = self.aabb.collide_distance(vec, terrain);
-        self.translate(vec * move_distance.unwrap_or(1.));
+        // Correct for collision.
+        let vec = vec * (move_distance.unwrap_or(1.) * 0.999);
+        // Remove very small movement, as it is probably an error...
+        let vec = vec.map(|coord| if coord.abs() < 1e-5 { 0. } else { coord });
+        self.translate(vec);
     }
 
     /// Converts vec from view coordinates to world coordinates and moves the player as far along
     /// the resulting vector as possible without colliding with the terrain.
     pub fn collide_move_relative(&mut self, vec: Vec3, terrain: &Terrain) {
         let move_vec = self.view.view_to_world(vec);
-        let move_distance = self.aabb.collide_distance(move_vec, terrain);
-        // Correct for collision.
-        let move_vec = move_vec * (move_distance.unwrap_or(1.) * 0.999);
-        // Remove very small movement, as it is probably an error...
-        let move_vec = move_vec.map(|coord| if coord.abs() < 1e-5 { 0. } else { coord });
-        self.translate(move_vec);
+        self.collide_move(move_vec, terrain);
     }
 
     /// Rotates the view direction along the great circle in the delta direction by |delta| radians.
