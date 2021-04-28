@@ -1,5 +1,5 @@
+use crate::graphics::wrapper::{FramebufferMetadata, ShaderMetadata, TextureMetadata};
 use std::collections::HashMap;
-use crate::graphics::wrapper::{ShaderMetadata, TextureMetadata, FramebufferMetadata};
 
 ///TODO
 ///Contains the capabilities that the Graphics wrapper makes available to the packer.
@@ -12,7 +12,7 @@ pub struct GraphicsCapabilities {
     /// A vector of shader metadata indexed by identifiers
     pub shader_metadata: Vec<ShaderMetadata>,
     /// A hashmap of framebuffer names and their metadata
-    pub framebuffer_metadata : Vec<FramebufferMetadata>,
+    pub framebuffer_metadata: Vec<FramebufferMetadata>,
     /// A tuple of current (width,height) of the screen.
-    pub screen_dimensions : (u32,u32)
+    pub screen_dimensions: (u32, u32),
 }

@@ -1,6 +1,9 @@
-use super::{FramebufferIdentifier, FramebufferManager, ShaderIdentifier, ShaderManager, TextureManager, VertexArray};
+use super::{
+    FramebufferIdentifier, FramebufferManager, ShaderIdentifier, ShaderManager, TextureManager,
+    VertexArray,
+};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
-use crate::utils::{Vertex3D};
+use crate::utils::Vertex3D;
 
 ///
 /// TODO
@@ -14,33 +17,36 @@ pub struct RenderCaller {
     vertex_array: VertexArray<Vertex3D>,
     pub shader_manager: ShaderManager,
     texture_manager: TextureManager,
-    framebuffer_manager : FramebufferManager,
-    screen_dimensions : (u32,u32)
+    framebuffer_manager: FramebufferManager,
+    screen_dimensions: (u32, u32),
 }
 
 impl RenderCaller {
     ///
     /// Marked as unsafe because it calls GL code
-    pub unsafe fn new(screen_dimensions : (u32,u32)) -> RenderCaller {
+    pub unsafe fn new(screen_dimensions: (u32, u32)) -> RenderCaller {
         let vertex_array = VertexArray::new(Vertex3D::dummy()).unwrap();
 
         let shader_manager = super::loader::load_shaders();
         let texture_manager = super::loader::load_textures(screen_dimensions);
-        let framebuffer_manager = super::loader::load_framebuffers(&texture_manager, screen_dimensions);
+        let framebuffer_manager =
+            super::loader::load_framebuffers(&texture_manager, screen_dimensions);
 
         RenderCaller {
             vertex_array,
             shader_manager,
             texture_manager,
             framebuffer_manager,
-            screen_dimensions
+            screen_dimensions,
         }
     }
 
-    pub unsafe fn update_screen_dimensions(&mut self, screen_dimensions : (u32,u32)) {
+    pub unsafe fn update_screen_dimensions(&mut self, screen_dimensions: (u32, u32)) {
         self.screen_dimensions = screen_dimensions;
-        self.texture_manager.update_screen_dimensions(screen_dimensions);
-        self.framebuffer_manager.update_screen_dimensions(&self.texture_manager, screen_dimensions);
+        self.texture_manager
+            .update_screen_dimensions(screen_dimensions);
+        self.framebuffer_manager
+            .update_screen_dimensions(&self.texture_manager, screen_dimensions);
     }
 
     ///
@@ -102,12 +108,17 @@ impl RenderCaller {
                 color_buffer,
                 depth_buffer,
             } => self.clear_buffers(color_buffer, depth_buffer),
-            RenderMessage::ChooseFramebuffer {framebuffer} => self.choose_framebuffer(&framebuffer),
-            RenderMessage::Compute {output_texture, dimensions} => self.dispatch_compute(output_texture, dimensions)
+            RenderMessage::ChooseFramebuffer { framebuffer } => {
+                self.choose_framebuffer(&framebuffer)
+            }
+            RenderMessage::Compute {
+                output_texture,
+                dimensions,
+            } => self.dispatch_compute(output_texture, dimensions),
         }
     }
 
-    pub unsafe fn choose_framebuffer(&mut self, framebuffer : &Option<FramebufferIdentifier>) {
+    pub unsafe fn choose_framebuffer(&mut self, framebuffer: &Option<FramebufferIdentifier>) {
         self.framebuffer_manager.bind_framebuffer(&framebuffer);
     }
 
@@ -134,9 +145,21 @@ impl RenderCaller {
         );
     }
 
-    pub unsafe fn dispatch_compute(&mut self, output_texture : &String, dimensions : &(u32,u32,u32)) {
+    pub unsafe fn dispatch_compute(
+        &mut self,
+        output_texture: &String,
+        dimensions: &(u32, u32, u32),
+    ) {
         let tex = self.texture_manager.get_texture(output_texture);
-        gl::BindImageTexture(0, tex.get_id(), 0, gl::FALSE, 0, gl::WRITE_ONLY, tex.metadata.internal_format.to_gl());
+        gl::BindImageTexture(
+            0,
+            tex.get_id(),
+            0,
+            gl::FALSE,
+            0,
+            gl::WRITE_ONLY,
+            tex.metadata.internal_format.to_gl(),
+        );
         gl::DispatchCompute(dimensions.0, dimensions.1, 1);
     }
 

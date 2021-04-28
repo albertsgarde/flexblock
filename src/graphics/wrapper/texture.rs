@@ -1,9 +1,9 @@
+use crate::utils::ColorFormat;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ptr::null;
-use serde::{Serialize, Deserialize};
-use crate::utils::ColorFormat;
 
-#[derive(Clone,Copy,Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum InternalFormat {
     RGBA8,
     RGB8,
@@ -21,7 +21,7 @@ impl InternalFormat {
 pub struct Texture {
     id: u32,
     filled: bool,
-    pub metadata : TextureMetadata
+    pub metadata: TextureMetadata,
 }
 
 impl Drop for Texture {
@@ -33,14 +33,20 @@ impl Drop for Texture {
 impl Texture {
     ///
     ///Creates a new, empty texture, with the specified width, height, and format
-    /// If width and height are None, then 
-    pub unsafe fn new(dimensions : Option<(u32, u32)>, format: ColorFormat, internal_format : InternalFormat, name : &str, screen_dimensions : (u32,u32)) -> Texture {
+    /// If width and height are None, then
+    pub unsafe fn new(
+        dimensions: Option<(u32, u32)>,
+        format: ColorFormat,
+        internal_format: InternalFormat,
+        name: &str,
+        screen_dimensions: (u32, u32),
+    ) -> Texture {
         let glf = format.gl_format();
         let mut id = 0;
 
-        let (width,height) = match dimensions {
+        let (width, height) = match dimensions {
             Some(d) => d,
-            None => screen_dimensions
+            None => screen_dimensions,
         };
         gl::GenTextures(1, &mut id);
         gl::BindTexture(gl::TEXTURE_2D, id);
@@ -65,7 +71,14 @@ impl Texture {
         Texture {
             id,
             filled: false,
-            metadata : TextureMetadata { format, internal_format, width, height, name : String::from(name), screen_dependant_dimensions : dimensions.is_none()} 
+            metadata: TextureMetadata {
+                format,
+                internal_format,
+                width,
+                height,
+                name: String::from(name),
+                screen_dependant_dimensions: dimensions.is_none(),
+            },
         }
     }
 
@@ -74,7 +87,7 @@ impl Texture {
     pub unsafe fn fill(&mut self, data: Vec<u8>) {
         assert_eq!(
             data.len(),
-            (self.metadata.width * self.metadata.height) as usize  * self.metadata.format.bytes(),
+            (self.metadata.width * self.metadata.height) as usize * self.metadata.format.bytes(),
             "Tried to fill a {}x{} {}-byte-stride texture with {} length data!",
             self.metadata.width,
             self.metadata.height,
@@ -111,14 +124,14 @@ impl Texture {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct TextureMetadata {
-    pub format : ColorFormat,
-    pub internal_format : InternalFormat,
-    pub width : u32,
-    pub height : u32,
-    pub name : String,
+    pub format: ColorFormat,
+    pub internal_format: InternalFormat,
+    pub width: u32,
+    pub height: u32,
+    pub name: String,
     /// Whether this texture changes size depending on the screen dimensions.
     /// TODO: IMPLEMENT ALTERNATE SCREEN DEPENDENCIES THAN JUST TEXTURE_DIM = SCREEN_DIM
-    pub screen_dependant_dimensions : bool,
+    pub screen_dependant_dimensions: bool,
 }
 
 pub struct TextureManager {
@@ -137,14 +150,20 @@ impl TextureManager {
     pub fn get_texture_metadata(&self) -> HashMap<String, TextureMetadata> {
         let mut res = HashMap::new();
         for texture in &self.textures {
-            res.insert(String::from(&texture.metadata.name), texture.metadata.clone());
+            res.insert(
+                String::from(&texture.metadata.name),
+                texture.metadata.clone(),
+            );
         }
         res
     }
 
-    pub fn add_texture(&mut self, texture: Texture) -> Result<(), String>{
+    pub fn add_texture(&mut self, texture: Texture) -> Result<(), String> {
         if self.texture_names.contains_key(&texture.metadata.name) {
-            return Err(format!("Texture with name {} was just added to TextureManager, but it already exists!", &texture.metadata.name));
+            return Err(format!(
+                "Texture with name {} was just added to TextureManager, but it already exists!",
+                &texture.metadata.name
+            ));
         }
         self.texture_names
             .insert(String::from(&texture.metadata.name), self.textures.len());
@@ -154,8 +173,11 @@ impl TextureManager {
 
     pub fn get_texture(&self, name: &str) -> &Texture {
         let index = match self.texture_names.get(name) {
-           Some(i) => i,
-           None => panic!("Texture {} was requested, but was not in texture manager!",name) 
+            Some(i) => i,
+            None => panic!(
+                "Texture {} was requested, but was not in texture manager!",
+                name
+            ),
         };
         &self.textures[*index]
     }
@@ -164,8 +186,11 @@ impl TextureManager {
     pub unsafe fn fill_texture(&mut self, name: &str, data: Vec<u8>) {
         let index = match self.texture_names.get(name) {
             Some(i) => i,
-            None => panic!("Texture {} was requested, but was not in texture manager!",name) 
-         };
+            None => panic!(
+                "Texture {} was requested, but was not in texture manager!",
+                name
+            ),
+        };
         self.textures[*index].fill(data);
     }
 
@@ -173,27 +198,32 @@ impl TextureManager {
         self.texture_names.contains_key(name)
     }
 
-    pub unsafe fn update_screen_dimensions(&mut self, screen_dimensions : (u32,u32)) {
+    pub unsafe fn update_screen_dimensions(&mut self, screen_dimensions: (u32, u32)) {
         for i in 0..self.textures.len() {
             if self.textures[i].metadata.screen_dependant_dimensions {
                 let old_metadata = self.textures[i].metadata.clone();
-                self.textures[i] = Texture::new(None, old_metadata.format, old_metadata.internal_format, &old_metadata.name, screen_dimensions);
+                self.textures[i] = Texture::new(
+                    None,
+                    old_metadata.format,
+                    old_metadata.internal_format,
+                    &old_metadata.name,
+                    screen_dimensions,
+                );
             }
         }
     }
 }
 
-
 #[cfg(test)]
 mod tests {
+    use super::super::InternalFormat;
     use super::TextureMetadata;
     use crate::utils::ColorFormat;
-    use super::super::InternalFormat;
 
     fn serialize_texture_metadata() {
         let metadata = TextureMetadata {
-            format : ColorFormat::RGB,
-            internal_format : InternalFormat::RGB8,
+            format: ColorFormat::RGB,
+            internal_format: InternalFormat::RGB8,
             width: 0,
             height: 0,
             name: "bob".to_owned(),
@@ -201,6 +231,6 @@ mod tests {
         };
         let j = serde_json::to_string(&metadata).unwrap();
 
-        println!("{}",j);
+        println!("{}", j);
     }
 }

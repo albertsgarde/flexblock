@@ -1,25 +1,25 @@
-use crate::graphics::{RenderMessage, RenderMessages, wrapper::{ShaderIdentifier}};
 use crate::graphics::UniformData;
+use crate::graphics::{wrapper::ShaderIdentifier, RenderMessage, RenderMessages};
 
 pub struct ComputePipeline {
-    dispatches : Vec<ComputeDispatch>
+    dispatches: Vec<ComputeDispatch>,
 }
 
 pub struct ComputeDispatch {
-    shader : ShaderIdentifier,
-    uniforms : UniformData,
-    output_texture : String,
-    dimensions : (u32, u32, u32)
+    shader: ShaderIdentifier,
+    uniforms: UniformData,
+    output_texture: String,
+    dimensions: (u32, u32, u32),
 }
 
 impl ComputePipeline {
-    pub fn new() -> ComputePipeline{
+    pub fn new() -> ComputePipeline {
         ComputePipeline {
-            dispatches : Vec::new()
+            dispatches: Vec::new(),
         }
     }
 
-    pub fn add_dispatch(&mut self, dispatch : ComputeDispatch) {
+    pub fn add_dispatch(&mut self, dispatch: ComputeDispatch) {
         self.dispatches.push(dispatch);
     }
 
@@ -34,25 +34,34 @@ impl ComputePipeline {
 }
 
 impl ComputeDispatch {
-    pub fn new(shader : ShaderIdentifier, uniforms : UniformData, output_texture : String, dimensions : (u32,u32,u32)) -> ComputeDispatch{
-
-        ComputeDispatch {shader, uniforms, output_texture, dimensions}
+    pub fn new(
+        shader: ShaderIdentifier,
+        uniforms: UniformData,
+        output_texture: String,
+        dimensions: (u32, u32, u32),
+    ) -> ComputeDispatch {
+        ComputeDispatch {
+            shader,
+            uniforms,
+            output_texture,
+            dimensions,
+        }
     }
 
     pub fn create_messages(self) -> RenderMessages {
         let mut messages = RenderMessages::new();
 
         messages.add_message(RenderMessage::ChooseShader {
-            shader : self.shader
+            shader: self.shader,
         });
         messages.add_message(RenderMessage::Uniforms {
-            uniforms : self.uniforms
+            uniforms: self.uniforms,
         });
         messages.add_message(RenderMessage::Compute {
-            output_texture : self.output_texture,
-            dimensions : self.dimensions
+            output_texture: self.output_texture,
+            dimensions: self.dimensions,
         });
 
         messages
-    } 
+    }
 }
