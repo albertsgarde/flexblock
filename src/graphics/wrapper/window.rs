@@ -83,7 +83,6 @@ impl Window {
             let mut render_messages = render_messages.unwrap();
 
             if let Some(messages) = render_messages.take() {
-                //println!("heey!");
                 for message in messages.iter() {
                     self.render_caller.read_message(message);
                 }

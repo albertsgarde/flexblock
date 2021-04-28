@@ -341,7 +341,6 @@ impl RenderState {
                         location.z as f32 * 16.,
                     ),
                 );
-
                 render_messages.add_message(RenderMessage::Uniforms {
                     uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![], vec![(String::from("/atlas.png"), String::from("test_texture"))]),
                 });
@@ -370,7 +369,15 @@ impl RenderState {
         self.capabilities = Some(capabilities);
     }
 
-    /// Fills in render messages for a tick
+    pub fn is_render_ready(&self) -> bool {
+        return self.capabilities.is_some();
+    }
+
+    pub fn render_capabilities(&self) -> &Option<GraphicsCapabilities> {
+        return &self.capabilities
+    }
+
+    /// Fills in world render messages for a tick
     pub fn create_render_messages(&mut self, data : &MutexGuard<GraphicsStateModel>) -> RenderMessages{
 
         // What should happen:
@@ -384,64 +391,60 @@ impl RenderState {
 
         let mut messages = RenderMessages::new();
 
-        if self.capabilities.is_some() {
-            
-            let (width,height) = match &self.capabilities {
-                Some(cap) => cap.screen_dimensions,
-                None => unreachable!()
-            };
-
-            messages.add_message(RenderMessage::ChooseShader {
-                shader: ShaderIdentifier::DefaultShader,
-            });
-
-            // Draw on the screen.
-            messages.add_message(RenderMessage::ChooseFramebuffer {
-                framebuffer : None
-            });
-            messages.add_message(RenderMessage::ClearBuffers {
-                color_buffer: true,
-                depth_buffer: true,
-            });
-
-            // state.pack_next_chunk(data.view.location().chunk, &mut messages, &data.terrain);
-            self.repack_chunk(data.view.location().chunk, &mut messages, &data.terrain);
-            self.repack_chunk(
-                data.view.location().chunk + glm::vec3(1, 0, 0),
-                &mut messages,
-                &data.terrain,
-            );
-            self.repack_chunk(
-                data.view.location().chunk + glm::vec3(-1, 0, 0),
-                &mut messages,
-                &data.terrain,
-            );
-            self.repack_chunk(
-                data.view.location().chunk + glm::vec3(0, 1, 0),
-                &mut messages,
-                &data.terrain,
-            );
-            self.repack_chunk(
-                data.view.location().chunk + glm::vec3(0, -1, 0),
-                &mut messages,
-                &data.terrain,
-            );
-            self.repack_chunk(
-                data.view.location().chunk + glm::vec3(0, 0, 1),
-                &mut messages,
-                &data.terrain,
-            );
-            self.repack_chunk(
-                data.view.location().chunk + glm::vec3(0, 0, -1),
-                &mut messages,
-                &data.terrain,
-            );
-
-            self.clear_distant_chunks(data.view.location().chunk, &mut messages);
-
-            let vp = get_vp_matrix(&data.view, (width,height));
-            self.render_packed_chunks(&mut messages, &vp);
+        if !self.is_render_ready() {
+            return messages;
         }
+
+        let (width,height) = match &self.capabilities {
+            Some(cap) => cap.screen_dimensions,
+            None => unreachable!()
+        };
+
+        messages.add_message(RenderMessage::ChooseShader {
+            shader: ShaderIdentifier::DefaultShader,
+        });
+        messages.add_message(RenderMessage::ClearBuffers {
+            color_buffer: true,
+            depth_buffer: true,
+        });
+
+        // state.pack_next_chunk(data.view.location().chunk, &mut messages, &data.terrain);
+        self.repack_chunk(data.view.location().chunk, &mut messages, &data.terrain);
+        self.repack_chunk(
+            data.view.location().chunk + glm::vec3(1, 0, 0),
+            &mut messages,
+            &data.terrain,
+        );
+        self.repack_chunk(
+            data.view.location().chunk + glm::vec3(-1, 0, 0),
+            &mut messages,
+            &data.terrain,
+        );
+        self.repack_chunk(
+            data.view.location().chunk + glm::vec3(0, 1, 0),
+            &mut messages,
+            &data.terrain,
+        );
+        self.repack_chunk(
+            data.view.location().chunk + glm::vec3(0, -1, 0),
+            &mut messages,
+            &data.terrain,
+        );
+        self.repack_chunk(
+            data.view.location().chunk + glm::vec3(0, 0, 1),
+            &mut messages,
+            &data.terrain,
+        );
+        self.repack_chunk(
+            data.view.location().chunk + glm::vec3(0, 0, -1),
+            &mut messages,
+            &data.terrain,
+        );
+
+        self.clear_distant_chunks(data.view.location().chunk, &mut messages);
+
+        let vp = get_vp_matrix(&data.view, (width,height));
+        self.render_packed_chunks(&mut messages, &vp);
         messages
     }
     
