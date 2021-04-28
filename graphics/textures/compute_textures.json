@@ -1,0 +1,4 @@
+[
+    {"format":"RGB", "internal_format" : "RGB8","width":0,"height":0,"name":"fpfcolor","screen_dependant_dimensions":true},
+    {"format":"RGBA", "internal_format" : "RGBA8","width":0,"height":0,"name":"sobel_output","screen_dependant_dimensions":true}
+]

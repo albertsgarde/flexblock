@@ -1,6 +1,6 @@
-use super::{ShaderManager, VertexArray};
+use super::{FramebufferIdentifier, FramebufferManager, ShaderIdentifier, ShaderManager, TextureManager, VertexArray};
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
-use crate::utils::Vertex3D;
+use crate::utils::{Vertex3D};
 
 ///
 /// TODO
@@ -13,22 +13,34 @@ use crate::utils::Vertex3D;
 pub struct RenderCaller {
     vertex_array: VertexArray<Vertex3D>,
     pub shader_manager: ShaderManager,
+    texture_manager: TextureManager,
+    framebuffer_manager : FramebufferManager,
+    screen_dimensions : (u32,u32)
 }
 
 impl RenderCaller {
     ///
     /// Marked as unsafe because it calls GL code
-    pub unsafe fn new() -> RenderCaller {
+    pub unsafe fn new(screen_dimensions : (u32,u32)) -> RenderCaller {
         let vertex_array = VertexArray::new(Vertex3D::dummy()).unwrap();
-        let mut shader_manager = ShaderManager::new();
 
-        //TODO: This should probably not be called from the RenderCaller new.
-        shader_manager.load_shaders("shaders");
+        let shader_manager = super::loader::load_shaders();
+        let texture_manager = super::loader::load_textures(screen_dimensions);
+        let framebuffer_manager = super::loader::load_framebuffers(&texture_manager, screen_dimensions);
 
         RenderCaller {
             vertex_array,
             shader_manager,
+            texture_manager,
+            framebuffer_manager,
+            screen_dimensions
         }
+    }
+
+    pub unsafe fn update_screen_dimensions(&mut self, screen_dimensions : (u32,u32)) {
+        self.screen_dimensions = screen_dimensions;
+        self.texture_manager.update_screen_dimensions(screen_dimensions);
+        self.framebuffer_manager.update_screen_dimensions(&self.texture_manager, screen_dimensions);
     }
 
     ///
@@ -36,11 +48,11 @@ impl RenderCaller {
     /// this has access to OpenGL calls.
     /// TODO: Enforce requirements on RenderPack<T> to make this safe.
     unsafe fn unpack(&mut self, buffer: &usize, pack: &VertexPack) {
-        if *buffer >= self.vertex_array.get_vbos() {
+        if *buffer >= self.vertex_array.get_vbo_count() {
             panic!(
                 "Trying to clear a buffer with index {}, but there's only {} buffers ",
                 buffer,
-                self.vertex_array.get_vbos()
+                self.vertex_array.get_vbo_count()
             );
         }
         self.vertex_array.fill_vbo(*buffer, &pack.vertices);
@@ -48,18 +60,17 @@ impl RenderCaller {
     }
 
     unsafe fn clear(&mut self, buffer: &usize) {
-        if *buffer >= self.vertex_array.get_vbos() {
+        if *buffer >= self.vertex_array.get_vbo_count() {
             panic!(
                 "Trying to clear an array with index {}, but there's only {} arrays ",
                 buffer,
-                self.vertex_array.get_vbos()
+                self.vertex_array.get_vbo_count()
             );
         }
         self.vertex_array.clear(*buffer);
     }
 
-    /// TODO: THIS IS WHERE YOU LEFT OFF, CONTINUE FROM HERE
-    unsafe fn choose_shader(&mut self, shader: &String) {
+    unsafe fn choose_shader(&mut self, shader: ShaderIdentifier) {
         match self.shader_manager.bind_shader(shader) {
             Err(s) => {
                 println!("{}", s)
@@ -69,7 +80,10 @@ impl RenderCaller {
     }
 
     unsafe fn uniforms(&mut self, uniforms: &UniformData) {
-        match self.shader_manager.uniforms(uniforms) {
+        match self
+            .shader_manager
+            .uniforms(uniforms, &self.texture_manager)
+        {
             Err(s) => {
                 println!("{}", s)
             } //TODO: LOG INSTEAD
@@ -81,14 +95,20 @@ impl RenderCaller {
         match message {
             RenderMessage::Pack { buffer, pack } => self.unpack(buffer, pack),
             RenderMessage::ClearArray { buffer } => self.clear(buffer),
-            RenderMessage::ChooseShader { shader } => self.choose_shader(shader),
+            RenderMessage::ChooseShader { shader } => self.choose_shader(*shader),
             RenderMessage::Uniforms { uniforms } => self.uniforms(uniforms),
             RenderMessage::Draw { buffer } => self.render(buffer),
             RenderMessage::ClearBuffers {
                 color_buffer,
                 depth_buffer,
             } => self.clear_buffers(color_buffer, depth_buffer),
+            RenderMessage::ChooseFramebuffer {framebuffer} => self.choose_framebuffer(&framebuffer),
+            RenderMessage::Compute {output_texture, dimensions} => self.dispatch_compute(output_texture, dimensions)
         }
+    }
+
+    pub unsafe fn choose_framebuffer(&mut self, framebuffer : &Option<FramebufferIdentifier>) {
+        self.framebuffer_manager.bind_framebuffer(&framebuffer);
     }
 
     pub unsafe fn render(&mut self, buffer: &usize) {
@@ -112,5 +132,27 @@ impl RenderCaller {
                 0
             }),
         );
+    }
+
+    pub unsafe fn dispatch_compute(&mut self, output_texture : &String, dimensions : &(u32,u32,u32)) {
+        let tex = self.texture_manager.get_texture(output_texture);
+        gl::BindImageTexture(0, tex.get_id(), 0, gl::FALSE, 0, gl::WRITE_ONLY, tex.metadata.internal_format.to_gl());
+        gl::DispatchCompute(dimensions.0, dimensions.1, 1);
+    }
+
+    pub fn get_vbo_count(&self) -> usize {
+        self.vertex_array.get_vbo_count()
+    }
+
+    pub fn get_texture_manager(&self) -> &TextureManager {
+        &self.texture_manager
+    }
+
+    pub fn get_shader_manager(&self) -> &ShaderManager {
+        &self.shader_manager
+    }
+
+    pub fn get_framebuffer_manager(&self) -> &FramebufferManager {
+        &self.framebuffer_manager
     }
 }

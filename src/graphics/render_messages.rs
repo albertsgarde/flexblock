@@ -1,8 +1,15 @@
 use crate::utils::vertex::Vertex3D;
 use std::slice::Iter;
+use std::fmt;
 
+use super::wrapper::{ShaderIdentifier, FramebufferIdentifier};
+
+#[derive(Debug)]
 pub struct RenderMessages {
     messages: Vec<RenderMessage>,
+    /// TODO: THIS IS SUCH A BAD NAME
+    /// Indicates the index where the first new message occurs. Before this index, only persistent render messages occur.
+    old_new_split_index : usize,
 }
 ///
 /// Holds everything needed for one render pass, but in CPU memory.
@@ -12,7 +19,7 @@ pub struct RenderMessages {
 impl RenderMessages {
     pub fn new() -> RenderMessages {
         let messages = Vec::new();
-        RenderMessages { messages }
+        RenderMessages { messages, old_new_split_index : 0 }
     }
 
     pub fn add_message(&mut self, message: RenderMessage) {
@@ -27,6 +34,10 @@ impl RenderMessages {
         self.messages.len()
     }
 
+    pub fn old_new_split_index(&self) -> usize {
+        self.old_new_split_index
+    }
+
     /// Merges an old, unused render pack into the render pack, putting it first and only keeping persistent render messages
     /// TODO: Make things cancel each other out, like filling and emptying the same vertex array should cancel out - this is probably actually a very inconsequential optimization
     pub fn merge_old(&mut self, old_pack: RenderMessages) {
@@ -35,8 +46,15 @@ impl RenderMessages {
             .into_iter()
             .filter(|x| x.is_persistent())
             .collect();
+        self.old_new_split_index = new_messages.len();
         new_messages.append(&mut self.messages);
         self.messages = new_messages;
+    }
+
+    /// Merges a current render pack onto the end of this one.
+    pub fn merge_current(&mut self, new_pack :RenderMessages) {
+        let mut new_pack = new_pack;
+        self.messages.append(&mut new_pack.messages);
     }
 }
 
@@ -47,6 +65,7 @@ pub struct VertexPack {
 
 /// One render message to the graphics thread.
 /// TODO: Documentation & contract checking
+#[derive(Debug)]
 pub enum RenderMessage {
     /// buffer = which buffer in the vertex array to target
     Pack {
@@ -64,7 +83,7 @@ pub enum RenderMessage {
         depth_buffer: bool,
     },
     ChooseShader {
-        shader: String,
+        shader: ShaderIdentifier,
     },
     Uniforms {
         uniforms: UniformData,
@@ -73,6 +92,14 @@ pub enum RenderMessage {
     Draw {
         buffer: usize,
     },
+    /// framebuffer = which framebuffer to draw to. None for the screen.
+    ChooseFramebuffer {
+        framebuffer : Option<FramebufferIdentifier>,
+    },
+    Compute {
+        output_texture : String,
+        dimensions : (u32,u32,u32),
+    }
 }
 
 impl RenderMessage {
@@ -90,6 +117,8 @@ impl RenderMessage {
             RenderMessage::ChooseShader { shader: _ } => false,
             RenderMessage::Uniforms { uniforms: _ } => false,
             RenderMessage::Draw { buffer: _ } => false,
+            RenderMessage::ChooseFramebuffer {framebuffer : _} => false,
+            RenderMessage::Compute {output_texture : _, dimensions : _} => false
         }
     }
 }
@@ -105,14 +134,55 @@ impl VertexPack {
     }
 }
 
-//TODO: Add mat 3, 2, and vec 3, 2, and f32, u32, i32
+impl fmt::Debug for VertexPack {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("VertexPack")
+    }
+}
+
+//TODO: Add mat 3, 2, and vec 3, 2, and f32, u32, i32, and texture
 pub struct UniformData {
     pub mat4s: Vec<(glm::Mat4, String)>,
-    pub vec4s: Vec<(glm::Vec3, String)>,
+    pub vec3s: Vec<(glm::Vec3, String)>,
+    /// The first string is the texture name, second is the uniform location name
+    pub textures: Vec<(String, String)>,
 }
 
 impl UniformData {
-    pub fn new(mat4s: Vec<(glm::Mat4, String)>, vec4s: Vec<(glm::Vec3, String)>) -> UniformData {
-        UniformData { mat4s, vec4s }
+    ///
+    /// textures = (texture name, uniform location name)
+    pub fn new(
+        mat4s: Vec<(glm::Mat4, String)>,
+        vec3s: Vec<(glm::Vec3, String)>,
+        textures: Vec<(String, String)>,
+    ) -> UniformData {
+        UniformData {
+            mat4s,
+            vec3s,
+            textures,
+        }
+    }
+
+    /// Gets the list of all uniforms referred to by this set of uniform data.
+    pub fn get_uniform_locations(&self) -> Vec<&String> {
+        let mut res = Vec::new();
+
+        for entry in &self.mat4s {
+            res.push(&entry.1);
+        }
+        for entry in &self.vec3s {
+            res.push(&entry.1);
+        }
+        for entry in &self.textures {
+            res.push(&entry.1);
+        }
+
+        res
+    }
+}
+
+impl fmt::Debug for UniformData {
+    fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("UniformData")
     }
 }

@@ -1,10 +1,12 @@
-use crate::game::{
+use crate::{game::{
     world::{Chunk, Terrain},
     View,
-};
+}, graphics::wrapper::ShaderIdentifier};
 use crate::graphics::VertexPack;
-use crate::graphics::{RenderMessage, RenderMessages, UniformData};
-use std::collections::VecDeque;
+use crate::graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
+use std::collections::{VecDeque};
+use std::sync::MutexGuard;
+use crate::game::GraphicsStateModel;
 
 /// This creates the vertex pack for a specific chunk. It just goes through all the voxels and adds their faces.
 fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
@@ -69,7 +71,9 @@ fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
 
 /// Returns the view * projection matrix of the supplied camera.
 /// Doesn't get us all the way to mvp (multiply this by the model matrix, and you're there boyo).
-pub fn get_vp_matrix(view: &View) -> glm::Mat4 {
+pub fn get_vp_matrix(view: &View, screen_dimensions : (u32,u32)) -> glm::Mat4 {
+    let (width,height) = screen_dimensions;
+
     let direction = view.view_direction();
     let chunk = &view.location().chunk;
     let position: glm::Vec3 = view.location().position
@@ -86,7 +90,7 @@ pub fn get_vp_matrix(view: &View) -> glm::Mat4 {
         &glm::vec3(center[0], center[1], center[2]),
         &glm::vec3(up[0], up[1], up[2]),
     );
-    let p: glm::Mat4 = glm::perspective_fov(90. / 180. * 3.1415, 600., 400., 0.1, 100.0); //TODO: CORRECT FOV, WIDTH, AND HEIGHT
+    let p: glm::Mat4 = glm::perspective_fov(90. / 180. * 3.1415, width as f32, height as f32, 0.1, 100.0); //TODO: CORRECT FOV, WIDTH, AND HEIGHT
 
     p * v
 }
@@ -144,21 +148,26 @@ impl BFS {
 /// Contains state information that is needed by the packing thread.
 pub struct RenderState {
     /// Contains a list of packed chunk locations. The index is which buffer they're packed into. None means no chunk is packed into that buffer.
-    packed_chunks: Vec<Option<glm::IVec3>>,
+    pub(super) packed_chunks: Vec<Option<glm::IVec3>>,
     chunk_search: Option<BFS>,
+    pub(super) capabilities: Option<GraphicsCapabilities>,
 }
 
+
+/// Keeps track of all state necessary to correctly supply graphics calls to the window each frame.
 impl RenderState {
     pub fn new() -> RenderState {
         //TODO: Buffer space should be sized according to the number of buffers in the target VertexArray. This should coordinate.
-        let packed_chunks = vec![None; 100];
+        let packed_chunks = vec![None; 0];
 
         RenderState {
             packed_chunks,
             chunk_search: None,
+            capabilities: None
         }
     }
 
+    /// Registers that a chunk has been packed into the given buffer
     fn register_packed_chunk(&mut self, location: glm::IVec3, buffer: usize) {
         /*debug_assert!(
             buffer < self.packed_chunks.len(),
@@ -172,19 +181,21 @@ impl RenderState {
         self.packed_chunks[buffer] = Some(location);
     }
 
+    /// Deregisters that a chunk has been packed into the given buffer.
     fn unregister_packed_chunk(&mut self, buffer: usize) {
         /*debug_assert!(
             buffer < self.packed_chunks.len(),
             "Trying to pack a chunk into a buffer outside buffer range!"
         );
         debug_assert!(
-            self.packed_chunks[buffer].is_none(),
+            self.packed_chunks[buffer].is_some(),
             "Trying to remove a chunk from a buffer that does not currently have a bound chunk!"
         );*/
 
         self.packed_chunks[buffer] = None;
     }
 
+    /// Finds a free VBO available for chunk packing
     fn find_free_location(&self) -> Option<usize> {
         let mut counter = 0;
         for c in &self.packed_chunks {
@@ -196,6 +207,7 @@ impl RenderState {
         return None;
     }
 
+    /// Packs a given chunk
     fn pack_chunk(
         &mut self,
         chunk: &Chunk,
@@ -218,6 +230,7 @@ impl RenderState {
         }
     }
 
+    /// Unpacks a given chunk
     fn unpack_chunk(&mut self, buffer: usize, messages: &mut RenderMessages) -> Result<(), String> {
         if self.packed_chunks[buffer].is_none() {
             return Err(String::from("Unpacking an unpacked buffer!"));
@@ -228,10 +241,12 @@ impl RenderState {
         Ok(())
     }
 
+    /// Tells whether a chunk is currently packed
     pub fn is_packed(&self, location: glm::IVec3) -> bool {
         self.packed_chunks.contains(&Some(location))
     }
 
+    ///DEPRECATED
     pub fn pack_next_chunk(
         &mut self,
         view_location: glm::IVec3,
@@ -256,6 +271,7 @@ impl RenderState {
         }
     }
 
+    /// Packs a chunk if it hasn't been packed before, or unpacks and packs it if it has been packed before.
     pub fn repack_chunk(
         &mut self,
         location: glm::IVec3,
@@ -284,6 +300,7 @@ impl RenderState {
         }
     }
 
+    /// Clears chunks that are further than four chunks from the given location.
     pub fn clear_distant_chunks(&mut self, location: glm::IVec3, messages: &mut RenderMessages) {
         let mut counter = 0;
         let mut remove = Vec::new();
@@ -324,9 +341,8 @@ impl RenderState {
                         location.z as f32 * 16.,
                     ),
                 );
-
                 render_messages.add_message(RenderMessage::Uniforms {
-                    uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![]),
+                    uniforms: UniformData::new(vec![(mvp, String::from("MVP"))], vec![], vec![(String::from("/atlas.png"), String::from("test_texture"))]),
                 });
 
                 render_messages.add_message(RenderMessage::Draw { buffer: counter });
@@ -334,4 +350,106 @@ impl RenderState {
             counter += 1;
         }
     }
+
+    /// When the window supplies new capabilities, update local capabilities to those.
+    pub fn update_capabilities(&mut self, capabilities: GraphicsCapabilities) {
+        let vbo_count = match self.capabilities.take() {
+            Some(cap2) => cap2.vbo_count,
+            None => 0,
+        };
+
+        if capabilities.vbo_count > vbo_count {
+            self.packed_chunks
+                .append(&mut vec![None; capabilities.vbo_count - vbo_count]);
+        } else if capabilities.vbo_count < vbo_count {
+            panic!(
+                "There is currently no support for a shrink in the number of available VBOs"
+            );
+        }
+        self.capabilities = Some(capabilities);
+    }
+
+    pub fn is_render_ready(&self) -> bool {
+        return self.capabilities.is_some();
+    }
+
+    pub fn render_capabilities(&self) -> &Option<GraphicsCapabilities> {
+        return &self.capabilities
+    }
+
+    /// Fills in world render messages for a tick
+    pub fn create_render_messages(&mut self, data : &MutexGuard<GraphicsStateModel>) -> RenderMessages{
+
+        // What should happen:
+        // 1. Clear color and depth buffer
+        // 2. Supply commmon uniforms
+        // 3. For every new chunk we're interested in (Or dirty chunks)
+        //   3a. Fill the chunk into a vertex array or update the existing vertex array
+        // 4. For every chunk already filled into a vertex array
+        //   4a. Supply specific uniforms
+        //   4b. Draw
+
+        let mut messages = RenderMessages::new();
+
+        if !self.is_render_ready() {
+            return messages;
+        }
+
+        let (width,height) = match &self.capabilities {
+            Some(cap) => cap.screen_dimensions,
+            None => unreachable!()
+        };
+
+        messages.add_message(RenderMessage::ChooseShader {
+            shader: ShaderIdentifier::DefaultShader,
+        });
+        messages.add_message(RenderMessage::ClearBuffers {
+            color_buffer: true,
+            depth_buffer: true,
+        });
+
+        // state.pack_next_chunk(data.view.location().chunk, &mut messages, &data.terrain);
+        self.repack_chunk(data.view.location().chunk, &mut messages, &data.terrain);
+        self.repack_chunk(
+            data.view.location().chunk + glm::vec3(1, 0, 0),
+            &mut messages,
+            &data.terrain,
+        );
+        self.repack_chunk(
+            data.view.location().chunk + glm::vec3(-1, 0, 0),
+            &mut messages,
+            &data.terrain,
+        );
+        self.repack_chunk(
+            data.view.location().chunk + glm::vec3(0, 1, 0),
+            &mut messages,
+            &data.terrain,
+        );
+        self.repack_chunk(
+            data.view.location().chunk + glm::vec3(0, -1, 0),
+            &mut messages,
+            &data.terrain,
+        );
+        self.repack_chunk(
+            data.view.location().chunk + glm::vec3(0, 0, 1),
+            &mut messages,
+            &data.terrain,
+        );
+        self.repack_chunk(
+            data.view.location().chunk + glm::vec3(0, 0, -1),
+            &mut messages,
+            &data.terrain,
+        );
+
+        self.clear_distant_chunks(data.view.location().chunk, &mut messages);
+
+        let vp = get_vp_matrix(&data.view, (width,height));
+        self.render_packed_chunks(&mut messages, &vp);
+        messages
+    }
+    
 }
+
+
+
+

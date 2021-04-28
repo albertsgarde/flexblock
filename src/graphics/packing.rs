@@ -1,84 +1,91 @@
-use super::pack::{get_vp_matrix, RenderState};
-use super::{RenderMessage, RenderMessages};
+use wrapper::FramebufferIdentifier;
+
+use super::pack::{*};
+use super::*;
 use crate::channels::*;
 use std::thread::{self, JoinHandle};
+use super::{RenderMessages, RenderMessage};
+use super::wrapper::ShaderIdentifier;
+use crate::utils::Vertex3D;
 
 pub fn start_packing_thread(
-    rx: LogicToPackingReceiver,
+    logic_rx: LogicToPackingReceiver,
     tx: PackingToWindowSender,
+    window_rx: WindowToPackingReceiver,
 ) -> JoinHandle<()> {
     let mut state = RenderState::new();
+    // Only used by debug validation
+    // Keeps all state needed for running validation.
+    let mut validator = RenderMessageValidator::new();
 
     thread::spawn(move || {
         println!("Ready to pack graphics state!");
 
-        for _ in rx.channel_receiver.iter() {
-            let data = rx.graphics_state_model.lock().unwrap();
-
-            let vp = get_vp_matrix(&data.view);
+        for _ in logic_rx.channel_receiver.iter() {
+            while let Ok(cap) = window_rx.channel_receiver.try_recv() {
+                state.update_capabilities(cap);
+            }
+            let data = logic_rx.graphics_state_model.lock().unwrap();
 
             let mut messages = RenderMessages::new();
 
-            // What should happen:
-            // 1. Clear color and depth buffer
-            // 2. Supply commmon uniforms
-            // 3. For every new chunk we're interested in (Or dirty chunks)
-            //   3a. Fill the chunk into a vertex array or update the existing vertex array
-            // 4. For every chunk already filled into a vertex array
-            //   4a. Supply specific uniforms
-            //   4b. Draw
+            if state.is_render_ready() {
+                messages.add_message(
+                    RenderMessage::ChooseFramebuffer {
+                        framebuffer : Some(FramebufferIdentifier::FirstPassFramebuffer)
+                    }
+                );
 
-            messages.add_message(RenderMessage::ChooseShader {
-                shader: String::from("s1"),
-            });
-            messages.add_message(RenderMessage::ClearBuffers {
-                color_buffer: true,
-                depth_buffer: true,
-            });
+                messages.merge_current(state.create_render_messages(&data));
+    
 
-            // state.pack_next_chunk(data.view.location().chunk, &mut messages, &data.terrain);
-            state.repack_chunk(data.view.location().chunk, &mut messages, &data.terrain);
-            state.repack_chunk(
-                data.view.location().chunk + glm::vec3(1, 0, 0),
-                &mut messages,
-                &data.terrain,
-            );
-            state.repack_chunk(
-                data.view.location().chunk + glm::vec3(-1, 0, 0),
-                &mut messages,
-                &data.terrain,
-            );
-            state.repack_chunk(
-                data.view.location().chunk + glm::vec3(0, 1, 0),
-                &mut messages,
-                &data.terrain,
-            );
-            state.repack_chunk(
-                data.view.location().chunk + glm::vec3(0, -1, 0),
-                &mut messages,
-                &data.terrain,
-            );
-            state.repack_chunk(
-                data.view.location().chunk + glm::vec3(0, 0, 1),
-                &mut messages,
-                &data.terrain,
-            );
-            state.repack_chunk(
-                data.view.location().chunk + glm::vec3(0, 0, -1),
-                &mut messages,
-                &data.terrain,
-            );
+                {
+                    let cx = state.render_capabilities().as_ref().unwrap();
+                    let mut cp = ComputePipeline::new();
+                    cp.add_dispatch(ComputeDispatch::new(
+                            ShaderIdentifier::SobelShader,
+                            UniformData::new(vec![], vec![], vec![("fpfcolor".to_owned(), "fromTex".to_owned())]),
+                            "sobel_output".to_owned(),
+                            (cx.screen_dimensions.0, cx.screen_dimensions.1, 1)
+                    ));
+                    
+                    messages.merge_current(cp.get_messages());
+                }
 
-            state.clear_distant_chunks(data.view.location().chunk, &mut messages);
-
-            state.render_packed_chunks(&mut messages, &vp);
+                // Framebuffer test code (Renders the texture sobel_output to screen)
+                messages.add_message(RenderMessage::ChooseShader{shader : ShaderIdentifier::SimpleShader});
+                messages.add_message(RenderMessage::Uniforms{uniforms : UniformData::new(vec![], vec![], vec![("sobel_output".to_owned(), "tex".to_owned())])});
+                messages.add_message(RenderMessage::ChooseFramebuffer{framebuffer : None});
+                messages.add_message(RenderMessage::ClearBuffers{color_buffer : true, depth_buffer : true});
+                messages.add_message(RenderMessage::Pack {
+                    buffer : 80,
+                    pack : VertexPack::new(
+                        vec![
+                            Vertex3D {x:-1., y:-1., z:-1., r:1., g:1., b:1., u:0., v:0.},
+                            Vertex3D {x:1., y:-1., z:-1., r:1., g:1., b:1., u:1., v:0.},
+                            Vertex3D {x:1., y:1., z:-1., r:1., g:1., b:1., u:1., v:1.},
+                            Vertex3D {x:-1., y:1., z:-1., r:1., g:1., b:1., u:0., v:1.},
+                            ],
+                        Some(vec![0, 1, 2, 0, 2, 3])
+                    )
+                });
+                messages.add_message(RenderMessage::Draw {buffer : 80});
+                messages.add_message(RenderMessage::ClearArray {buffer : 80});
+            
+            }
 
             let mut message_mutex = tx.render_pack.lock().unwrap();
             // This check is done to make sure that persistent-state calls are done even if draw misses a call or two.
             // Like packing chunks into buffers
             if let Some(old) = message_mutex.take() {
                 messages.merge_old(old);
+            } else {
+                
             }
+
+            // Validate render messages.
+            debug_assert!(validator.validate(&mut state, &messages).unwrap() == ());
+
             *message_mutex = Some(messages);
         }
     })

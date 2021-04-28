@@ -79,7 +79,6 @@ impl<T: Vertex> VertexArray<T> {
 
     //TODO: MAKE THIS SAFE BY HANDLING MULTI BINDING OF SAME LAYOUT LOCATION
     pub unsafe fn bind(&self, target: usize) {
-        //println!("Binding vertex array {}", self.id);
         gl::BindVertexArray(self.id);
         let attributes = &self.attributes;
         self.vbos[target].bind();
@@ -122,7 +121,7 @@ impl<T: Vertex> VertexArray<T> {
         self.vbos[target].get_size()
     }
 
-    pub fn get_vbos(&self) -> usize {
+    pub fn get_vbo_count(&self) -> usize {
         self.vbos.len()
     }
 }
