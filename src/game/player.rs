@@ -56,7 +56,9 @@ impl Player {
     pub fn collide_move_relative(&mut self, vec: Vec3, terrain: &Terrain) {
         let move_vec = self.view.view_to_world(vec);
         let move_distance = self.aabb.collide_distance(move_vec, terrain);
+        // Correct for collision.
         let move_vec = move_vec * (move_distance.unwrap_or(1.) * 0.999);
+        // Remove very small movement, as it is probably an error...
         let move_vec = move_vec.map(|coord| if coord.abs() < 1e-5 { 0. } else { coord });
         self.translate(move_vec);
     }
