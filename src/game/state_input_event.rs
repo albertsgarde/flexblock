@@ -72,6 +72,12 @@ impl ExternalEventHandler {
         if let Some(true) = self.key_state.get(&VirtualKeyCode::A) {
             move_vector += Vec3::new(-1., 0., 0.);
         }
+        if let Some(true) = self.key_state.get(&VirtualKeyCode::Space) {
+            move_vector += Vec3::new(0., 1., 0.);
+        }
+        if let Some(true) = self.key_state.get(&VirtualKeyCode::LShift) {
+            move_vector += Vec3::new(0., -1., 0.);
+        }
         if move_vector != Vec3::new(0., 0., 0.) {
             result.push(StateInputEvent::MovePlayerRelative { delta: move_vector });
         }
