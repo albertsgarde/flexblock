@@ -407,30 +407,39 @@ impl<'a> ShaderManager {
                 UniformValue::vec2(value) => {
                     gl::Uniform2fv(*loc.unwrap(), 1, (value.as_ptr()) as *const f32)
                 }
+
                 UniformValue::vec3(value) => {
                     gl::Uniform3fv(*loc.unwrap(), 1, (value.as_ptr()) as *const f32)
                 }
+
                 UniformValue::vec4(value) => {
                     gl::Uniform4fv(*loc.unwrap(), 1, (value.as_ptr()) as *const f32)
                 }
+
                 UniformValue::ivec4(value) => {
                     gl::Uniform4iv(*loc.unwrap(), 1, (value.as_ptr()) as *const i32)
                 }
+
                 UniformValue::ivec3(value) => {
                     gl::Uniform3iv(*loc.unwrap(), 1, (value.as_ptr()) as *const i32)
                 }
+
                 UniformValue::ivec2(value) => {
                     gl::Uniform2iv(*loc.unwrap(), 1, (value.as_ptr()) as *const i32)
                 }
+
                 UniformValue::uvec4(value) => {
                     gl::Uniform4uiv(*loc.unwrap(), 1, (value.as_ptr()) as *const u32)
                 }
+
                 UniformValue::uvec3(value) => {
                     gl::Uniform3uiv(*loc.unwrap(), 1, (value.as_ptr()) as *const u32)
                 }
+
                 UniformValue::uvec2(value) => {
                     gl::Uniform2uiv(*loc.unwrap(), 1, (value.as_ptr()) as *const u32)
                 }
+
                 UniformValue::texture(value) => {
                     let tex = texture_manager.get_texture(value);
                     gl::ActiveTexture(gl::TEXTURE0 + texture_slot as u32);
