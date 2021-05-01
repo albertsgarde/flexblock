@@ -34,8 +34,10 @@ void main() {
     vec3 res2 = abs((p1+p2*2+p3)-(m1+m2*2+m3)).xyz;
 
     float res = (res1.x+res1.y+res1.z+res2.x+res2.y+res2.z)/3.f;
+    
 
     res = pow(res, 2);
 
-    imageStore(img_output, pixel_coords, vec4(vec3(res),1));
+    //imageStore(img_output, pixel_coords, vec4(vec3(res),1));
+    imageStore(img_output, pixel_coords, texture(fromTex, pixel_coords*scale));
 }

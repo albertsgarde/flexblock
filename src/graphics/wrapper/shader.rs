@@ -1,4 +1,5 @@
 use super::TextureManager;
+use crate::graphics::render_messages::UniformValue;
 use crate::graphics::UniformData;
 use macros::ShaderId;
 use std::collections::HashMap;
@@ -24,15 +25,15 @@ pub enum ShaderIdentifier {
     #[name("Default shader")]
     #[extensionless_path("graphics/shaders/s1")]
     #[is_compute(false)]
-    DefaultShader,
+    Default,
     #[name("Sobel shader")]
     #[extensionless_path("graphics/shaders/sobel")]
     #[is_compute(true)]
-    SobelShader,
+    Sobel,
     #[name("Simple Shader")]
     #[extensionless_path("graphics/shaders/simple")]
     #[is_compute(false)]
-    SimpleShader,
+    Simple,
 }
 
 #[derive(Clone)]
@@ -368,7 +369,7 @@ impl<'a> ShaderManager {
         &mut self,
         uniforms: &UniformData,
         texture_manager: &TextureManager,
-    ) -> Result<u32, String> {
+    ) -> Result<(), String> {
         //TODO: THERE COULD BE NO CURRENT SHADER
         if let None = self.bound_shader {
             return Err(String::from(
@@ -377,33 +378,70 @@ impl<'a> ShaderManager {
         }
 
         let s = &self.shaders[self.bound_shader.unwrap() as usize];
-        for entry in &uniforms.mat4s {
-            let loc = (s).uniform_locations.get(&entry.1);
-            let mat = entry.0;
-
-            gl::UniformMatrix4fv(*loc.unwrap(), 1, gl::FALSE, (mat.as_ptr()) as *const f32);
-            //TODO: HOW TO DO THIS?? s.fill_uniform(&entry.1);
-        }
-
-        for entry in &uniforms.vec3s {
-            let loc = s.uniform_locations.get(&entry.1);
-            let vec = entry.0;
-
-            gl::Uniform4fv(*loc.unwrap(), 1, (vec.as_ptr()) as *const f32)
-        }
-
         let mut texture_slot: i32 = 0;
-        for entry in &uniforms.textures {
-            let loc = s.uniform_locations.get(&entry.1);
-            let tex_name = &entry.0;
-            let tex = texture_manager.get_texture(tex_name);
 
-            gl::ActiveTexture(gl::TEXTURE0 + texture_slot as u32);
-            tex.bind();
-            gl::Uniform1i(*loc.unwrap(), texture_slot);
-            texture_slot += 1;
+        for uniform in uniforms.get_uniforms() {
+            let loc = s.uniform_locations.get(uniform.location);
+            match uniform.value {
+                UniformValue::float(value) => gl::Uniform1f(*loc.unwrap(), *value),
+                UniformValue::int(value) => gl::Uniform1i(*loc.unwrap(), *value),
+                UniformValue::uint(value) => gl::Uniform1ui(*loc.unwrap(), *value),
+                UniformValue::mat2(value) => gl::UniformMatrix2fv(
+                    *loc.unwrap(),
+                    1,
+                    gl::FALSE,
+                    (value.as_ptr()) as *const f32,
+                ),
+                UniformValue::mat3(value) => gl::UniformMatrix3fv(
+                    *loc.unwrap(),
+                    1,
+                    gl::FALSE,
+                    (value.as_ptr()) as *const f32,
+                ),
+                UniformValue::mat4(value) => gl::UniformMatrix4fv(
+                    *loc.unwrap(),
+                    1,
+                    gl::FALSE,
+                    (value.as_ptr()) as *const f32,
+                ),
+                UniformValue::vec2(value) => {
+                    gl::Uniform2fv(*loc.unwrap(), 1, (value.as_ptr()) as *const f32)
+                }
+                UniformValue::vec3(value) => {
+                    gl::Uniform3fv(*loc.unwrap(), 1, (value.as_ptr()) as *const f32)
+                }
+                UniformValue::vec4(value) => {
+                    gl::Uniform4fv(*loc.unwrap(), 1, (value.as_ptr()) as *const f32)
+                }
+                UniformValue::ivec4(value) => {
+                    gl::Uniform4iv(*loc.unwrap(), 1, (value.as_ptr()) as *const i32)
+                }
+                UniformValue::ivec3(value) => {
+                    gl::Uniform3iv(*loc.unwrap(), 1, (value.as_ptr()) as *const i32)
+                }
+                UniformValue::ivec2(value) => {
+                    gl::Uniform2iv(*loc.unwrap(), 1, (value.as_ptr()) as *const i32)
+                }
+                UniformValue::uvec4(value) => {
+                    gl::Uniform4uiv(*loc.unwrap(), 1, (value.as_ptr()) as *const u32)
+                }
+                UniformValue::uvec3(value) => {
+                    gl::Uniform3uiv(*loc.unwrap(), 1, (value.as_ptr()) as *const u32)
+                }
+                UniformValue::uvec2(value) => {
+                    gl::Uniform2uiv(*loc.unwrap(), 1, (value.as_ptr()) as *const u32)
+                }
+                UniformValue::texture(value) => {
+                    let tex = texture_manager.get_texture(value);
+                    gl::ActiveTexture(gl::TEXTURE0 + texture_slot as u32);
+                    tex.bind();
+                    gl::Uniform1i(*loc.unwrap(), texture_slot);
+                    texture_slot += 1;
+                }
+            }
         }
-        Ok(0)
+
+        Ok(())
     }
 
     pub fn get_active_shader_name(&self) -> Option<String> {
@@ -479,9 +517,9 @@ mod tests {
             program_id: 0,
             uniform_locations: HashMap::new(),
             metadata: ShaderMetadata {
-                identifier: ShaderIdentifier::DefaultShader,
+                identifier: ShaderIdentifier::Default,
                 required_uniforms: Vec::new(),
-                shader_type: if ShaderIdentifier::DefaultShader.is_compute() {
+                shader_type: if ShaderIdentifier::Default.is_compute() {
                     ProgramType::Compute
                 } else {
                     ProgramType::Graphics

@@ -31,19 +31,23 @@ impl ComputePipeline {
         }
         messages
     }
+
+    pub fn last_dispatch(&mut self) -> &mut ComputeDispatch {
+        self.dispatches.last_mut().unwrap()
+    }
 }
 
 impl ComputeDispatch {
-    pub fn new(
+    pub fn new<T: Into<String>>(
         shader: ShaderIdentifier,
         uniforms: UniformData,
-        output_texture: String,
+        output_texture: T,
         dimensions: (u32, u32, u32),
     ) -> ComputeDispatch {
         ComputeDispatch {
             shader,
             uniforms,
-            output_texture,
+            output_texture: output_texture.into(),
             dimensions,
         }
     }
@@ -63,5 +67,9 @@ impl ComputeDispatch {
         });
 
         messages
+    }
+
+    pub fn uniforms_mut(&mut self) -> &mut UniformData {
+        &mut self.uniforms
     }
 }

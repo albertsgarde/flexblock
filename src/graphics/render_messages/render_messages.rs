@@ -1,8 +1,7 @@
-use crate::utils::vertex::Vertex3D;
-use std::fmt;
 use std::slice::Iter;
 
-use super::wrapper::{FramebufferIdentifier, ShaderIdentifier};
+use super::{UniformData, VertexPack};
+use crate::graphics::wrapper::{FramebufferIdentifier, ShaderIdentifier};
 
 #[derive(Debug)]
 pub struct RenderMessages {
@@ -59,11 +58,6 @@ impl RenderMessages {
         let mut new_pack = new_pack;
         self.messages.append(&mut new_pack.messages);
     }
-}
-
-pub struct VertexPack {
-    pub vertices: Vec<Vertex3D>,
-    pub elements: Vec<u32>,
 }
 
 /// One render message to the graphics thread.
@@ -126,69 +120,5 @@ impl RenderMessage {
                 dimensions: _,
             } => false,
         }
-    }
-}
-
-impl VertexPack {
-    ///TODO: Make this follow the contract
-    pub fn new(vertices: Vec<Vertex3D>, elements: Option<Vec<u32>>) -> VertexPack {
-        let elements = match elements {
-            Some(e) => e,
-            None => Vec::new(),
-        };
-        VertexPack { vertices, elements }
-    }
-}
-
-impl fmt::Debug for VertexPack {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("VertexPack")
-    }
-}
-
-//TODO: Add mat 3, 2, and vec 3, 2, and f32, u32, i32, and texture
-pub struct UniformData {
-    pub mat4s: Vec<(glm::Mat4, String)>,
-    pub vec3s: Vec<(glm::Vec3, String)>,
-    /// The first string is the texture name, second is the uniform location name
-    pub textures: Vec<(String, String)>,
-}
-
-impl UniformData {
-    ///
-    /// textures = (texture name, uniform location name)
-    pub fn new(
-        mat4s: Vec<(glm::Mat4, String)>,
-        vec3s: Vec<(glm::Vec3, String)>,
-        textures: Vec<(String, String)>,
-    ) -> UniformData {
-        UniformData {
-            mat4s,
-            vec3s,
-            textures,
-        }
-    }
-
-    /// Gets the list of all uniforms referred to by this set of uniform data.
-    pub fn get_uniform_locations(&self) -> Vec<&String> {
-        let mut res = Vec::new();
-
-        for entry in &self.mat4s {
-            res.push(&entry.1);
-        }
-        for entry in &self.vec3s {
-            res.push(&entry.1);
-        }
-        for entry in &self.textures {
-            res.push(&entry.1);
-        }
-
-        res
-    }
-}
-
-impl fmt::Debug for UniformData {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("UniformData")
     }
 }
