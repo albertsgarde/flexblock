@@ -2,7 +2,7 @@ use super::TextureManager;
 use serde::{Deserialize, Serialize};
 use strum::{EnumCount, EnumIter};
 
-const VERBOSE : bool = false;
+const VERBOSE: bool = false;
 
 #[derive(Clone, Copy, Debug, EnumCount, EnumIter, Serialize, Deserialize)]
 pub enum FramebufferIdentifier {
@@ -106,7 +106,10 @@ impl Framebuffer {
         if let Some(ct) = identifier.color_texture() {
             let ct = texture_manager.get_texture(ct);
             if VERBOSE {
-                println!("Framebuffer {:?} gets color texture {} with id {}", identifier, ct.metadata.name, ct.id);
+                println!(
+                    "Framebuffer {:?} gets color texture {} with id {}",
+                    identifier, ct.metadata.name, ct.id
+                );
             }
             if ct.metadata.width != width || ct.metadata.height != height {
                 return Err(format!("Instantiating framebuffer {:?} with depth texture {:?} that does not match framebuffer dimensions! {:?} != {:?}!", identifier, ct.metadata.name, (width,height), (ct.metadata.width, ct.metadata.height)));

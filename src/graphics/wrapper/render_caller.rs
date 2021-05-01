@@ -5,7 +5,7 @@ use super::{
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
 
-const VERBOSE : bool = false;
+const VERBOSE: bool = false;
 
 ///
 /// TODO
@@ -182,7 +182,11 @@ impl RenderCaller {
         );
         gl::DispatchCompute(dimensions.0, dimensions.1, dimensions.2);
         if VERBOSE {
-            println!("Dispatching compute shader generating texture {}, id {}", output_texture, tex.get_id());
+            println!(
+                "Dispatching compute shader generating texture {}, id {}",
+                output_texture,
+                tex.get_id()
+            );
         }
     }
 

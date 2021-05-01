@@ -7,7 +7,7 @@ use std::ptr::null;
 pub enum InternalFormat {
     RGBA8,
     RGB8,
-    D16
+    D16,
 }
 
 impl InternalFormat {
@@ -15,7 +15,7 @@ impl InternalFormat {
         match self {
             InternalFormat::RGB8 => gl::RGB8,
             InternalFormat::RGBA8 => gl::RGBA8,
-            InternalFormat::D16 => gl::DEPTH_COMPONENT16
+            InternalFormat::D16 => gl::DEPTH_COMPONENT16,
         }
     }
 
@@ -97,7 +97,8 @@ impl Texture {
     pub unsafe fn fill(&mut self, data: Vec<u8>) {
         assert_eq!(
             data.len(),
-            (self.metadata.width * self.metadata.height) as usize * self.metadata.internal_format.bytes(),
+            (self.metadata.width * self.metadata.height) as usize
+                * self.metadata.internal_format.bytes(),
             "Tried to fill a {}x{} {}-byte-stride texture with {} length data!",
             self.metadata.width,
             self.metadata.height,

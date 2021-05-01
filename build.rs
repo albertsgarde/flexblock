@@ -1,4 +1,4 @@
-//use std::process::Command;
+use std::process::Command;
 
 fn main() {
     Command::new("cargo")
@@ -6,5 +6,3 @@ fn main() {
         .status()
         .expect("Failed to run `cargo fmt`.");
 }
-
-fn main() {}

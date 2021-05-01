@@ -180,7 +180,7 @@ impl Shader {
         gl::DeleteShader(fsid);
 
         let uniform_locations = Shader::uniform_hashmap(&required_uniforms, program_id);
-/*
+        /*
         for entry in &required_uniforms {
             let ename = format!("{}{}", entry.0, "\0");
             let ename = ename.as_bytes();
@@ -249,7 +249,6 @@ impl Shader {
         //gl::DetachShader(program_id, id);
         gl::DeleteShader(id);
 
-
         let uniform_locations = Shader::uniform_hashmap(&required_uniforms, program_id);
         gl::UseProgram(0);
 
@@ -264,7 +263,10 @@ impl Shader {
         })
     }
 
-    unsafe fn uniform_hashmap(required_uniforms : &Vec<(String,String)>, program_id : u32) -> HashMap<String, i32> {
+    unsafe fn uniform_hashmap(
+        required_uniforms: &Vec<(String, String)>,
+        program_id: u32,
+    ) -> HashMap<String, i32> {
         let mut uniform_locations: HashMap<String, i32> = HashMap::new();
 
         gl::UseProgram(program_id);
@@ -274,7 +276,7 @@ impl Shader {
             let ename = CStr::from_bytes_with_nul(ename).unwrap();
             let id =
                 gl::GetUniformLocation(program_id, (ename.as_ptr()) as *const gl::types::GLchar);
-                
+
             println!(
                 "Creating a uniform location for uniform {:?} at {}",
                 ename, id
@@ -458,7 +460,10 @@ impl<'a> ShaderManager {
 
                 UniformValue::texture(value) => {
                     let tex = texture_manager.get_texture(value);
-                    println!("Passing texture {} with id {} in slot {}!",value,tex.id, texture_slot);
+                    println!(
+                        "Passing texture {} with id {} in slot {}!",
+                        value, tex.id, texture_slot
+                    );
                     gl::ActiveTexture(gl::TEXTURE0 + texture_slot as u32);
                     tex.bind();
                     gl::Uniform1i(*loc.unwrap(), texture_slot);

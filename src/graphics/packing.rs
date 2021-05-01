@@ -40,7 +40,6 @@ pub fn start_packing_thread(
                     let cx = state.render_capabilities().as_ref().unwrap();
                     let mut cp = ComputePipeline::new();
 
-
                     // Sobel
                     let mut uniforms = UniformData::new();
                     uniforms.texture("fpf_color".to_owned(), "from_tex");
