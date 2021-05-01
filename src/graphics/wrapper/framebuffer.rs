@@ -34,7 +34,7 @@ impl FramebufferIdentifier {
 
     pub fn has_depth(&self) -> bool {
         match self {
-            FramebufferIdentifier::FirstPassFramebuffer => false,
+            FramebufferIdentifier::FirstPassFramebuffer => true,
         }
     }
 

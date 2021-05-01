@@ -39,14 +39,14 @@ pub fn start_packing_thread(
                 {
                     let cx = state.render_capabilities().as_ref().unwrap();
                     let mut cp = ComputePipeline::new();
+
+                    let mut uniforms = UniformData::new();
+                    uniforms.texture("fpfcolor".to_owned(), "fromTex");
+
                     cp.add_dispatch(ComputeDispatch::new(
-                        ShaderIdentifier::SobelShader,
-                        UniformData::new(
-                            vec![],
-                            vec![],
-                            vec![("fpfcolor".to_owned(), "fromTex".to_owned())],
-                        ),
-                        "sobel_output".to_owned(),
+                        ShaderIdentifier::Sobel,
+                        uniforms,
+                        "sobel_output",
                         (cx.screen_dimensions.0, cx.screen_dimensions.1, 1),
                     ));
 
@@ -55,15 +55,11 @@ pub fn start_packing_thread(
 
                 // Framebuffer test code (Renders the texture sobel_output to screen)
                 messages.add_message(RenderMessage::ChooseShader {
-                    shader: ShaderIdentifier::SimpleShader,
+                    shader: ShaderIdentifier::Simple,
                 });
-                messages.add_message(RenderMessage::Uniforms {
-                    uniforms: UniformData::new(
-                        vec![],
-                        vec![],
-                        vec![("sobel_output".to_owned(), "tex".to_owned())],
-                    ),
-                });
+                let mut ud = UniformData::new();
+                ud.texture("sobel_output".to_owned(), "tex".to_owned());
+                messages.add_message(RenderMessage::Uniforms { uniforms: ud });
                 messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
                 messages.add_message(RenderMessage::ClearBuffers {
                     color_buffer: true,

@@ -344,13 +344,10 @@ impl RenderState {
                         location.z as f32 * 16.,
                     ),
                 );
-                render_messages.add_message(RenderMessage::Uniforms {
-                    uniforms: UniformData::new(
-                        vec![(mvp, String::from("MVP"))],
-                        vec![],
-                        vec![(String::from("/atlas.png"), String::from("test_texture"))],
-                    ),
-                });
+                let mut ud = UniformData::new();
+                ud.texture(String::from("/atlas.png"), String::from("test_texture"));
+                ud.mat4(mvp, String::from("MVP"));
+                render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
 
                 render_messages.add_message(RenderMessage::Draw { buffer: counter });
             }
@@ -408,7 +405,7 @@ impl RenderState {
         };
 
         messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
         messages.add_message(RenderMessage::ClearBuffers {
             color_buffer: true,
