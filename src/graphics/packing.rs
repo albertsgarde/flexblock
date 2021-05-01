@@ -31,7 +31,7 @@ pub fn start_packing_thread(
 
             if state.is_render_ready() {
                 messages.add_message(RenderMessage::ChooseFramebuffer {
-                    framebuffer: Some(FramebufferIdentifier::FirstPassFramebuffer),
+                    framebuffer: Some(FramebufferIdentifier::FirstPass),
                 });
 
                 messages.merge_current(state.create_render_messages(&data));
@@ -40,13 +40,28 @@ pub fn start_packing_thread(
                     let cx = state.render_capabilities().as_ref().unwrap();
                     let mut cp = ComputePipeline::new();
 
+
+                    // Sobel
                     let mut uniforms = UniformData::new();
-                    uniforms.texture("fpfcolor".to_owned(), "fromTex");
+                    uniforms.texture("fpf_color".to_owned(), "from_tex");
 
                     cp.add_dispatch(ComputeDispatch::new(
                         ShaderIdentifier::Sobel,
                         uniforms,
                         "sobel_output",
+                        (cx.screen_dimensions.0, cx.screen_dimensions.1, 1),
+                    ));
+
+                    // Artsyfartsy
+                    let mut uniforms = UniformData::new();
+                    uniforms.texture("sobel_output".to_owned(), "sobel_tex");
+                    uniforms.texture("fpf_depth".to_owned(), "depth_tex");
+                    uniforms.texture("fpf_color".to_owned(), "color_tex");
+
+                    cp.add_dispatch(ComputeDispatch::new(
+                        ShaderIdentifier::Artsyfartsy,
+                        uniforms,
+                        "artsy_output",
                         (cx.screen_dimensions.0, cx.screen_dimensions.1, 1),
                     ));
 
@@ -58,7 +73,7 @@ pub fn start_packing_thread(
                     shader: ShaderIdentifier::Simple,
                 });
                 let mut ud = UniformData::new();
-                ud.texture("sobel_output".to_owned(), "tex".to_owned());
+                ud.texture("artsy_output".to_owned(), "tex");
                 messages.add_message(RenderMessage::Uniforms { uniforms: ud });
                 messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
                 messages.add_message(RenderMessage::ClearBuffers {
