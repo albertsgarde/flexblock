@@ -223,7 +223,7 @@ impl RenderMessageValidator {
                             });
                         }
 
-                        if let Some(s) = &chosen_shader {
+                        if let Some(s) = chosen_shader {
                             if s.identifier.is_compute() {
                                 return Err(ValidationError {
                                     error_type: ValidationErrorType::NonGraphicsShader {
@@ -493,7 +493,7 @@ impl RenderMessageValidator {
 
         if let Some(s) = &chosen_shader {
             // Test if every passed texture exists in the graphics capabilities.
-            for entry in &uniforms.textures {
+            for entry in &uniforms.texture {
                 if !capabilities.texture_metadata.contains_key(&entry.0) {
                     return Err(ValidationErrorType::InvalidTexture {
                         texture: String::from(&entry.0),
@@ -548,7 +548,7 @@ mod tests {
             required_uniforms.push((String::from("vector"), String::from("")));
         }
         let s1 = ShaderMetadata {
-            identifier: ShaderIdentifier::DefaultShader,
+            identifier: ShaderIdentifier::Default,
             required_uniforms,
             shader_type: ProgramType::Graphics,
         };
@@ -619,15 +619,11 @@ mod tests {
         let mut validator = RenderMessageValidator::new();
 
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
+        let mut ud = UniformData::new();
+        ud.texture(String::from("atlas"), String::from("test_texture"));
+        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
@@ -644,15 +640,11 @@ mod tests {
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![],
-                vec![(String::from("atlas"), String::from("test"))],
-            ),
-        });
+        let mut ud = UniformData::new();
+        ud.texture(String::from("atlas"), String::from("test"));
+        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
@@ -665,37 +657,30 @@ mod tests {
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![],
-                vec![(String::from("at"), String::from("test_texture"))],
-            ),
-        });
+        let mut ud = UniformData::new();
+        ud.texture(String::from("atlass"), String::from("test_texture"));
+        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
         });
 
+        let res = validator.validate(&mut rs, &render_messages);
         assert!(
-            validator.validate(&mut rs, &render_messages).is_err(),
+            res.is_err(),
             "Validate wrongfully accepts non-existent texture name!"
         );
 
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
+        let mut ud = UniformData::new();
+        ud.texture(String::from("atlas"), String::from("test_texture"));
+        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
@@ -715,7 +700,7 @@ mod tests {
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
@@ -732,19 +717,15 @@ mod tests {
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
         });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
+        let mut ud = UniformData::new();
+        ud.texture(String::from("atlas"), String::from("test_texture"));
+        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         render_messages.add_message(RenderMessage::Draw { buffer: 0 });
 
@@ -756,26 +737,16 @@ mod tests {
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
         });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![(glm::vec3(0., 0., 0.), String::from("vector"))],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
+        let mut ud = UniformData::new();
+        ud.texture(String::from("atlas"), String::from("test_texture"));
+        ud.vec3(glm::vec3(0., 0., 0.), String::from("vector"));
+        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         render_messages.add_message(RenderMessage::Draw { buffer: 0 });
         assert!(
@@ -786,28 +757,18 @@ mod tests {
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
         });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![(glm::vec3(0., 0., 0.), String::from("vector"))],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
+        let mut ud = UniformData::new();
+        ud.texture(String::from("atlas"), String::from("test_texture"));
+        ud.vec3(glm::vec3(0., 0., 0.), String::from("vector"));
+        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         render_messages.add_message(RenderMessage::Draw { buffer: 0 });
@@ -820,43 +781,26 @@ mod tests {
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
         });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![(glm::vec3(0., 0., 0.), String::from("vector"))],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
+        let mut ud = UniformData::new();
+        ud.texture(String::from("atlas"), String::from("test_texture"));
+        ud.vec3(glm::vec3(0., 0., 0.), String::from("vector"));
+        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![(glm::vec3(0., 0., 0.), String::from("vector"))],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
+        let mut ud = UniformData::new();
+        ud.texture(String::from("atlas"), String::from("test_texture"));
+        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        let mut ud = UniformData::new();
+        ud.texture(String::from("atlas"), String::from("test_texture"));
+        ud.vec3(glm::vec3(0., 0., 0.), String::from("vector"));
+        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         render_messages.add_message(RenderMessage::Draw { buffer: 0 });
 
@@ -873,15 +817,11 @@ mod tests {
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
+        let mut ud = UniformData::new();
+        ud.texture(String::from("atlas"), String::from("test_texture"));
+        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
@@ -896,25 +836,25 @@ mod tests {
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
         render_messages.add_message(RenderMessage::ChooseShader {
-            shader: ShaderIdentifier::DefaultShader,
+            shader: ShaderIdentifier::Default,
         });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
-        render_messages.add_message(RenderMessage::Uniforms {
-            uniforms: UniformData::new(
-                vec![],
-                vec![],
-                vec![(String::from("atlas"), String::from("test_texture"))],
-            ),
-        });
+        let mut ud = UniformData::new();
+        ud.texture(String::from("atlas"), String::from("test_texture"));
+        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
         });
         render_messages.add_message(RenderMessage::Draw { buffer: 0 });
 
+        let res = validator.validate(&mut rs, &render_messages);
         assert!(
-            validator.validate(&mut rs, &render_messages).is_ok(),
-            "Validate wrongfully doesn't accept a render target!"
+            res.is_ok(),
+            format!(
+                "Validate wrongfully doesn't accept a render target! {:?}",
+                res
+            )
         );
     }
 }
