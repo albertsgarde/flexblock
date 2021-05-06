@@ -460,10 +460,6 @@ impl<'a> ShaderManager {
 
                 UniformValue::texture(value) => {
                     let tex = texture_manager.get_texture(value);
-                    println!(
-                        "Passing texture {} with id {} in slot {}!",
-                        value, tex.id, texture_slot
-                    );
                     gl::ActiveTexture(gl::TEXTURE0 + texture_slot as u32);
                     tex.bind();
                     gl::Uniform1i(*loc.unwrap(), texture_slot);
