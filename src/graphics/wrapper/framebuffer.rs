@@ -2,46 +2,42 @@ use super::TextureManager;
 use serde::{Deserialize, Serialize};
 use strum::{EnumCount, EnumIter};
 
+const VERBOSE: bool = false;
+
 #[derive(Clone, Copy, Debug, EnumCount, EnumIter, Serialize, Deserialize)]
 pub enum FramebufferIdentifier {
-    FirstPassFramebuffer,
+    FirstPass,
 }
 
+///TODO: make a FramebufferIdentifier derive macro
 impl FramebufferIdentifier {
-    /*pub fn path(&self) -> &'static str{
-        match self {
-            FramebufferIdentifier::FirstPassFramebuffer => "graphics/framebuffers/firstpassframebuffer.json"
-        }
-    } TODO: THIS MAY BE REMOVED ONE DAY*/
-
     pub fn name(&self) -> &'static str {
         match self {
-            FramebufferIdentifier::FirstPassFramebuffer => "First pass framebuffer",
+            FramebufferIdentifier::FirstPass => "First pass framebuffer",
         }
     }
 
     pub fn color_texture(&self) -> Option<&'static str> {
         match self {
-            FramebufferIdentifier::FirstPassFramebuffer => Some("fpfcolor"),
+            FramebufferIdentifier::FirstPass => Some("fpf_color"),
         }
     }
 
     pub fn depth_texture(&self) -> Option<&'static str> {
         match self {
-            FramebufferIdentifier::FirstPassFramebuffer => None,
+            FramebufferIdentifier::FirstPass => Some("fpf_depth"),
         }
     }
 
     pub fn has_depth(&self) -> bool {
         match self {
-            FramebufferIdentifier::FirstPassFramebuffer => true,
+            FramebufferIdentifier::FirstPass => true,
         }
     }
 
-    /// TODO: Figure out a way to make dimensions in terms of screen dimensions.
     pub fn dimensions(&self, screen_dimensions: (u32, u32)) -> (u32, u32) {
         match self {
-            FramebufferIdentifier::FirstPassFramebuffer => screen_dimensions,
+            FramebufferIdentifier::FirstPass => screen_dimensions,
         }
     }
 }
@@ -109,6 +105,12 @@ impl Framebuffer {
 
         if let Some(ct) = identifier.color_texture() {
             let ct = texture_manager.get_texture(ct);
+            if VERBOSE {
+                println!(
+                    "Framebuffer {:?} gets color texture {} with id {}",
+                    identifier, ct.metadata.name, ct.id
+                );
+            }
             if ct.metadata.width != width || ct.metadata.height != height {
                 return Err(format!("Instantiating framebuffer {:?} with depth texture {:?} that does not match framebuffer dimensions! {:?} != {:?}!", identifier, ct.metadata.name, (width,height), (ct.metadata.width, ct.metadata.height)));
             }
@@ -137,6 +139,19 @@ impl Framebuffer {
 
     pub unsafe fn bind(&self) {
         gl::BindFramebuffer(gl::FRAMEBUFFER, self.id);
+        if !self.metadata.identifier.has_depth() {
+            gl::Disable(gl::DEPTH_TEST);
+        } else {
+            gl::Enable(gl::DEPTH_TEST);
+        }
+    }
+}
+
+impl Drop for Framebuffer {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteFramebuffers(1, &self.id as *const u32);
+        }
     }
 }
 
@@ -185,6 +200,7 @@ impl FramebufferManager {
             }
             None => {
                 gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
+                gl::Enable(gl::DEPTH_TEST);
             }
         }
     }
@@ -220,7 +236,7 @@ mod tests {
     use super::{FramebufferIdentifier, FramebufferMetadata};
     fn serialize_framebuffer_metadata() {
         let metadata = FramebufferMetadata {
-            identifier: FramebufferIdentifier::FirstPassFramebuffer,
+            identifier: FramebufferIdentifier::FirstPass,
             width: 800,
             height: 800,
         };

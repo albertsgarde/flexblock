@@ -3,4 +3,3 @@
 /macros/target
 # Flexblock saves.
 *.flex
-/build.rs
