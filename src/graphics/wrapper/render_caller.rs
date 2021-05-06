@@ -5,6 +5,8 @@ use super::{
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
 
+const VERBOSE: bool = false;
+
 ///
 /// TODO
 /// This struct is in charge of rendering one round. Also in terms of setting opengl settings.
@@ -53,13 +55,16 @@ impl RenderCaller {
     /// This is supposed to turn a packed render into something that can then be rendered directly. So
     /// this has access to OpenGL calls.
     /// TODO: Enforce requirements on RenderPack<T> to make this safe.
-    unsafe fn unpack(&mut self, buffer: &usize, pack: &VertexPack) {
+    unsafe fn pack(&mut self, buffer: &usize, pack: &VertexPack) {
         if *buffer >= self.vertex_array.get_vbo_count() {
             panic!(
                 "Trying to clear a buffer with index {}, but there's only {} buffers ",
                 buffer,
                 self.vertex_array.get_vbo_count()
             );
+        }
+        if VERBOSE {
+            println!("Packing buffer {}", buffer);
         }
         self.vertex_array.fill_vbo(*buffer, &pack.vertices);
         self.vertex_array.fill_ebo(*buffer, &pack.elements);
@@ -73,6 +78,9 @@ impl RenderCaller {
                 self.vertex_array.get_vbo_count()
             );
         }
+        if VERBOSE {
+            println!("Clearing buffer {}", buffer);
+        }
         self.vertex_array.clear(*buffer);
     }
 
@@ -82,6 +90,9 @@ impl RenderCaller {
                 println!("{}", s)
             } //TODO: LOG INSTEAD
             _ => (),
+        }
+        if VERBOSE {
+            println!("Choosing shader {}", shader.name());
         }
     }
 
@@ -95,11 +106,14 @@ impl RenderCaller {
             } //TODO: LOG INSTEAD
             _ => (),
         }
+        if VERBOSE {
+            println!("Passing uniforms");
+        }
     }
 
     pub unsafe fn read_message(&mut self, message: &RenderMessage) {
         match message {
-            RenderMessage::Pack { buffer, pack } => self.unpack(buffer, pack),
+            RenderMessage::Pack { buffer, pack } => self.pack(buffer, pack),
             RenderMessage::ClearArray { buffer } => self.clear(buffer),
             RenderMessage::ChooseShader { shader } => self.choose_shader(*shader),
             RenderMessage::Uniforms { uniforms } => self.uniforms(uniforms),
@@ -120,6 +134,9 @@ impl RenderCaller {
 
     pub unsafe fn choose_framebuffer(&mut self, framebuffer: &Option<FramebufferIdentifier>) {
         self.framebuffer_manager.bind_framebuffer(&framebuffer);
+        if VERBOSE {
+            println!("Choosing framebuffer {:?}", framebuffer);
+        }
     }
 
     pub unsafe fn render(&mut self, buffer: &usize) {
@@ -128,6 +145,9 @@ impl RenderCaller {
             "A render call was made on an empty vertex array!"
         );
         self.vertex_array.draw(*buffer);
+        if VERBOSE {
+            println!("Rendering buffer {}", buffer);
+        }
     }
 
     pub unsafe fn clear_buffers(&mut self, color_buffer: &bool, depth_buffer: &bool) {
@@ -160,7 +180,14 @@ impl RenderCaller {
             gl::WRITE_ONLY,
             tex.metadata.internal_format.to_gl(),
         );
-        gl::DispatchCompute(dimensions.0, dimensions.1, 1);
+        gl::DispatchCompute(dimensions.0, dimensions.1, dimensions.2);
+        if VERBOSE {
+            println!(
+                "Dispatching compute shader generating texture {}, id {}",
+                output_texture,
+                tex.get_id()
+            );
+        }
     }
 
     pub fn get_vbo_count(&self) -> usize {

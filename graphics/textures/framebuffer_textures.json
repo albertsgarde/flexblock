@@ -1,3 +1,4 @@
 [
-    {"format":"RGBA", "internal_format": "RGBA8","width":800,"height":800,"name":"sobel_texture","screen_dependant_dimensions":false}
+    {"format":"RGB", "internal_format" : "RGB8","width":0,"height":0,"name":"fpf_color","screen_dependant_dimensions":true},
+    {"format":"D", "internal_format": "D16","width":0,"height":0,"name":"fpf_depth","screen_dependant_dimensions":true}
 ]

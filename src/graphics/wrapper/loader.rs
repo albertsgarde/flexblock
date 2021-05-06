@@ -102,6 +102,7 @@ pub unsafe fn load_textures(screen_dimensions: (u32, u32)) -> TextureManager {
             let int_format = match data.format {
                 ColorFormat::RGB => InternalFormat::RGB8,
                 ColorFormat::RGBA => InternalFormat::RGBA8,
+                _ => unreachable!(), // read_png handles the case where the color format isn't one of these two with an error.
             };
 
             let mut t = Texture::new(

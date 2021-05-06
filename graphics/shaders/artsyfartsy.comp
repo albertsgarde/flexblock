@@ -1,0 +1,66 @@
+#version 430 core
+
+layout(local_size_x=1, local_size_y=1) in;
+layout(rgba8, binding=0) uniform image2D img_output;
+uniform sampler2D sobel_tex;
+uniform sampler2D depth_tex;
+uniform sampler2D color_tex;
+
+// blur with hexagonalish sampling pattern
+// weighs samples according to coc size (so that "in focus" samples count for less)
+// and according to tap nb (weighs outer samples higher)
+// TODO: How does this actually work?? Hmm would be interesting to get it to work.
+vec3 hexablur(sampler2D tex, vec2 uv, vec2 scale) {
+    vec3 col = vec3(0.0);
+    float asum = 0.0;
+    float coc = texture(tex, uv).a;
+    for(float t = 0.0; t < 8.0 * 2.0 * 3.14; t += 3.14 / 32.0) {
+    	float r = cos(3.14 / 6.0) / cos(mod(t, 2.0 * 3.14 / 6.0) - 3.14 / 6.0);
+        
+        // Tap filter once for coc
+        vec2 offset = vec2(sin(t), cos(t)) * r * t * scale * coc;
+        vec4 samp = texture(tex, uv + offset * 1.0);
+        
+        // Tap filter with coc from texture
+        offset = vec2(sin(t), cos(t)) * r * t * scale * samp.a;
+        samp = texture(tex, uv + offset * 1.0);
+        
+        // weigh and save
+        col += samp.rgb * samp.a * t;
+        asum += samp.a * t;
+        
+    }
+    col = col / asum;
+    return(col);
+}
+
+void main() {
+	ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+
+    //while(true) {
+
+    //}
+    uvec2 nwg = gl_NumWorkGroups.xy;
+    vec2 scale = vec2(1./int(nwg.x), 1./int(nwg.y));
+    vec2 scaled_coords = pixel_coords*scale;
+    
+    float sb = texture(sobel_tex, scaled_coords).x;
+    float depth = texture(depth_tex, scaled_coords).x;
+
+    //imageStore(img_output, pixel_coords, vec4(sb,sb,sb, 1));
+
+
+    depth = (2.0*depth -1.0);
+    depth = 2.0*100*0.1/ (100.0+0.1 - depth *(100.0-0.1));
+    depth = clamp(20-depth, 0 ,10);
+    depth = depth/10;
+
+    vec3 base_color = vec3(124/255., 88/255., 61/255.)*0.3;
+    vec3 top_color = texture(color_tex, scaled_coords).xyz;
+    top_color = vec3(dot(top_color, vec3(0.2126, 0.7152, 0.0722)));
+    top_color = top_color * vec3(246/255., 209/255., 166/255.);
+
+    //imageStore(img_output, pixel_coords, vec4(top_color,1));
+    imageStore(img_output, pixel_coords, vec4(mix(base_color, top_color*(1-sb), depth),1));
+    //imageStore(img_output, pixel_coords, texture(fromTex, pixel_coords*scale));
+}

@@ -34,6 +34,14 @@ pub enum ShaderIdentifier {
     #[extensionless_path("graphics/shaders/simple")]
     #[is_compute(false)]
     Simple,
+    #[name("Artsyfartsy")]
+    #[extensionless_path("graphics/shaders/artsyfartsy")]
+    #[is_compute(true)]
+    Artsyfartsy,
+    #[name("Transfer")]
+    #[extensionless_path("graphics/shaders/transfer")]
+    #[is_compute(true)]
+    Transfer,
 }
 
 #[derive(Clone)]
@@ -171,11 +179,8 @@ impl Shader {
         gl::DeleteShader(vsid);
         gl::DeleteShader(fsid);
 
-        let mut uniform_locations: HashMap<String, i32> = HashMap::new();
-
-        gl::UseProgram(0);
-
-        gl::UseProgram(program_id);
+        let uniform_locations = Shader::uniform_hashmap(&required_uniforms, program_id);
+        /*
         for entry in &required_uniforms {
             let ename = format!("{}{}", entry.0, "\0");
             let ename = ename.as_bytes();
@@ -188,7 +193,7 @@ impl Shader {
             );
 
             uniform_locations.insert(String::from(&entry.0), id);
-        }
+        }*/
         gl::UseProgram(0);
 
         Ok(Shader {
@@ -244,18 +249,7 @@ impl Shader {
         //gl::DetachShader(program_id, id);
         gl::DeleteShader(id);
 
-        let mut uniform_locations: HashMap<String, i32> = HashMap::new();
-
-        gl::UseProgram(program_id);
-        for entry in &required_uniforms {
-            let id = gl::GetUniformLocation(
-                program_id,
-                ((*entry.0).as_ptr()) as *const gl::types::GLchar,
-            );
-            println!("Creating a uniform location for uniform {}", &entry.0);
-            uniform_locations.insert(String::from(&entry.0), id);
-            //uniform_locations.
-        }
+        let uniform_locations = Shader::uniform_hashmap(&required_uniforms, program_id);
         gl::UseProgram(0);
 
         Ok(Shader {
@@ -267,6 +261,30 @@ impl Shader {
                 shader_type: ProgramType::Graphics,
             },
         })
+    }
+
+    unsafe fn uniform_hashmap(
+        required_uniforms: &Vec<(String, String)>,
+        program_id: u32,
+    ) -> HashMap<String, i32> {
+        let mut uniform_locations: HashMap<String, i32> = HashMap::new();
+
+        gl::UseProgram(program_id);
+        for entry in required_uniforms {
+            let ename = format!("{}{}", entry.0, "\0");
+            let ename = ename.as_bytes();
+            let ename = CStr::from_bytes_with_nul(ename).unwrap();
+            let id =
+                gl::GetUniformLocation(program_id, (ename.as_ptr()) as *const gl::types::GLchar);
+
+            println!(
+                "Creating a uniform location for uniform {:?} at {}",
+                ename, id
+            );
+            uniform_locations.insert(String::from(&entry.0), id);
+        }
+
+        uniform_locations
     }
 
     ///TODO: This should work for any valid notation.
