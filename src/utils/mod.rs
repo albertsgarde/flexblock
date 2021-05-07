@@ -13,8 +13,4 @@ pub use file_utilities::dir_entries;
 mod colors;
 pub use colors::ColorFormat;
 
-<<<<<<< HEAD
-mod ply;
-=======
 pub mod ply;
->>>>>>> 43-load-ply-point-clouds
