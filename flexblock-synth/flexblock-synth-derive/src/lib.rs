@@ -10,20 +10,20 @@ pub fn module(_: TokenStream, item: TokenStream) -> TokenStream {
     module_inner(item).into()
 }
 
-fn ident(name: &str) -> Ident {
+fn _ident(name: &str) -> Ident {
     Ident::new(name, Span::call_site())
 }
 
 fn module_inner(item: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
     let ast: syn::DeriveInput = syn::parse2(item).unwrap();
-    let mut gen = quote! {
+    let gen = quote! {
         #[derive(Clone)]
         #ast
     };
     gen
 }
 
-fn impl_operator(ast: &syn::DeriveInput, operator: &Ident, operator_function: &Ident, operator_module: &Ident) -> proc_macro2::TokenStream {
+fn _impl_operator(ast: &syn::DeriveInput, operator: &Ident, operator_function: &Ident, operator_module: &Ident) -> proc_macro2::TokenStream {
     let name = &ast.ident;
     let generics = &ast.generics;
     let type_params = generics.type_params();
