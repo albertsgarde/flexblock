@@ -8,6 +8,94 @@ use crate::channels::*;
 use crate::utils::Vertex3D;
 use std::thread::{self, JoinHandle};
 
+fn get_reticle_pack() -> VertexPack {
+    VertexPack::new(
+        vec![
+            Vertex3D {
+                x: -0.02,
+                y: -0.01,
+                z: -1.,
+                r: 1.0,
+                g: 1.,
+                b: 1.,
+                u: 0.,
+                v: 0.,
+            },
+            Vertex3D {
+                x: 0.02,
+                y: -0.01,
+                z: -1.,
+                r: 1.,
+                g: 1.,
+                b: 1.,
+                u: 1.,
+                v: 0.,
+            },
+            Vertex3D {
+                x: 0.02,
+                y: 0.01,
+                z: -1.,
+                r: 1.,
+                g: 1.,
+                b: 1.,
+                u: 1.,
+                v: 1.,
+            },
+            Vertex3D {
+                x: -0.02,
+                y: 0.01,
+                z: -1.,
+                r: 1.,
+                g: 1.,
+                b: 1.,
+                u: 0.,
+                v: 1.,
+            },
+            Vertex3D {
+                x: -0.01,
+                y: -0.02,
+                z: -1.,
+                r: 1.0,
+                g: 1.,
+                b: 1.,
+                u: 0.,
+                v: 0.,
+            },
+            Vertex3D {
+                x: 0.01,
+                y: -0.02,
+                z: -1.,
+                r: 1.,
+                g: 1.,
+                b: 1.,
+                u: 1.,
+                v: 0.,
+            },
+            Vertex3D {
+                x: 0.01,
+                y: 0.02,
+                z: -1.,
+                r: 1.,
+                g: 1.,
+                b: 1.,
+                u: 1.,
+                v: 1.,
+            },
+            Vertex3D {
+                x: -0.01,
+                y: 0.02,
+                z: -1.,
+                r: 1.,
+                g: 1.,
+                b: 1.,
+                u: 0.,
+                v: 1.,
+            },
+        ],
+        Some(vec![0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7]),
+    )
+}
+
 pub fn start_packing_thread(
     logic_rx: LogicToPackingReceiver,
     tx: PackingToWindowSender,
@@ -126,6 +214,19 @@ pub fn start_packing_thread(
                         ],
                         Some(vec![0, 1, 2, 0, 2, 3]),
                     ),
+                });
+                messages.add_message(RenderMessage::Draw { buffer: 80 });
+                messages.add_message(RenderMessage::ClearArray { buffer: 80 });
+                messages.add_message(RenderMessage::ChooseShader {
+                    shader: ShaderIdentifier::Color,
+                });
+                messages.add_message(RenderMessage::ClearBuffers {
+                    color_buffer: false,
+                    depth_buffer: true,
+                });
+                messages.add_message(RenderMessage::Pack {
+                    buffer: 80,
+                    pack: get_reticle_pack(),
                 });
                 messages.add_message(RenderMessage::Draw { buffer: 80 });
                 messages.add_message(RenderMessage::ClearArray { buffer: 80 });
