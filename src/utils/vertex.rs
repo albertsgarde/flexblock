@@ -8,6 +8,13 @@ pub trait Vertex: Packed + Copy {
     fn attribute_pointers() -> AttributePointerList;
 }
 
+/// Impl this if you have a location in 3d space given by an f32. Used by some algorthims / data structures.
+pub trait Locatedf32 {
+    fn x(&self) -> f32;
+    fn y(&self) -> f32;
+    fn z(&self) -> f32;
+}
+
 #[derive(Packed, Copy, Clone, Debug)]
 pub struct V3C3 {
     pub x: f32,
@@ -28,6 +35,18 @@ pub struct V3C3UV {
     pub b: f32,
     pub u: f32,
     pub v: f32,
+}
+
+impl Locatedf32 for V3C3 {
+    fn x(&self) -> f32 {
+        self.x
+    }
+    fn y(&self) -> f32 {
+        self.y
+    }
+    fn z(&self) -> f32 {
+        self.z
+    }
 }
 
 ///

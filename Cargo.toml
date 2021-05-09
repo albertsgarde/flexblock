@@ -24,3 +24,4 @@ regex = "1.4.3"
 nalgebra-glm = { version = "0.11.0", features = ["serde-serialize"] }
 png = "0.16.8"
 strum = { version = "0.20", features = ["derive"] }
+byteorder = "*"

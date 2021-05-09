@@ -1,8 +1,8 @@
 mod chunk;
+mod generation;
 pub mod raytrace;
 mod terrain;
 mod voxel;
-mod generation;
 
 pub use chunk::chunk_index_to_position;
 pub use chunk::Chunk;
