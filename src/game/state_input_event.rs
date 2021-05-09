@@ -69,14 +69,16 @@ impl ExternalEventHandler {
             ExternalEvent::MouseInput { button, state } => {
                 self.button_state
                     .insert(button, state == ElementState::Pressed);
-                match button {
-                    MouseButton::Left => {
-                        self.tick_events.push(StateInputEvent::PlayerInteract1);
+                if state == ElementState::Pressed {
+                    match button {
+                        MouseButton::Left => {
+                            self.tick_events.push(StateInputEvent::PlayerInteract1);
+                        }
+                        MouseButton::Right => {
+                            self.tick_events.push(StateInputEvent::PlayerInteract2);
+                        }
+                        _ => {}
                     }
-                    MouseButton::Right => {
-                        self.tick_events.push(StateInputEvent::PlayerInteract2);
-                    }
-                    _ => {}
                 };
             }
         }
