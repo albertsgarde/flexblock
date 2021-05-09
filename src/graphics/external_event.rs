@@ -8,6 +8,10 @@ pub enum ExternalEvent {
         keycode: VirtualKeyCode,
         state: ElementState,
     },
+    MouseInput {
+        button: MouseButton,
+        state: ElementState,
+    },
 }
 
 impl ExternalEvent {
@@ -43,6 +47,14 @@ impl ExternalEvent {
                         None
                     }
                 }
+                // To avoid annoying warning on the modifiers field.
+                #[allow(deprecated)]
+                WindowEvent::MouseInput {
+                    device_id: _,
+                    state,
+                    button,
+                    modifiers: _,
+                } => Some(ExternalEvent::MouseInput { button, state }),
                 _ => None,
             },
             _ => None,
