@@ -25,6 +25,14 @@ impl ChunkLocation {
     /// The coordinates are not bound checked and undefined behaviour
     /// will occur if any are >= CHUNK_SIZE.
     pub fn new(x: u32, y: u32, z: u32) -> ChunkLocation {
+        let index = (CHUNK_SIZE * CHUNK_SIZE * x + CHUNK_SIZE * y + z) as usize;
+        debug_assert!(
+            index < CHUNK_LENGTH,
+            "Invalid chunk location ({}, {}, {})",
+            x,
+            y,
+            z
+        );
         ChunkLocation {
             index: (CHUNK_SIZE * CHUNK_SIZE * x + CHUNK_SIZE * y + z) as usize,
         }
@@ -63,9 +71,9 @@ impl Chunk {
         position.x >= 0.
             && position.y >= 0.
             && position.z >= 0.
-            && position.x <= CHUNK_SIZE_F
-            && position.y <= CHUNK_SIZE_F
-            && position.z <= CHUNK_SIZE_F
+            && position.x < CHUNK_SIZE_F
+            && position.y < CHUNK_SIZE_F
+            && position.z < CHUNK_SIZE_F
     }
 
     pub fn debug_assert_within_chunk(position: Vec3) {
@@ -102,6 +110,7 @@ impl Chunk {
     ///
     /// * `loc` - Will find the object of the voxel at this location in the chunk.
     pub fn voxel_object(&self, loc: ChunkLocation) -> Option<&dyn Voxel> {
+        debug_assert!(loc.index < CHUNK_LENGTH);
         match self {
             Chunk::SingleType(_) => None,
             // `voxel` is a reference to a box. To get a reference to the contents, we
@@ -118,6 +127,7 @@ impl Chunk {
     ///
     /// * `loc` - Will find the type of the voxel at this location in the chunk.
     pub fn voxel_unchecked(&self, loc: ChunkLocation) -> (VoxelType, Option<&dyn Voxel>) {
+        debug_assert!(loc.index < CHUNK_LENGTH);
         match self {
             Chunk::SingleType(voxel_type) => (*voxel_type, None),
             Chunk::MultiType(array, voxel_map) => {
@@ -130,6 +140,7 @@ impl Chunk {
     /// The location is not bound-checked and the function will either panic or
     /// set an undefined voxel if the location is out of bounds.
     pub fn set_voxel_type_unchecked(&mut self, loc: ChunkLocation, voxel_type: VoxelType) {
+        debug_assert!(loc.index < CHUNK_LENGTH);
         if let Chunk::SingleType(single_type) = self {
             if voxel_type != *single_type {
                 let mut voxel_vec = vec![*single_type; CHUNK_LENGTH];
