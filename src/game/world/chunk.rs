@@ -298,4 +298,14 @@ mod tests {
         }
         assert_eq!(iter.next(), None);
     }
+
+    #[test]
+    fn trace() {
+        let mut chunk = Chunk::new();
+        chunk.set_voxel_type_unchecked(ChunkLocation::new(0, 0, 2), VoxelType(1));
+
+        let loc = Vec3::new(0.7398548, 1.6037731, 15.999945);
+        let dir = Vec3::new(0.8108393, 0.19129802, -0.5531295);
+        chunk.trace_ray(loc, dir);
+    }
 }
