@@ -5,20 +5,20 @@ use std::mem::swap;
 
 /// Represents a physical body that can collide with terrain and other physical bodies.
 #[derive(Deserialize, Serialize)]
-pub struct AABB {
+pub struct Aabb {
     location: Location,
     size: Vec3,
 }
 
-impl AABB {
+impl Aabb {
     /// Creates a new RigidBody with given location and size.
     ///
     /// # Arguments
     ///
     /// `location` - The location of the lower corner of the RigidBody.
     /// `size` - Vector from the lower corner of the RigidBody to the upper corner.
-    pub fn new(location: Location, size: Vec3) -> AABB {
-        AABB { location, size }
+    pub fn new(location: Location, size: Vec3) -> Aabb {
+        Aabb { location, size }
     }
 
     pub fn location(&self) -> Location {
@@ -35,7 +35,7 @@ impl AABB {
     ///
     /// `vec` - The vector to add to the body's location.
     pub fn translate(&mut self, vec: Vec3) {
-        self.location = self.location + vec;
+        self.location += vec;
     }
 
     /// Returns true if self intersects with the given RigidBody.
@@ -43,7 +43,7 @@ impl AABB {
     /// # Arguments
     ///
     /// `other` - The RigidBody to check for collisions with.
-    pub fn collides_with(&self, other: &AABB) -> bool {
+    pub fn collides_with(&self, other: &Aabb) -> bool {
         let self_upper = self.location + self.size;
         let other_upper = other.location + other.size;
         (0..3).all(|i| {
@@ -146,7 +146,7 @@ mod test {
     fn simple_x() {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(3., 0., 0.), VoxelType(1));
-        let aabb = AABB::new(Location::origin(), Vec3::new(1., 1., 1.));
+        let aabb = Aabb::new(Location::origin(), Vec3::new(1., 1., 1.));
         let collide_distance = aabb
             .collide_distance(Vec3::new(4., 0., 0.), &terrain)
             .unwrap();
@@ -157,7 +157,7 @@ mod test {
     fn simple_y() {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(0., 3., 0.), VoxelType(1));
-        let aabb = AABB::new(Location::origin(), Vec3::new(1., 1., 1.));
+        let aabb = Aabb::new(Location::origin(), Vec3::new(1., 1., 1.));
         let collide_distance = aabb
             .collide_distance(Vec3::new(0., 40000., 0.), &terrain)
             .unwrap();
@@ -168,7 +168,7 @@ mod test {
     fn simple_z() {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(0., 0., 3.), VoxelType(1));
-        let aabb = AABB::new(Location::origin(), Vec3::new(1., 1., 1.));
+        let aabb = Aabb::new(Location::origin(), Vec3::new(1., 1., 1.));
         let collide_distance = aabb
             .collide_distance(Vec3::new(0., 0., 400.), &terrain)
             .unwrap();
@@ -180,7 +180,7 @@ mod test {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(4., 8., 0.), VoxelType(1));
         terrain.set_voxel_type(Location::from_coords(1., 5., 0.), VoxelType(1));
-        let aabb = AABB::new(Location::from_coords(1., 1., 0.), Vec3::new(1., 1., 1.));
+        let aabb = Aabb::new(Location::from_coords(1., 1., 0.), Vec3::new(1., 1., 1.));
         let move_vector = Vec3::new(4., 11., 0.);
         let collide_distance = aabb.collide_distance(move_vector, &terrain).unwrap();
         assert!(collide_distance > 6.37 / move_vector.norm());
@@ -192,7 +192,7 @@ mod test {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(4., 8., 0.), VoxelType(1));
         terrain.set_voxel_type(Location::from_coords(1., 5., 0.), VoxelType(1));
-        let aabb = AABB::new(
+        let aabb = Aabb::new(
             Location::from_coords(1.18, 1.18, 0.),
             Vec3::new(0.64, 0.62, 1.),
         );
@@ -207,7 +207,7 @@ mod test {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(11., 0., -3.), VoxelType(1));
         terrain.set_voxel_type(Location::from_coords(9., 0., -2.), VoxelType(1));
-        let aabb = AABB::new(
+        let aabb = Aabb::new(
             Location::from_coords(6.35, 0., -6.08),
             Vec3::new(3.62, 1., 1.36),
         );
@@ -226,7 +226,7 @@ mod test {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(8., 0., -11.), VoxelType(1));
         terrain.set_voxel_type(Location::from_coords(4., 0., -13.), VoxelType(1));
-        let aabb = AABB::new(
+        let aabb = Aabb::new(
             Location::from_coords(3.8, 0., -8.59),
             Vec3::new(3.62, 1., 1.36),
         );
@@ -244,7 +244,7 @@ mod test {
     fn diagonal_2d_small_move() {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(0., 6., -6.), VoxelType(1));
-        let aabb = AABB::new(
+        let aabb = Aabb::new(
             Location::from_coords(0., 6.88, -4.95),
             Vec3::new(1., 1.24, 1.24),
         );
@@ -262,7 +262,7 @@ mod test {
     fn negative_2d_small_move() {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(2., 0., 1.), VoxelType(1));
-        let aabb = AABB::new(
+        let aabb = Aabb::new(
             Location::from_coords(3.84, 0., 1.2),
             Vec3::new(1., 1.24, 1.24),
         );
@@ -275,7 +275,7 @@ mod test {
     fn adjacent_2d_small_negative_move() {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(2., 0., 1.), VoxelType(1));
-        let aabb = AABB::new(
+        let aabb = Aabb::new(
             Location::from_coords(3., 0., 1.27),
             Vec3::new(1., 1.24, 1.24),
         );
@@ -288,7 +288,7 @@ mod test {
     fn adjacent_2d_small_positive_move() {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(2., 0., 1.), VoxelType(1));
-        let aabb = AABB::new(
+        let aabb = Aabb::new(
             Location::from_coords(1., 0., 1.27),
             Vec3::new(1., 1.24, 1.24),
         );
