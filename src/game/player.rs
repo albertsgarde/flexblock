@@ -1,5 +1,5 @@
 use crate::game::{
-    physics::AABB,
+    physics::Aabb,
     world::{Location, Terrain},
     View,
 };
@@ -19,14 +19,14 @@ macro_rules! PLAYER_VIEW_LOC {
 
 #[derive(Deserialize, Serialize)]
 pub struct Player {
-    aabb: AABB,
+    aabb: Aabb,
     view: View,
 }
 
 impl Player {
     pub fn new(location: Location, view_direction: Vec3) -> Player {
         Player {
-            aabb: AABB::new(location, PLAYER_SIZE!()),
+            aabb: Aabb::new(location, PLAYER_SIZE!()),
             view: View::new(
                 location + PLAYER_VIEW_LOC!(),
                 view_direction,
