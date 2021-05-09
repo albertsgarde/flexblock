@@ -4,6 +4,9 @@ stages:
 rust-latest:
   stage: build
   image: rust:latest
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y libasound2-dev
   script:
     - cargo build --verbose
     - cargo test --verbose
