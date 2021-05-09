@@ -1,5 +1,8 @@
 use crate::game::{world, GraphicsStateModel, Player, StateInputEvent};
+use glm::Vec3;
 use serde::{Deserialize, Serialize};
+
+use super::world::VoxelType;
 
 /// Holds the entire world state.
 /// Everything that is part of the game is held within.
@@ -42,6 +45,25 @@ impl State {
                 StateInputEvent::MovePlayerRelative { delta } => self
                     .player
                     .collide_move_relative(delta * 0.05, &self.terrain),
+                StateInputEvent::PlayerInteract1 => {
+                    let point_at = self.terrain.trace_ray(
+                        self.player.view().location(),
+                        self.player.view().view_direction(),
+                    );
+                    if let Some(target) = point_at {
+                        self.terrain.set_voxel_type(target, VoxelType(0));
+                    }
+                }
+                StateInputEvent::PlayerInteract2 => {
+                    let point_at = self.terrain.trace_ray(
+                        self.player.view().location(),
+                        self.player.view().view_direction(),
+                    );
+                    if let Some(target) = point_at {
+                        self.terrain
+                            .set_voxel_type(target + Vec3::new(1., 0., 0.), VoxelType(1));
+                    }
+                }
             }
         }
     }
