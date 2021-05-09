@@ -4,6 +4,7 @@
 /flexblock-synth/target
 /flexblock-synth/Cargo.lock
 /flexblock-synth/flexblock-synth-derive/target
+/wix
 # Flexblock saves.
 *.flex
 build_args.txt
