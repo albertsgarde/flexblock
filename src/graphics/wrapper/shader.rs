@@ -23,23 +23,23 @@ pub struct Shader {
 #[derive(Clone, Copy, Debug, EnumCount, EnumIter, ShaderId)]
 pub enum ShaderIdentifier {
     #[name("Default shader")]
-    #[extensionless_path("graphics/shaders/s1")]
+    #[extensionless_path("assets/graphics/shaders/s1")]
     #[is_compute(false)]
     Default,
     #[name("Sobel shader")]
-    #[extensionless_path("graphics/shaders/sobel")]
+    #[extensionless_path("assets/graphics/shaders/sobel")]
     #[is_compute(true)]
     Sobel,
     #[name("Simple Shader")]
-    #[extensionless_path("graphics/shaders/simple")]
+    #[extensionless_path("assets/graphics/shaders/simple")]
     #[is_compute(false)]
     Simple,
     #[name("Artsyfartsy")]
-    #[extensionless_path("graphics/shaders/artsyfartsy")]
+    #[extensionless_path("assets/graphics/shaders/artsyfartsy")]
     #[is_compute(true)]
     Artsyfartsy,
     #[name("Transfer")]
-    #[extensionless_path("graphics/shaders/transfer")]
+    #[extensionless_path("assets/graphics/shaders/transfer")]
     #[is_compute(true)]
     Transfer,
 }
