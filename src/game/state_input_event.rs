@@ -1,22 +1,34 @@
 use crate::graphics::ExternalEvent;
 use glm::Vec3;
-use glutin::event::{ElementState, VirtualKeyCode};
+use glutin::event::{ElementState, MouseButton, VirtualKeyCode};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::mpsc};
 
 /// Represents the event of something happening outside of state that the state might need to react to.
 /// Examples are player actions and game closing.
+/// Examples do _not_ include mouse clicks or button presses.
+/// These events should be abstracted away before-hand.
 #[derive(Debug, Serialize, Deserialize)]
 pub enum StateInputEvent {
     /// Rotates the view along the great circle in the delta direction by |delta| radians.
-    RotateView { delta: (f32, f32) },
+    RotateView {
+        delta: (f32, f32),
+    },
     /// Makes the player move in the direction given in view coordinates.
-    MovePlayerRelative { delta: Vec3 },
+    MovePlayerRelative {
+        delta: Vec3,
+    },
+    PlayerInteract1,
+    PlayerInteract2,
 }
 
 /// Handles external events and produces state input events.
 pub struct ExternalEventHandler {
+    /// The state of each keyboard key.
     key_state: HashMap<VirtualKeyCode, bool>,
+    /// The state of each mouse button.
+    button_state: HashMap<MouseButton, bool>,
+    /// The events generated this tick.
     tick_events: Vec<StateInputEvent>,
 }
 
@@ -24,6 +36,7 @@ impl ExternalEventHandler {
     pub fn new() -> ExternalEventHandler {
         ExternalEventHandler {
             key_state: HashMap::new(),
+            button_state: HashMap::new(),
             tick_events: Vec::new(),
         }
     }
@@ -52,6 +65,21 @@ impl ExternalEventHandler {
             ExternalEvent::KeyboardInput { keycode, state } => {
                 self.key_state
                     .insert(keycode, state == ElementState::Pressed);
+            }
+            ExternalEvent::MouseInput { button, state } => {
+                self.button_state
+                    .insert(button, state == ElementState::Pressed);
+                if state == ElementState::Pressed {
+                    match button {
+                        MouseButton::Left => {
+                            self.tick_events.push(StateInputEvent::PlayerInteract1);
+                        }
+                        MouseButton::Right => {
+                            self.tick_events.push(StateInputEvent::PlayerInteract2);
+                        }
+                        _ => {}
+                    }
+                };
             }
         }
     }

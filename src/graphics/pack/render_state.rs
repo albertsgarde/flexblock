@@ -221,12 +221,15 @@ impl RenderState {
             return Err(String::from("The given chunk has already been packed"));
         }
         if let Some(buffer) = self.find_free_location() {
-            messages.add_message(RenderMessage::Pack {
-                buffer,
-                pack: create_chunk_pack(chunk),
-            });
+            let pack = create_chunk_pack(chunk);
+            if pack.vertices.len() > 0 {
+                messages.add_message(RenderMessage::Pack {
+                    buffer,
+                    pack: create_chunk_pack(chunk),
+                });
+                self.register_packed_chunk(location, buffer);
+            }
 
-            self.register_packed_chunk(location, buffer);
             Ok(())
         } else {
             Err(String::from("No buffer available for passed chunk!"))
