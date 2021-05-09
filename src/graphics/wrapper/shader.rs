@@ -42,6 +42,10 @@ pub enum ShaderIdentifier {
     #[extensionless_path("graphics/shaders/transfer")]
     #[is_compute(true)]
     Transfer,
+    #[name("Just Color")]
+    #[extensionless_path("graphics/shaders/s2")]
+    #[is_compute(false)]
+    Color,
 }
 
 #[derive(Clone)]
