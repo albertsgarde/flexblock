@@ -851,10 +851,8 @@ mod tests {
         let res = validator.validate(&mut rs, &render_messages);
         assert!(
             res.is_ok(),
-            format!(
-                "Validate wrongfully doesn't accept a render target! {:?}",
-                res
-            )
+            "Validate wrongfully doesn't accept a render target! {:?}",
+            res
         );
     }
 }
