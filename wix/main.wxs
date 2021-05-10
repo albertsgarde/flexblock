@@ -28,7 +28,6 @@
   <?define Win64 = "no" ?>
   <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
 <?endif ?>
-<?define AssetsDir = "SourceDir/assets/"?>
 
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
 
