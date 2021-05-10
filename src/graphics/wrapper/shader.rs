@@ -184,25 +184,12 @@ impl Shader {
         gl::DeleteShader(fsid);
 
         let uniform_locations = Shader::uniform_hashmap(&required_uniforms, program_id);
-        /*
-        for entry in &required_uniforms {
-            let ename = format!("{}{}", entry.0, "\0");
-            let ename = ename.as_bytes();
-            let ename = CStr::from_bytes_with_nul(ename).unwrap();
-            let id =
-                gl::GetUniformLocation(program_id, (ename.as_ptr()) as *const gl::types::GLchar);
-            println!(
-                "Creating a uniform location for uniform {:?} at {}",
-                ename, id
-            );
 
-            uniform_locations.insert(String::from(&entry.0), id);
-        }*/
         gl::UseProgram(0);
 
         Ok(Shader {
             program_id,
-            uniform_locations: uniform_locations,
+            uniform_locations,
             metadata: ShaderMetadata {
                 identifier,
                 required_uniforms,
@@ -262,13 +249,13 @@ impl Shader {
             metadata: ShaderMetadata {
                 identifier,
                 required_uniforms,
-                shader_type: ProgramType::Graphics,
+                shader_type: ProgramType::Compute,
             },
         })
     }
 
     unsafe fn uniform_hashmap(
-        required_uniforms: &Vec<(String, String)>,
+        required_uniforms: &[(String, String)],
         program_id: u32,
     ) -> HashMap<String, i32> {
         let mut uniform_locations: HashMap<String, i32> = HashMap::new();
@@ -393,7 +380,7 @@ impl<'a> ShaderManager {
         texture_manager: &TextureManager,
     ) -> Result<(), String> {
         //TODO: THERE COULD BE NO CURRENT SHADER
-        if let None = self.bound_shader {
+        if self.bound_shader.is_none() {
             return Err(String::from(
                 "Uniforms were sent, but there's no bound shader!",
             ));
@@ -476,11 +463,7 @@ impl<'a> ShaderManager {
     }
 
     pub fn get_active_shader_name(&self) -> Option<String> {
-        if let Some(index) = self.bound_shader {
-            Some(String::from(index.name()))
-        } else {
-            None
-        }
+        self.bound_shader.map(|index| String::from(index.name()))
     }
 
     /// Returns the metadata of every Shader indexed by its ShaderIdentifier.

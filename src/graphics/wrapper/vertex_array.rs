@@ -60,14 +60,14 @@ impl<T: Vertex> VertexArray<T> {
 
     ///
     /// Fills the vbo of the vertex array with the given data.
-    pub unsafe fn fill_vbo(&mut self, target: usize, data: &Vec<T>) {
-        self.vbos[target].fill(&data);
+    pub unsafe fn fill_vbo(&mut self, target: usize, data: &[T]) {
+        self.vbos[target].fill(data);
     }
 
     ///
     /// Fills the ebo (element buffer object) of the vertex array with the given data.
-    pub unsafe fn fill_ebo(&mut self, target: usize, data: &Vec<u32>) {
-        self.ebos[target].fill(&data);
+    pub unsafe fn fill_ebo(&mut self, target: usize, data: &[u32]) {
+        self.ebos[target].fill(data);
     }
 
     ///
@@ -110,7 +110,7 @@ impl<T: Vertex> VertexArray<T> {
                 gl::TRIANGLES,
                 self.ebos[target].get_size() as i32,
                 gl::UNSIGNED_INT,
-                0 as *const _,
+                std::ptr::null(),
             );
         } else {
             gl::DrawArrays(gl::TRIANGLES, 0, self.vbos[target].get_size() as i32);

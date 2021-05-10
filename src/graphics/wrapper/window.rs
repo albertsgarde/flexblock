@@ -94,9 +94,7 @@ impl Window {
         // Try getting the lock; only render if there's render messages available.
         let render_messages = self.render_messages.render_pack.try_lock();
 
-        if let Ok(_) = render_messages {
-            let mut render_messages = render_messages.unwrap();
-
+        if let Ok(mut render_messages) = render_messages {
             if let Some(messages) = render_messages.take() {
                 for message in messages.iter() {
                     self.render_caller.read_message(message);
@@ -128,7 +126,7 @@ impl Window {
                 *control_flow = ControlFlow::Poll;
 
                 match event {
-                    Event::LoopDestroyed => return,
+                    Event::LoopDestroyed => {} //TODO: HANDLE LOOP DESTROYED
                     Event::WindowEvent { window_id, event } => match event {
                         WindowEvent::Resized(physical_size) => {
                             self.context.resize(physical_size);

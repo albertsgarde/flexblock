@@ -11,23 +11,23 @@ use std::str::FromStr;
 
 #[derive(PartialEq)]
 enum PlyTypes {
-    FLOAT,
-    UCHAR,
+    Float,
+    Uchar,
 }
 
 impl PlyTypes {
     fn type_from_string(s: &str) -> Result<PlyTypes, PlyError> {
         match s {
-            "float" => Ok(PlyTypes::FLOAT),
-            "uchar" => Ok(PlyTypes::UCHAR),
+            "float" => Ok(PlyTypes::Float),
+            "uchar" => Ok(PlyTypes::Uchar),
             _ => Err(PlyError::UnsupportedType(String::from(s))),
         }
     }
 
     fn size(&self) -> usize {
         match self {
-            PlyTypes::FLOAT => 4,
-            PlyTypes::UCHAR => 1,
+            PlyTypes::Float => 4,
+            PlyTypes::Uchar => 1,
         }
     }
 }
@@ -38,8 +38,8 @@ impl std::fmt::Display for PlyTypes {
             f,
             "{}",
             match self {
-                PlyTypes::FLOAT => "float",
-                PlyTypes::UCHAR => "uchar",
+                PlyTypes::Float => "float",
+                PlyTypes::Uchar => "uchar",
             }
         )
     }
@@ -71,10 +71,15 @@ impl Locatedf32 for VertAligned {
     }
 }
 
+/// Creates an f32 in the range [0;1] from four bytes in the given endianness
+/// and then moves the cursor along by four bytes
 fn fill_from_f32<T: ByteOrder>(out: &mut f32, inp: &[u8], loc: &mut usize) {
     *out = T::read_f32(&inp[*loc..*loc + 4]);
     *loc += 4;
 }
+
+/// Creates an f32 in the range [0;1] by dividing the first u8 in the input stream by 255f32
+/// and then moves the cursor along by one byte
 fn fill_from_u8(out: &mut f32, inp: &[u8], loc: &mut usize) {
     *out = inp[*loc] as f32 / 255f32;
     *loc += 1;
@@ -101,6 +106,7 @@ impl VertAligned {
     }
 }
 
+/// A list of all the elements in a VertAligned
 enum VertLocations {
     X,
     Y,
@@ -177,8 +183,6 @@ fn read_line(reader: &mut BufReader<std::fs::File>) -> io::Result<(String, usize
     Ok((res, count))
 }
 
-fn bp() {}
-
 /// Big Endian, Little Endian
 /// They have shitty names because of the byteorder package.
 enum Endianness {
@@ -216,7 +220,6 @@ fn read_unaligned_ply<P: AsRef<Path>>(path: P) -> Result<Vec<VertAligned>, PlyEr
             let len = line_buffer.len();
             let line_buffer = String::from(&line_buffer[15..len]);
             println!("Reading {} vertices!", line_buffer);
-            bp();
             num_vertices = line_buffer.parse::<usize>()?;
         } else if line_buffer.starts_with("property ") {
             let mut iter = line_buffer.split(' ');
@@ -523,36 +526,6 @@ mod tests {
             return Err(PlyError::UnknownHeaderElement(line_buffer));
         }
     }
-<<<<<<< HEAD
-    #[test]
-    fn types_not_matching() {
-        let result = read_ply::<Vert, &str>("assets/graphics/ply/test/types_not_matching.ply");
-        assert!(
-            match result {
-                Ok(_) => false,
-                Err(e) => match e {
-                    PlyError::TypesNotMatching { type_index: _ } => true,
-                    _ => false,
-                },
-            },
-            "read_ply accepts a file with non-matching types!"
-        );
-    }
-    #[test]
-    fn too_many_types() {
-        let result = read_ply::<Vert, &str>("assets/graphics/ply/test/too_many_types.ply");
-        assert!(
-            match result {
-                Ok(_) => false,
-                Err(e) => match e {
-                    PlyError::WrongTypeAmount => true,
-                    _ => false,
-                },
-            },
-            "read_ply accepts a file with too many types!"
-        );
-=======
->>>>>>> 4148ddfa1bbd17eef93bdc4b96c51739b7649530
     println!("Read {} ascii characters!", count);
 
     if types_in_file.len() != T::types().len() {
