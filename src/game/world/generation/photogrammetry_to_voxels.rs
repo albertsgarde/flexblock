@@ -217,6 +217,6 @@ mod tests {
     #[test]
     #[ignore]
     fn basic_test() {
-        let oct = create_voxels("graphics/ply/test/minimal.points").unwrap();
+        let _oct = create_voxels("graphics/ply/test/minimal.points").unwrap();
     }
 }
