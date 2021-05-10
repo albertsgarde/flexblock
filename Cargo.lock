@@ -541,6 +541,7 @@ name = "flexblock"
 version = "0.1.0"
 dependencies = [
  "bincode",
+ "byteorder",
  "bytepack",
  "bytepack_derive",
  "flexblock-synth",

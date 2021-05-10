@@ -1,6 +1,7 @@
 pub mod maths;
 
 pub mod vertex;
+pub use vertex::Locatedf32;
 pub use vertex::Vertex3D;
 pub mod mesh_iterator;
 
@@ -13,4 +14,4 @@ pub use file_utilities::dir_entries;
 mod colors;
 pub use colors::ColorFormat;
 
-mod ply;
+pub mod ply;

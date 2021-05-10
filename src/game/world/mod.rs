@@ -1,4 +1,5 @@
 mod chunk;
+mod generation;
 pub mod raytrace;
 mod terrain;
 mod voxel;
