@@ -8,6 +8,13 @@ pub trait Vertex: Packed + Copy {
     fn attribute_pointers() -> AttributePointerList;
 }
 
+/// Impl this if you have a location in 3d space given by an f32. Used by some algorthims / data structures.
+pub trait Locatedf32 {
+    fn x(&self) -> f32;
+    fn y(&self) -> f32;
+    fn z(&self) -> f32;
+}
+
 #[derive(Packed, Copy, Clone, Debug)]
 pub struct V3C3 {
     pub x: f32,
@@ -28,6 +35,18 @@ pub struct V3C3UV {
     pub b: f32,
     pub u: f32,
     pub v: f32,
+}
+
+impl Locatedf32 for V3C3 {
+    fn x(&self) -> f32 {
+        self.x
+    }
+    fn y(&self) -> f32 {
+        self.y
+    }
+    fn z(&self) -> f32 {
+        self.z
+    }
 }
 
 ///
@@ -97,14 +116,14 @@ impl AttributePointerList {
         attribute_pointers: Vec<AttributePointer>,
     ) -> Result<AttributePointerList, String> {
         let mut offset: u32 = 0;
-        for i in 0..attribute_pointers.len() {
-            if attribute_pointers[i].get_offset() != offset {
+        for (i, pointer) in attribute_pointers.iter().enumerate() {
+            if pointer.get_offset() != offset {
                 return Err(String::from(
                     "Offsets of attribute pointers don't make sense",
                 ));
             }
-            offset += attribute_pointers[i].get_components() as u32
-                * (match attribute_pointers[i].get_type() {
+            offset += pointer.get_components() as u32
+                * (match pointer.get_type() {
                     gl::FLOAT => 4,
                     _ => {
                         return Err(String::from(
@@ -112,7 +131,7 @@ impl AttributePointerList {
                         ))
                     }
                 });
-            if i != attribute_pointers[i].get_index() as usize {
+            if i != pointer.get_index() as usize {
                 return Err(String::from("Indices must increase by one every time!"));
             }
         }

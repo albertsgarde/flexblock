@@ -1,3 +1,4 @@
+use super::Locatedf32;
 use byteorder::{BigEndian, ByteOrder, LittleEndian};
 use std::cmp::PartialEq;
 use std::default::Default;
@@ -58,12 +59,24 @@ pub struct VertAligned {
     nz: f32,
 }
 
+impl Locatedf32 for VertAligned {
+    fn x(&self) -> f32 {
+        self.x
+    }
+    fn y(&self) -> f32 {
+        self.y
+    }
+    fn z(&self) -> f32 {
+        self.z
+    }
+}
+
 fn fill_from_f32<T: ByteOrder>(out: &mut f32, inp: &[u8], loc: &mut usize) {
     *out = T::read_f32(&inp[*loc..*loc + 4]);
     *loc += 4;
 }
 fn fill_from_u8(out: &mut f32, inp: &[u8], loc: &mut usize) {
-    *out = inp[*loc] as f32 / 255 as f32;
+    *out = inp[*loc] as f32 / 255f32;
     *loc += 1;
 }
 
@@ -153,7 +166,7 @@ fn read_line(reader: &mut BufReader<std::fs::File>) -> io::Result<(String, usize
     let mut res = String::new();
     let mut count: usize = 0;
     loop {
-        reader.read(&mut buf)?;
+        reader.read_exact(&mut buf)?;
         count += 1;
         if buf == *b"\n" {
             break;
@@ -226,13 +239,13 @@ fn read_unaligned_ply<P: AsRef<Path>>(path: P) -> Result<Vec<VertAligned>, PlyEr
                 )));
             }
         } else if line_buffer.starts_with("element face ") {
-            return Err(PlyError::UnsupportedElement(format!(
-                "read_ply only reads points, does not support faces!"
-            )));
+            return Err(PlyError::UnsupportedElement(
+                "read_ply only reads points, does not support faces!".to_string(),
+            ));
         } else if line_buffer.starts_with("element edge ") {
-            return Err(PlyError::UnsupportedElement(format!(
-                "read_ply only reads points, does not support edges!"
-            )));
+            return Err(PlyError::UnsupportedElement(
+                "read_ply only reads points, does not support edges!".to_string(),
+            ));
         } else if line_buffer.starts_with("format ") {
             let mut iter = line_buffer.split(' ');
             iter.next();
@@ -241,15 +254,15 @@ fn read_unaligned_ply<P: AsRef<Path>>(path: P) -> Result<Vec<VertAligned>, PlyEr
                     "binary_little_endian" => Some(Endianness::LE),
                     "binary_big_endian" => Some(Endianness::BE),
                     _ => {
-                        return Err(PlyError::UnsupportedElement(format!(
-                            "Malformed endian element!"
-                        )))
+                        return Err(PlyError::UnsupportedElement(
+                            "Malformed endian element!".to_string(),
+                        ))
                     }
                 };
             } else {
-                return Err(PlyError::UnsupportedElement(format!(
-                    "Malformed endian element!"
-                )));
+                return Err(PlyError::UnsupportedElement(
+                    "Malformed endian element!".to_string(),
+                ));
             }
         } else if !(line_buffer.starts_with("ply")
             || line_buffer.starts_with("comment ")
@@ -273,9 +286,9 @@ fn read_unaligned_ply<P: AsRef<Path>>(path: P) -> Result<Vec<VertAligned>, PlyEr
         preverts.set_len(num_vertices * struct_size);
     }
     if endianness.is_none() {
-        return Err(PlyError::MissingElement(format!(
-            "No endianness/byteorder element!"
-        )));
+        return Err(PlyError::MissingElement(
+            "No endianness/byteorder element!".to_string(),
+        ));
     }
     let endianness = endianness.unwrap();
     for i in 0..num_vertices {
@@ -293,14 +306,14 @@ fn read_unaligned_ply<P: AsRef<Path>>(path: P) -> Result<Vec<VertAligned>, PlyEr
 
     let mut rest: Vec<u8> = Vec::new();
     reader.read_to_end(&mut rest)?;
-    if rest.len() > 0 {
+    if !rest.is_empty() {
         return Err(PlyError::DataLeftInFile { bytes: rest.len() });
     }
 
     Ok(vert)
 }
 
-fn write_aligned_points<P: AsRef<Path>>(point_cloud: &Vec<VertAligned>, path: P) -> io::Result<()> {
+fn write_aligned_points<P: AsRef<Path>>(point_cloud: &[VertAligned], path: P) -> io::Result<()> {
     let mut file = File::create(path)?;
 
     // Since it used to be a .ply file
@@ -316,7 +329,7 @@ fn write_aligned_points<P: AsRef<Path>>(point_cloud: &Vec<VertAligned>, path: P)
     //}
     //write!(&mut file, "end_header\n")?;
     unsafe {
-        file.write(&point_cloud.len().to_ne_bytes())?;
+        file.write_all(&point_cloud.len().to_ne_bytes())?;
         let buffer: &[u8] = std::slice::from_raw_parts(
             point_cloud.as_ptr() as *const u8,
             std::mem::size_of::<VertAligned>() * point_cloud.len(),
@@ -340,12 +353,12 @@ pub fn read_aligned_points<P: AsRef<Path>>(path: P) -> io::Result<Vec<VertAligne
             slice::from_raw_parts_mut(verts.as_ptr() as *mut u8, num_vertices * struct_size);
 
         reader.read_exact(buffer)?;
-        verts.set_len(num_vertices * struct_size);
+        verts.set_len(num_vertices);
     }
 
     let mut rest = Vec::new();
     reader.read_to_end(&mut rest)?;
-    if rest.len() > 0 {
+    if !rest.is_empty() {
         panic!("Not the correct number of points in aligned point cloud file! Likely an endianness error.");
     }
 
@@ -406,25 +419,18 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    #[ignore]
-    fn read_large_unaligned_ply() -> Result<(), PlyError> {
-        use std::time::Instant;
-        let start = Instant::now();
-        let vs = read_unaligned_ply::<&str>("graphics/ply/test/large_unaligned.ply")?;
-        let first_read = Instant::now();
-        println!(
-            "Read unaligned ply in {}ms!",
-            (first_read - start).as_millis()
+    /*#[test]
+    fn load_infinite_header() {
+        assert!(
+            match read_ply::<Vert, &str>("graphics/ply/test/infinite_header.ply") {
+                Ok(_) => false,
+                Err(e) => match e {
+                    PlyError::UnknownHeaderElement(_) => true,
+                    _ => false,
+                },
+            },
+            "read_ply doesn't notice when the header is infinite!"
         );
-
-        write_aligned_points(&vs, "graphics/ply/test/large_aligned.points")?;
-        let post_write = Instant::now();
-        println!(
-            "Wrote aligned points in {}ms!",
-            (post_write - first_read).as_millis()
-        );
-
         let vs2 = read_aligned_points("graphics/ply/test/large_aligned.points")?;
         let second_read = Instant::now();
         println!(
@@ -442,7 +448,7 @@ mod tests {
         }
         println!("All vertices match!");
         Ok(())
-    }
+    }*/
 
     #[test]
     fn convert_directly() -> Result<(), PlyError> {
@@ -452,7 +458,6 @@ mod tests {
         )
     }
 
-    #[test]
     fn test_fill() {
         let bytes = [0, 0, 0, 0];
         let mut loc = 0;
