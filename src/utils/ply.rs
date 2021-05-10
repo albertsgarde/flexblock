@@ -415,6 +415,9 @@ mod tests {
                 print!(".")
             }
         }
+        if vs.len() != vs2.len() {
+            panic!("The two methods read different amounts of vertices!");
+        }
         println!("All vertices match! ");
         Ok(())
     }
