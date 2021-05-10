@@ -13,7 +13,7 @@ fn half(min_bounds: &glm::Vec3, max_bounds: &glm::Vec3) -> glm::Vec3 {
     return (max_bounds - min_bounds) * 0.5 + min_bounds;
 }
 
-struct Octree<T: Locatedf32, const LEAF_CAPACITY: usize> {
+struct Octree<T: Locatedf32, const LEAF_CAPACITY: usize, const MAX_DEPTH: usize> {
     nodes: Vec<OctreeNode>,
     vertices: Vec<T>,
     min_bounds: glm::Vec3,
@@ -65,17 +65,19 @@ impl OctreeNode {
                 contents.push(*vp);
             }
         }
-        for d in distribution.iter() {
-            if *d == contents.len() {
-                panic!("Degenerate octree!");
-            }
-        }
+        //for d in distribution.iter() {
+        //    if *d == contents.len() {
+        //        panic!("Degenerate octree!");
+        //    }
+        //}
 
         OctreeNode::Branch { nodes: nodesn }
     }
 }
 
-impl<T: Locatedf32, const LEAF_CAPACITY: usize> Octree<T, LEAF_CAPACITY> {
+impl<T: Locatedf32, const LEAF_CAPACITY: usize, const MAX_DEPTH: usize>
+    Octree<T, LEAF_CAPACITY, MAX_DEPTH>
+{
     pub fn new(min_bounds: glm::Vec3, max_bounds: glm::Vec3, vertices: Vec<T>) -> Self {
         let size = max_bounds - min_bounds;
 
@@ -115,6 +117,8 @@ impl<T: Locatedf32, const LEAF_CAPACITY: usize> Octree<T, LEAF_CAPACITY> {
             i += 1;
         }
 
+        println!("Returning octree!");
+
         Octree {
             nodes,
             vertices,
@@ -139,15 +143,6 @@ impl<T: Locatedf32, const LEAF_CAPACITY: usize> Octree<T, LEAF_CAPACITY> {
         let mut depth = 0;
         loop {
             depth += 1;
-            if depth > 7 {
-                println!(
-                    "d{} Bounds: {:?}, {:?}, for vertex {:?}",
-                    depth,
-                    min_bounds,
-                    max_bounds,
-                    (v.x(), v.y(), v.z())
-                );
-            }
             match &mut nodes[pointer.0] {
                 OctreeNode::Branch { nodes } => {
                     let mut index = 0;
@@ -183,7 +178,7 @@ impl<T: Locatedf32, const LEAF_CAPACITY: usize> Octree<T, LEAF_CAPACITY> {
         let mut split = false;
 
         if let OctreeNode::Leaf { contents } = &mut nodes[pointer.0] {
-            if contents.len() > LEAF_CAPACITY {
+            if contents.len() > LEAF_CAPACITY && depth < MAX_DEPTH {
                 split = true;
             } else {
                 contents.push(added_vertex);
@@ -206,14 +201,11 @@ impl<T: Locatedf32, const LEAF_CAPACITY: usize> Octree<T, LEAF_CAPACITY> {
     }
 }
 
-fn create_voxels<P: AsRef<Path>>(file: P) -> std::io::Result<Octree<VertAligned, 100>> {
-    let mut points = read_aligned_points(file)?;
-    println!("Hi2!");
+fn create_voxels<P: AsRef<Path>>(file: P) -> std::io::Result<Octree<VertAligned, 20, 9>> {
+    let points = read_aligned_points(file)?;
+    println!("Available points: {}", points.len());
 
-    points.resize_with(10000, || panic!("Length should be shorter!"));
-
-    let octree =
-        Octree::<VertAligned, 100>::new(glm::vec3(-5., -5., -5.), glm::vec3(5., 5., 5.), points);
+    let octree = Octree::new(glm::vec3(-5., -5., -5.), glm::vec3(5., 5., 5.), points);
 
     Ok(octree)
 }
@@ -225,7 +217,6 @@ mod tests {
     #[test]
     #[ignore]
     fn basic_test() {
-        // This test currently fails, since the points in the file are apparently degenerate.
         let oct = create_voxels("graphics/ply/test/minimal.points").unwrap();
     }
 }

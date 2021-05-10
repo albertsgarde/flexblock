@@ -12,9 +12,9 @@ impl ColorFormat {
     /// Returns the GL texture type, but not the internal format.
     pub fn gl_format(&self) -> u32 {
         match self {
-            &ColorFormat::RGB => gl::RGB,
-            &ColorFormat::RGBA => gl::RGBA,
-            &ColorFormat::D => gl::DEPTH_COMPONENT,
+            ColorFormat::RGB => gl::RGB,
+            ColorFormat::RGBA => gl::RGBA,
+            ColorFormat::D => gl::DEPTH_COMPONENT,
         }
     }
 }

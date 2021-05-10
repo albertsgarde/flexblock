@@ -116,14 +116,14 @@ impl AttributePointerList {
         attribute_pointers: Vec<AttributePointer>,
     ) -> Result<AttributePointerList, String> {
         let mut offset: u32 = 0;
-        for i in 0..attribute_pointers.len() {
-            if attribute_pointers[i].get_offset() != offset {
+        for (i, pointer) in attribute_pointers.iter().enumerate() {
+            if pointer.get_offset() != offset {
                 return Err(String::from(
                     "Offsets of attribute pointers don't make sense",
                 ));
             }
-            offset += attribute_pointers[i].get_components() as u32
-                * (match attribute_pointers[i].get_type() {
+            offset += pointer.get_components() as u32
+                * (match pointer.get_type() {
                     gl::FLOAT => 4,
                     _ => {
                         return Err(String::from(
@@ -131,7 +131,7 @@ impl AttributePointerList {
                         ))
                     }
                 });
-            if i != attribute_pointers[i].get_index() as usize {
+            if i != pointer.get_index() as usize {
                 return Err(String::from("Indices must increase by one every time!"));
             }
         }
