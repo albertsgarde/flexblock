@@ -15,7 +15,7 @@ pub trait Locatedf32 {
     fn z(&self) -> f32;
 }
 
-#[derive(Packed, Copy, Clone, Debug)]
+#[derive(Packed, Copy, Clone, Debug, Default)]
 pub struct V3C3 {
     pub x: f32,
     pub y: f32,
@@ -25,7 +25,7 @@ pub struct V3C3 {
     pub b: f32,
 }
 
-#[derive(Packed, Copy, Clone, Debug)]
+#[derive(Packed, Copy, Clone, Debug, Default)]
 pub struct V3C3UV {
     pub x: f32,
     pub y: f32,
@@ -53,20 +53,6 @@ impl Locatedf32 for V3C3 {
 /// The vertex used basically everywhere in the program.
 pub type Vertex3D = V3C3UV;
 
-impl V3C3 {
-    ///TODO: Can i make this a part of the vertex trait instead?
-    pub fn dummy() -> V3C3 {
-        V3C3 {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-            r: 0.0,
-            g: 0.0,
-            b: 0.0,
-        }
-    }
-}
-
 impl Vertex for V3C3 {
     fn attribute_pointers() -> AttributePointerList {
         AttributePointerList::new::<V3C3>(vec![
@@ -74,21 +60,6 @@ impl Vertex for V3C3 {
             AttributePointer::new(1, 3, gl::FLOAT, false, 12),
         ])
         .unwrap()
-    }
-}
-
-impl V3C3UV {
-    pub fn dummy() -> V3C3UV {
-        V3C3UV {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-            r: 0.0,
-            g: 0.0,
-            b: 0.0,
-            u: 0.0,
-            v: 0.0,
-        }
     }
 }
 

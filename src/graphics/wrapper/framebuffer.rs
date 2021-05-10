@@ -83,24 +83,22 @@ impl Framebuffer {
                 dt.get_id(),
                 0,
             );
-        } else {
-            if identifier.has_depth() {
-                let mut depth_render_buffer = 0;
-                gl::GenRenderbuffers(1, &mut depth_render_buffer);
-                gl::BindRenderbuffer(gl::RENDERBUFFER, depth_render_buffer);
-                gl::RenderbufferStorage(
-                    gl::RENDERBUFFER,
-                    gl::DEPTH_COMPONENT,
-                    width as i32,
-                    height as i32,
-                );
-                gl::FramebufferRenderbuffer(
-                    gl::FRAMEBUFFER,
-                    gl::DEPTH_ATTACHMENT,
-                    gl::RENDERBUFFER,
-                    depth_render_buffer,
-                );
-            }
+        } else if identifier.has_depth() {
+            let mut depth_render_buffer = 0;
+            gl::GenRenderbuffers(1, &mut depth_render_buffer);
+            gl::BindRenderbuffer(gl::RENDERBUFFER, depth_render_buffer);
+            gl::RenderbufferStorage(
+                gl::RENDERBUFFER,
+                gl::DEPTH_COMPONENT,
+                width as i32,
+                height as i32,
+            );
+            gl::FramebufferRenderbuffer(
+                gl::FRAMEBUFFER,
+                gl::DEPTH_ATTACHMENT,
+                gl::RENDERBUFFER,
+                depth_render_buffer,
+            );
         }
 
         if let Some(ct) = identifier.color_texture() {

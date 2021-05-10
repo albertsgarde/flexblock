@@ -15,7 +15,7 @@ pub enum ExternalEvent {
 }
 
 impl ExternalEvent {
-    pub fn create_from_glut_event<'a, T: 'static>(event: Event<'a, T>) -> Option<ExternalEvent> {
+    pub fn create_from_glut_event<T: 'static>(event: Event<'_, T>) -> Option<ExternalEvent> {
         match event {
             // TODO: Should different devices be handled differently?
             Event::DeviceEvent {
@@ -38,13 +38,13 @@ impl ExternalEvent {
                         // TODO: Should synthetic events be discarded? They only occur on Windows and "X11",
                         // so to be consistent across platforms they are for now.
                         None
-                    } else if let Some(keycode) = input.virtual_keycode {
-                        Some(ExternalEvent::KeyboardInput {
-                            keycode,
-                            state: input.state,
-                        })
                     } else {
-                        None
+                        input
+                            .virtual_keycode
+                            .map(|keycode| ExternalEvent::KeyboardInput {
+                                keycode,
+                                state: input.state,
+                            })
                     }
                 }
                 // To avoid annoying warning on the modifiers field.

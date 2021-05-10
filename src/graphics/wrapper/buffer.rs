@@ -27,7 +27,7 @@ impl<T: Vertex> ArrayBuffer<T> {
         gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
     }
 
-    pub unsafe fn fill(&mut self, data: &Vec<T>) {
+    pub unsafe fn fill(&mut self, data: &[T]) {
         self.bind();
         //TODO: Maybe shouldn't be static draw
         gl::BufferData(
@@ -77,7 +77,7 @@ impl ElementBuffer {
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
     }
 
-    pub unsafe fn fill(&mut self, data: &Vec<u32>) {
+    pub unsafe fn fill(&mut self, data: &[u32]) {
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
         gl::BufferData(
             gl::ELEMENT_ARRAY_BUFFER,

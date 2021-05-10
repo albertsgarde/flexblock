@@ -43,31 +43,29 @@ impl<'a> fmt::Debug for ValidationError<'a> {
             ValidationErrorType::InvalidShader { shader } => format!("Trying to choose shader {}, that does not exist!", shader),
             ValidationErrorType::VBOOutOfBounds {vbo} => format!("Trying to access VBO {}, which is out of bounds.", vbo),
             ValidationErrorType::ClearEmptyVBO {vbo} => format!("Trying to clear VBO {}, which is already empty!", vbo),
-            ValidationErrorType::NoClearedBuffers => format!("A clear buffers render message is sent, but no buffers are cleared!"),
-            ValidationErrorType::NoRenderTarget => format!("Trying to draw without first picking a render target!"),
+            ValidationErrorType::NoClearedBuffers => ("A clear buffers render message is sent, but no buffers are cleared!").to_string(),
+            ValidationErrorType::NoRenderTarget => ("Trying to draw without first picking a render target!").to_string(),
             ValidationErrorType::UnfilledUniform {uniforms } => format!("Trying to draw without supplying all needed uniforms! Missing uniforms: {:?}", uniforms),
-            ValidationErrorType::NoShaderChosen => format!("Trying to draw without picking a shader first!"),
+            ValidationErrorType::NoShaderChosen => ("Trying to draw without picking a shader first!").to_string(),
             ValidationErrorType::DrawEmptyVBO {vbo} => format!("Trying to draw VBO {}, which is empty!", vbo),
-            ValidationErrorType::WrongTriangleCount => format!("Received a vertex pack that does not contain a whole number of triangles!"),
-            ValidationErrorType::EmptyVertexPack => format!("Trying to fill VBO with empty vertex pack! A VBO is cleared by sending a RenderMessage::ClearArray message!"),
+            ValidationErrorType::WrongTriangleCount => ("Received a vertex pack that does not contain a whole number of triangles!").to_string(),
+            ValidationErrorType::EmptyVertexPack => ("Trying to fill VBO with empty vertex pack! A VBO is cleared by sending a RenderMessage::ClearArray message!").to_string(),
             ValidationErrorType::PackFullVBO {vbo}=> format!("Trying to pack VBO {}, which is already full!", vbo),
             ValidationErrorType::InvalidFramebuffer {framebuffer} => format!("Trying to bind framebuffer {}, which does not exist", framebuffer),
             ValidationErrorType::InvalidTexture {texture} => format!("Trying to pass texture {} as shader uniform, but texture does not exist in the graphics capabilities object!", texture),
             ValidationErrorType::UnwantedUniform {uniform} => format!("Trying to pass uniform {} to a shader that does not want it! (This is non-critical, should maybe be a warning instead)", uniform),
-            ValidationErrorType::NoGraphicsCapabilities => format!("Trying to send RenderMessages with no graphics capabilities!"),
+            ValidationErrorType::NoGraphicsCapabilities => ("Trying to send RenderMessages with no graphics capabilities!").to_string(),
             ValidationErrorType::NonComputeShader {shader}=> format!("Trying to run a compute dispatch with graphics shader {}!", shader),
             ValidationErrorType::NonGraphicsShader {shader}=> format!("Trying to render with compute shader {}!", shader),
         };
-        res.push_str("\n");
-        let mut counter = 0;
-        for message in self.context.render_messages.iter() {
+        res.push('\n');
+        for (counter, message) in self.context.render_messages.iter().enumerate() {
             if counter == self.context.message_index {
                 res.push_str(&format!("\n{:?} -- ERROR HERE\n\n", message));
                 break;
             } else {
                 res.push_str(&format!("{:?}|", message));
             }
-            counter += 1;
         }
         res.push_str(&format!("{:?}", self.context.render_messages));
         f.write_str(&res)
@@ -136,9 +134,7 @@ impl RenderMessageValidator {
             // A hashmap of shader metadata
             let shader_metadata = &capabilities.shader_metadata;
 
-            let mut message_index = 0;
-
-            for message in messages.iter() {
+            for (message_index, message) in messages.iter().enumerate() {
                 match message {
                     RenderMessage::ChooseShader { shader } => {
                         chosen_shader = Some(&shader_metadata[*shader as usize]);
@@ -245,7 +241,7 @@ impl RenderMessageValidator {
                                     return Err(ValidationError {
                                         error_type: ValidationErrorType::UnfilledUniform {
                                             uniforms: (&s.required_uniforms)
-                                                .into_iter()
+                                                .iter()
                                                 .map(|x| String::from(&x.0))
                                                 .filter(|x| !bound_uniforms.contains(&x))
                                                 .collect::<Vec<String>>(),
@@ -312,7 +308,7 @@ impl RenderMessageValidator {
                         }
 
                         if pack.elements.len() % 3 != 0
-                            || (pack.elements.len() == 0 && pack.vertices.len() % 3 != 0)
+                            || (pack.elements.is_empty() && pack.vertices.len() % 3 != 0)
                         {
                             return Err(ValidationError {
                                 error_type: ValidationErrorType::WrongTriangleCount,
@@ -326,7 +322,7 @@ impl RenderMessageValidator {
                                 ),
                             });
                         }
-                        if pack.vertices.len() == 0 {
+                        if pack.vertices.is_empty() {
                             return Err(ValidationError {
                                 error_type: ValidationErrorType::EmptyVertexPack,
                                 context: self.capture_context(
@@ -443,7 +439,7 @@ impl RenderMessageValidator {
                                     return Err(ValidationError {
                                         error_type: ValidationErrorType::UnfilledUniform {
                                             uniforms: (&s.required_uniforms)
-                                                .into_iter()
+                                                .iter()
                                                 .map(|x| String::from(&x.0))
                                                 .filter(|x| !bound_uniforms.contains(&x))
                                                 .collect::<Vec<String>>(),
@@ -462,23 +458,20 @@ impl RenderMessageValidator {
                         }
                     }
                 }
-                message_index += 1;
             }
 
             Ok(())
+        } else if !messages.is_empty() {
+            Err(ValidationError {
+                error_type: ValidationErrorType::NoGraphicsCapabilities,
+                context: ValidationContext {
+                    render_messages: messages,
+                    message_index: 0,
+                },
+            })
+            //Err("Trying to send render messages when no graphics capabilities object is available!")
         } else {
-            if messages.size() > 0 {
-                return Err(ValidationError {
-                    error_type: ValidationErrorType::NoGraphicsCapabilities,
-                    context: ValidationContext {
-                        render_messages: messages,
-                        message_index: 0,
-                    },
-                });
-                //Err("Trying to send render messages when no graphics capabilities object is available!")
-            } else {
-                Ok(())
-            }
+            Ok(())
         }
     }
 
@@ -623,7 +616,9 @@ mod tests {
         });
         let mut ud = UniformData::new();
         ud.texture(String::from("atlas"), String::from("test_texture"));
-        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        render_messages.add_message(RenderMessage::Uniforms {
+            uniforms: Box::new(ud),
+        });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
@@ -644,7 +639,9 @@ mod tests {
         });
         let mut ud = UniformData::new();
         ud.texture(String::from("atlas"), String::from("test"));
-        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        render_messages.add_message(RenderMessage::Uniforms {
+            uniforms: Box::new(ud),
+        });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
@@ -661,7 +658,9 @@ mod tests {
         });
         let mut ud = UniformData::new();
         ud.texture(String::from("atlass"), String::from("test_texture"));
-        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        render_messages.add_message(RenderMessage::Uniforms {
+            uniforms: Box::new(ud),
+        });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
@@ -680,7 +679,9 @@ mod tests {
         });
         let mut ud = UniformData::new();
         ud.texture(String::from("atlas"), String::from("test_texture"));
-        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        render_messages.add_message(RenderMessage::Uniforms {
+            uniforms: Box::new(ud),
+        });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
@@ -725,7 +726,9 @@ mod tests {
         });
         let mut ud = UniformData::new();
         ud.texture(String::from("atlas"), String::from("test_texture"));
-        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        render_messages.add_message(RenderMessage::Uniforms {
+            uniforms: Box::new(ud),
+        });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         render_messages.add_message(RenderMessage::Draw { buffer: 0 });
 
@@ -746,7 +749,9 @@ mod tests {
         let mut ud = UniformData::new();
         ud.texture(String::from("atlas"), String::from("test_texture"));
         ud.vec3(glm::vec3(0., 0., 0.), String::from("vector"));
-        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        render_messages.add_message(RenderMessage::Uniforms {
+            uniforms: Box::new(ud),
+        });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         render_messages.add_message(RenderMessage::Draw { buffer: 0 });
         assert!(
@@ -766,7 +771,9 @@ mod tests {
         let mut ud = UniformData::new();
         ud.texture(String::from("atlas"), String::from("test_texture"));
         ud.vec3(glm::vec3(0., 0., 0.), String::from("vector"));
-        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        render_messages.add_message(RenderMessage::Uniforms {
+            uniforms: Box::new(ud),
+        });
         render_messages.add_message(RenderMessage::ChooseShader {
             shader: ShaderIdentifier::Default,
         });
@@ -790,17 +797,23 @@ mod tests {
         let mut ud = UniformData::new();
         ud.texture(String::from("atlas"), String::from("test_texture"));
         ud.vec3(glm::vec3(0., 0., 0.), String::from("vector"));
-        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        render_messages.add_message(RenderMessage::Uniforms {
+            uniforms: Box::new(ud),
+        });
         render_messages.add_message(RenderMessage::ChooseShader {
             shader: ShaderIdentifier::Default,
         });
         let mut ud = UniformData::new();
         ud.texture(String::from("atlas"), String::from("test_texture"));
-        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        render_messages.add_message(RenderMessage::Uniforms {
+            uniforms: Box::new(ud),
+        });
         let mut ud = UniformData::new();
         ud.texture(String::from("atlas"), String::from("test_texture"));
         ud.vec3(glm::vec3(0., 0., 0.), String::from("vector"));
-        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        render_messages.add_message(RenderMessage::Uniforms {
+            uniforms: Box::new(ud),
+        });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         render_messages.add_message(RenderMessage::Draw { buffer: 0 });
 
@@ -821,7 +834,9 @@ mod tests {
         });
         let mut ud = UniformData::new();
         ud.texture(String::from("atlas"), String::from("test_texture"));
-        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        render_messages.add_message(RenderMessage::Uniforms {
+            uniforms: Box::new(ud),
+        });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
@@ -841,7 +856,9 @@ mod tests {
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         let mut ud = UniformData::new();
         ud.texture(String::from("atlas"), String::from("test_texture"));
-        render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+        render_messages.add_message(RenderMessage::Uniforms {
+            uniforms: Box::new(ud),
+        });
         render_messages.add_message(RenderMessage::Pack {
             buffer: 0,
             pack: create_quad_pack(),
