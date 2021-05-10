@@ -523,6 +523,7 @@ mod tests {
             return Err(PlyError::UnknownHeaderElement(line_buffer));
         }
     }
+<<<<<<< HEAD
     #[test]
     fn types_not_matching() {
         let result = read_ply::<Vert, &str>("assets/graphics/ply/test/types_not_matching.ply");
@@ -550,6 +551,8 @@ mod tests {
             },
             "read_ply accepts a file with too many types!"
         );
+=======
+>>>>>>> 4148ddfa1bbd17eef93bdc4b96c51739b7649530
     println!("Read {} ascii characters!", count);
 
     if types_in_file.len() != T::types().len() {
