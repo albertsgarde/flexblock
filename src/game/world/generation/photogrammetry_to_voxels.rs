@@ -10,7 +10,7 @@ struct OctreeNodePointer(usize);
 struct OctreeVertexPointer(usize);
 
 fn half(min_bounds: &glm::Vec3, max_bounds: &glm::Vec3) -> glm::Vec3 {
-    return (max_bounds - min_bounds) * 0.5 + min_bounds;
+    (max_bounds - min_bounds) * 0.5 + min_bounds
 }
 
 struct Octree<T: Locatedf32, const LEAF_CAPACITY: usize, const MAX_DEPTH: usize> {
@@ -36,14 +36,14 @@ impl OctreeNode {
 
     pub fn new_branch<T: Locatedf32>(
         nodes: &mut Vec<OctreeNode>,
-        vertices: &Vec<T>,
-        contents: &Vec<OctreeVertexPointer>,
+        vertices: &[T],
+        contents: &[OctreeVertexPointer],
         min_bounds: &glm::Vec3,
         max_bounds: &glm::Vec3,
     ) -> Self {
         let mut nodesn = [OctreeNodePointer(0); 8];
-        for i in 0..8 {
-            nodesn[i] = OctreeNodePointer(nodes.len());
+        for node in nodesn.iter_mut() {
+            *node = OctreeNodePointer(nodes.len());
             nodes.push(OctreeNode::new());
         }
         let mut distribution = [0; 8];
@@ -130,13 +130,13 @@ impl<T: Locatedf32, const LEAF_CAPACITY: usize, const MAX_DEPTH: usize>
 
     fn add_vertex(
         nodes: &mut Vec<OctreeNode>,
-        vertices: &Vec<T>,
+        vertices: &[T],
         added_vertex: OctreeVertexPointer,
         min_bounds: &glm::Vec3,
         max_bounds: &glm::Vec3,
     ) {
-        let mut min_bounds = min_bounds.clone();
-        let mut max_bounds = max_bounds.clone();
+        let mut min_bounds = *min_bounds;
+        let mut max_bounds = *max_bounds;
         let mut pointer = OctreeNodePointer(0);
 
         let v = &vertices[added_vertex.0];

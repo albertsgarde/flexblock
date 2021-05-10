@@ -161,7 +161,9 @@ pub fn start_packing_thread(
                 });
                 let mut ud = UniformData::new();
                 ud.texture("artsy_output".to_owned(), "tex");
-                messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+                messages.add_message(RenderMessage::Uniforms {
+                    uniforms: Box::new(ud),
+                });
                 messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
                 messages.add_message(RenderMessage::ClearBuffers {
                     color_buffer: true,
@@ -241,7 +243,7 @@ pub fn start_packing_thread(
             }
 
             // Validate render messages.
-            debug_assert!(validator.validate(&mut state, &messages).unwrap() == ());
+            debug_assert!(validator.validate(&state, &messages).is_ok());
 
             *message_mutex = Some(messages);
         }

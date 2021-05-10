@@ -68,8 +68,7 @@ fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
             elements.append(&mut eadd);
         }
     }
-    let vertex_pack = VertexPack::new(vertices, Some(elements));
-    vertex_pack
+    VertexPack::new(vertices, Some(elements))
 }
 
 /// Returns the view * projection matrix of the supplied camera.
@@ -93,23 +92,28 @@ pub fn get_vp_matrix(view: &View, screen_dimensions: (u32, u32)) -> glm::Mat4 {
         &glm::vec3(center[0], center[1], center[2]),
         &glm::vec3(up[0], up[1], up[2]),
     );
-    let p: glm::Mat4 =
-        glm::perspective_fov(90. / 180. * 3.1415, width as f32, height as f32, 0.1, 100.0); //TODO: CORRECT FOV, WIDTH, AND HEIGHT
+    let p: glm::Mat4 = glm::perspective_fov(
+        90. / 180. * std::f32::consts::PI,
+        width as f32,
+        height as f32,
+        0.1,
+        100.0,
+    ); //TODO: CORRECT FOV, WIDTH, AND HEIGHT
 
     p * v
 }
 
 /// Breadth first search
-struct BFS {
+struct BreadthFirstSearch {
     visited_locations: Vec<glm::IVec3>,
     frontier: VecDeque<glm::IVec3>,
 }
 
-impl BFS {
-    pub fn new(start_location: glm::IVec3) -> BFS {
+impl BreadthFirstSearch {
+    pub fn new(start_location: glm::IVec3) -> BreadthFirstSearch {
         let mut frontier = VecDeque::new();
         frontier.push_back(start_location);
-        BFS {
+        BreadthFirstSearch {
             visited_locations: Vec::new(),
             frontier,
         }
@@ -153,7 +157,6 @@ impl BFS {
 pub struct RenderState {
     /// Contains a list of packed chunk locations. The index is which buffer they're packed into. None means no chunk is packed into that buffer.
     pub(super) packed_chunks: Vec<Option<glm::IVec3>>,
-    chunk_search: Option<BFS>,
     pub(super) capabilities: Option<GraphicsCapabilities>,
 }
 
@@ -165,7 +168,6 @@ impl RenderState {
 
         RenderState {
             packed_chunks,
-            chunk_search: None,
             capabilities: None,
         }
     }
@@ -200,14 +202,12 @@ impl RenderState {
 
     /// Finds a free VBO available for chunk packing
     fn find_free_location(&self) -> Option<usize> {
-        let mut counter = 0;
-        for c in &self.packed_chunks {
+        for (counter, c) in self.packed_chunks.iter().enumerate() {
             if c.is_none() {
                 return Some(counter);
             }
-            counter += 1;
         }
-        return None;
+        None
     }
 
     /// Packs a given chunk
@@ -222,7 +222,7 @@ impl RenderState {
         }
         if let Some(buffer) = self.find_free_location() {
             let pack = create_chunk_pack(chunk);
-            if pack.vertices.len() > 0 {
+            if !pack.vertices.is_empty() {
                 messages.add_message(RenderMessage::Pack {
                     buffer,
                     pack: create_chunk_pack(chunk),
@@ -252,31 +252,6 @@ impl RenderState {
         self.packed_chunks.contains(&Some(location))
     }
 
-    ///DEPRECATED
-    pub fn pack_next_chunk(
-        &mut self,
-        view_location: glm::IVec3,
-        messages: &mut RenderMessages,
-        terrain: &Terrain,
-    ) {
-        //TODO: BFS SHOULD RESET OR SOMETHING SOMETIMES
-        if self.chunk_search.is_none() {
-            self.chunk_search = Some(BFS::new(view_location));
-        }
-        if let Some(bfs) = &mut self.chunk_search {
-            if let Some(loc) = bfs.next(view_location, 4) {
-                if let Some(chunk) = terrain.chunk(loc) {
-                    match self.pack_chunk(chunk, loc, messages) {
-                        Ok(_) => {}
-                        Err(s) => {
-                            println!("{}", s)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     /// Packs a chunk if it hasn't been packed before, or unpacks and packs it if it has been packed before.
     pub fn repack_chunk(
         &mut self,
@@ -284,8 +259,7 @@ impl RenderState {
         messages: &mut RenderMessages,
         terrain: &Terrain,
     ) {
-        let mut counter = 0;
-        for chunk in &self.packed_chunks {
+        for (counter, chunk) in self.packed_chunks.iter().enumerate() {
             if let Some(chunk) = chunk {
                 if *chunk == location {
                     self.unregister_packed_chunk(counter);
@@ -293,7 +267,6 @@ impl RenderState {
                     break;
                 }
             }
-            counter += 1;
         }
 
         if let Some(chunk) = terrain.chunk(location) {
@@ -308,16 +281,14 @@ impl RenderState {
 
     /// Clears chunks that are further than four chunks from the given location.
     pub fn clear_distant_chunks(&mut self, location: glm::IVec3, messages: &mut RenderMessages) {
-        let mut counter = 0;
         let mut remove = Vec::new();
-        for chunk in &self.packed_chunks {
+        for (counter, chunk) in self.packed_chunks.iter().enumerate() {
             if let Some(chunk) = chunk {
                 let v = chunk - location;
                 if v.x * v.x + v.y * v.y + v.z * v.z > 4 {
                     remove.push(counter);
                 }
             }
-            counter += 1;
         }
         for i in remove {
             match self.unpack_chunk(i, messages) {
@@ -336,8 +307,7 @@ impl RenderState {
         render_messages: &mut RenderMessages,
         vp_matrix: &glm::Mat4,
     ) {
-        let mut counter = 0;
-        for location in &self.packed_chunks {
+        for (counter, location) in self.packed_chunks.iter().enumerate() {
             if let Some(location) = location {
                 let mvp = glm::translate(
                     vp_matrix,
@@ -350,11 +320,12 @@ impl RenderState {
                 let mut ud = UniformData::new();
                 ud.texture(String::from("/atlas.png"), String::from("test_texture"));
                 ud.mat4(mvp, String::from("MVP"));
-                render_messages.add_message(RenderMessage::Uniforms { uniforms: ud });
+                render_messages.add_message(RenderMessage::Uniforms {
+                    uniforms: Box::new(ud),
+                });
 
                 render_messages.add_message(RenderMessage::Draw { buffer: counter });
             }
-            counter += 1;
         }
     }
 
@@ -365,21 +336,26 @@ impl RenderState {
             None => 0,
         };
 
-        if capabilities.vbo_count > vbo_count {
-            self.packed_chunks
-                .append(&mut vec![None; capabilities.vbo_count - vbo_count]);
-        } else if capabilities.vbo_count < vbo_count {
-            panic!("There is currently no support for a shrink in the number of available VBOs");
+        match capabilities.vbo_count {
+            c if c > vbo_count => {
+                self.packed_chunks.append(&mut vec![None; c - vbo_count]);
+            }
+            c if c < vbo_count => {
+                panic!(
+                    "There is currently no support for a shrink in the number of available VBOs"
+                );
+            }
+            _ => {}
         }
         self.capabilities = Some(capabilities);
     }
 
     pub fn is_render_ready(&self) -> bool {
-        return self.capabilities.is_some();
+        self.capabilities.is_some()
     }
 
     pub fn render_capabilities(&self) -> &Option<GraphicsCapabilities> {
-        return &self.capabilities;
+        &self.capabilities
     }
 
     /// Fills in world render messages for a tick

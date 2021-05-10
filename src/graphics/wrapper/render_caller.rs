@@ -27,7 +27,7 @@ impl RenderCaller {
     ///
     /// Marked as unsafe because it calls GL code
     pub unsafe fn new(screen_dimensions: (u32, u32)) -> RenderCaller {
-        let vertex_array = VertexArray::new(Vertex3D::dummy()).unwrap();
+        let vertex_array = VertexArray::new(Vertex3D::default()).unwrap();
 
         let shader_manager = super::loader::load_shaders();
         let texture_manager = super::loader::load_textures(screen_dimensions);
@@ -85,11 +85,8 @@ impl RenderCaller {
     }
 
     unsafe fn choose_shader(&mut self, shader: ShaderIdentifier) {
-        match self.shader_manager.bind_shader(shader) {
-            Err(s) => {
-                println!("{}", s)
-            } //TODO: LOG INSTEAD
-            _ => (),
+        if let Err(s) = self.shader_manager.bind_shader(shader) {
+            println!("{}", s) //TODO: Log instead
         }
         if VERBOSE {
             println!("Choosing shader {}", shader.name());
@@ -97,14 +94,11 @@ impl RenderCaller {
     }
 
     unsafe fn uniforms(&mut self, uniforms: &UniformData) {
-        match self
+        if let Err(s) = self
             .shader_manager
             .uniforms(uniforms, &self.texture_manager)
         {
-            Err(s) => {
-                println!("{}", s)
-            } //TODO: LOG INSTEAD
-            _ => (),
+            println!("{}", s); //TOOD: Log instead
         }
         if VERBOSE {
             println!("Passing uniforms");
@@ -165,11 +159,7 @@ impl RenderCaller {
         );
     }
 
-    pub unsafe fn dispatch_compute(
-        &mut self,
-        output_texture: &String,
-        dimensions: &(u32, u32, u32),
-    ) {
+    pub unsafe fn dispatch_compute(&mut self, output_texture: &str, dimensions: &(u32, u32, u32)) {
         let tex = self.texture_manager.get_texture(output_texture);
         gl::BindImageTexture(
             0,

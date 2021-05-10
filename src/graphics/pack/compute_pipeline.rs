@@ -31,10 +31,6 @@ impl ComputePipeline {
         }
         messages
     }
-
-    pub fn last_dispatch(&mut self) -> &mut ComputeDispatch {
-        self.dispatches.last_mut().unwrap()
-    }
 }
 
 impl ComputeDispatch {
@@ -59,7 +55,7 @@ impl ComputeDispatch {
             shader: self.shader,
         });
         messages.add_message(RenderMessage::Uniforms {
-            uniforms: self.uniforms,
+            uniforms: Box::new(self.uniforms),
         });
         messages.add_message(RenderMessage::Compute {
             output_texture: self.output_texture,
@@ -67,9 +63,5 @@ impl ComputeDispatch {
         });
 
         messages
-    }
-
-    pub fn uniforms_mut(&mut self) -> &mut UniformData {
-        &mut self.uniforms
     }
 }
