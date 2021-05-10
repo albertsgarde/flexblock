@@ -425,7 +425,7 @@ mod tests {
     /*#[test]
     fn load_infinite_header() {
         assert!(
-            match read_ply::<Vert, &str>("graphics/ply/test/infinite_header.ply") {
+            match read_ply::<Vert, &str>("assets/graphics/ply/test/infinite_header.ply") {
                 Ok(_) => false,
                 Err(e) => match e {
                     PlyError::UnknownHeaderElement(_) => true,

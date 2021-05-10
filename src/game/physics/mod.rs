@@ -1,2 +1,2 @@
 mod aabb;
-pub use aabb::AABB;
+pub use aabb::Aabb;
