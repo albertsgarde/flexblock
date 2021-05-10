@@ -1,0 +1,2 @@
+"C:\Program Files (x86)\WiX Toolset v3.11\bin\heat.exe" dir assets -out "wix/assets.wxs" -gg -cg Assets -sfrag -sreg -var "env.ASSETS_DIR"
+ASSETS_DIR="assets/" cargo wix --nocapture

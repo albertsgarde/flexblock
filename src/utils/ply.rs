@@ -179,7 +179,7 @@ mod tests {
     use super::*;
     #[test]
     fn load_simple() {
-        let result = read_ply::<Vert, &str>("graphics/ply/test/minimal.ply");
+        let result = read_ply::<Vert, &str>("assets/graphics/ply/test/minimal.ply");
         if let Err(result) = &result {
             println!("{:?}", result);
         }
@@ -191,7 +191,7 @@ mod tests {
     #[test]
     fn load_infinite_header() {
         assert!(
-            match read_ply::<Vert, &str>("graphics/ply/test/infinite_header.ply") {
+            match read_ply::<Vert, &str>("assets/graphics/ply/test/infinite_header.ply") {
                 Ok(_) => false,
                 Err(e) => match e {
                     PlyError::UnknownHeaderElement(_) => true,
@@ -203,7 +203,7 @@ mod tests {
     }
     #[test]
     fn load_size_mismatch_too_long() {
-        let result = read_ply::<Vert, &str>("graphics/ply/test/size_mismatch_too_long.ply");
+        let result = read_ply::<Vert, &str>("assets/graphics/ply/test/size_mismatch_too_long.ply");
         if let Err(e) = &result {
             println!("{:?}", e);
         }
@@ -218,7 +218,7 @@ mod tests {
 
     #[test]
     fn load_size_mismatch_too_short() {
-        let result = read_ply::<Vert, &str>("graphics/ply/test/size_mismatch_too_short.ply");
+        let result = read_ply::<Vert, &str>("assets/graphics/ply/test/size_mismatch_too_short.ply");
         assert!(match result {
             Ok(_) => false,
             Err(e) => match e {
@@ -234,7 +234,7 @@ mod tests {
     }
     #[test]
     fn types_not_matching() {
-        let result = read_ply::<Vert, &str>("graphics/ply/test/types_not_matching.ply");
+        let result = read_ply::<Vert, &str>("assets/graphics/ply/test/types_not_matching.ply");
         assert!(
             match result {
                 Ok(_) => false,
@@ -248,7 +248,7 @@ mod tests {
     }
     #[test]
     fn too_many_types() {
-        let result = read_ply::<Vert, &str>("graphics/ply/test/too_many_types.ply");
+        let result = read_ply::<Vert, &str>("assets/graphics/ply/test/too_many_types.ply");
         assert!(
             match result {
                 Ok(_) => false,
