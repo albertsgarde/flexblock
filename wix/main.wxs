@@ -28,13 +28,12 @@
   <?define Win64 = "no" ?>
   <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
 <?endif ?>
-<?define AssetsDir = "SourceDir/assets/"?>
 
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
 
     <Product
         Id='*'
-        Name='flexblock'
+        Name='Flexblock'
         UpgradeCode='12DC3A2F-0992-4633-8B57-02CA4A159E29'
         Manufacturer='Albert Garde'
         Language='1033'
@@ -60,7 +59,7 @@
 
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='$(var.PlatformProgramFilesFolder)' Name='PFiles'>
-                <Directory Id='APPLICATIONFOLDER' Name='flexblock'>
+                <Directory Id='APPLICATIONFOLDER' Name='Flexblock'>
                     
                     <!--
                       Enabling the license sidecar file in the installer is a four step process:
@@ -83,20 +82,10 @@
                     -->
 
                     <Directory Id='Bin' Name='bin'>
-                        <Component Id='Path' Guid='EB3085FB-15BD-4FD0-9C8D-8D92D583DCE6' Win64='$(var.Win64)' KeyPath='yes'>
-                            <Environment
-                                Id='PATH'
-                                Name='PATH'
-                                Value='[Bin]'
-                                Permanent='no'
-                                Part='last'
-                                Action='set'
-                                System='yes'/>
-                        </Component>
                         <Component Id='binary0' Guid='*' Win64='$(var.Win64)'>
                             <File
                                 Id='exe0'
-                                Name='flexblock.exe'
+                                Name='Flexblock.exe'
                                 DiskId='1'
                                 Source='target\$(var.Profile)\flexblock.exe'
                                 KeyPath='yes'/>
@@ -125,14 +114,6 @@
             <ComponentRef Id='binary0'/>
             <ComponentGroupRef Id='Assets'/>
 
-            <Feature
-                Id='Environment'
-                Title='PATH Environment Variable'
-                Description='Add the install location of the [ProductName] executable to the PATH system environment variable. This allows the [ProductName] executable to be called from any location.'
-                Level='1'
-                Absent='allow'>
-                <ComponentRef Id='Path'/>
-            </Feature>
         </Feature>
 
         <SetProperty Id='ARPINSTALLLOCATION' Value='[APPLICATIONFOLDER]' After='CostFinalize'/>
