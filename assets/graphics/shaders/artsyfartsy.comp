@@ -39,7 +39,7 @@ void main() {
 
     //while(true) {
 
-    //}
+    //}carg
     uvec2 nwg = gl_NumWorkGroups.xy;
     vec2 scale = vec2(1./int(nwg.x), 1./int(nwg.y));
     vec2 scaled_coords = pixel_coords*scale;
