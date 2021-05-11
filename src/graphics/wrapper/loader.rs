@@ -6,7 +6,9 @@ use crate::utils::read_png;
 use strum::IntoEnumIterator;
 
 pub unsafe fn load_shaders() -> ShaderManager {
-    let folder = "assets/graphics/shaders";
+    let folder = crate::ASSETS_PATH.join("graphics/shaders").to_owned();
+    println!("{}", folder.to_str().unwrap());
+    println!("{}", folder.canonicalize().unwrap().to_str().unwrap());
 
     let mut compute_shaders: Vec<String> = Vec::new();
     let mut fragment_shaders: Vec<String> = Vec::new();
@@ -14,7 +16,7 @@ pub unsafe fn load_shaders() -> ShaderManager {
 
     // First, we find every file in the folder we're loading from, and see if it's a shader file
 
-    let entries = crate::utils::dir_entries(&std::path::Path::new(folder), folder);
+    let entries = crate::utils::dir_entries(&folder, folder.to_str().unwrap());
     let entries = match entries {
         Ok(e) => e,
         Err(error) => {
@@ -75,8 +77,7 @@ pub unsafe fn load_shaders() -> ShaderManager {
 pub unsafe fn load_textures(screen_dimensions: (u32, u32)) -> TextureManager {
     let mut texture_manager = TextureManager::new();
 
-    let entries =
-        crate::utils::dir_entries(&std::path::Path::new("./assets/graphics/textures"), "");
+    let entries = crate::utils::dir_entries(&crate::ASSETS_PATH.join("graphics/textures"), "");
     let entries = match entries {
         Ok(e) => e,
         Err(error) => {

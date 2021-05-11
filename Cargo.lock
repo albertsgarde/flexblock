@@ -548,6 +548,7 @@ dependencies = [
  "gl",
  "glutin",
  "hashbrown",
+ "lazy_static",
  "macros",
  "nalgebra-glm",
  "png",
