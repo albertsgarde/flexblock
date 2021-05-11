@@ -23,27 +23,27 @@ pub struct Shader {
 #[derive(Clone, Copy, Debug, EnumCount, EnumIter, ShaderId)]
 pub enum ShaderIdentifier {
     #[name("Default shader")]
-    #[extensionless_path("assets/graphics/shaders/s1")]
+    #[extensionless_path("graphics/shaders/s1")]
     #[is_compute(false)]
     Default,
     #[name("Sobel shader")]
-    #[extensionless_path("assets/graphics/shaders/sobel")]
+    #[extensionless_path("graphics/shaders/sobel")]
     #[is_compute(true)]
     Sobel,
     #[name("Simple Shader")]
-    #[extensionless_path("assets/graphics/shaders/simple")]
+    #[extensionless_path("graphics/shaders/simple")]
     #[is_compute(false)]
     Simple,
     #[name("Artsyfartsy")]
-    #[extensionless_path("assets/graphics/shaders/artsyfartsy")]
+    #[extensionless_path("graphics/shaders/artsyfartsy")]
     #[is_compute(true)]
     Artsyfartsy,
     #[name("Transfer")]
-    #[extensionless_path("assets/graphics/shaders/transfer")]
+    #[extensionless_path("graphics/shaders/transfer")]
     #[is_compute(true)]
     Transfer,
     #[name("Just Color")]
-    #[extensionless_path("assets/graphics/shaders/s2")]
+    #[extensionless_path("graphics/shaders/s2")]
     #[is_compute(false)]
     Color,
 }
@@ -134,9 +134,17 @@ impl Shader {
             ));
         }
         let name = identifier.name();
-        let extensionless_path = identifier.extensionless_path();
-        let vertex_file = format!("{}.vert", extensionless_path);
-        let fragment_file = format!("{}.frag", extensionless_path);
+        let extensionless_path = crate::ASSETS_PATH.join(identifier.extensionless_path());
+        let vertex_file = extensionless_path
+            .with_extension("vert")
+            .to_str()
+            .unwrap()
+            .to_owned();
+        let fragment_file = extensionless_path
+            .with_extension("frag")
+            .to_str()
+            .unwrap()
+            .to_owned();
         println!("Loading shader {}", name);
         let (vsid, mut vsuniforms) = match Self::load_shader(&vertex_file, gl::VERTEX_SHADER) {
             Ok(id) => id,
@@ -218,8 +226,12 @@ impl Shader {
                 identifier.name()
             ));
         }
-        let extensionless_path = identifier.extensionless_path();
-        let compute_file = format!("{}.comp", extensionless_path);
+        let extensionless_path = crate::ASSETS_PATH.join(identifier.extensionless_path());
+        let compute_file = extensionless_path
+            .with_extension("comp")
+            .to_str()
+            .unwrap()
+            .to_owned();
         let (id, required_uniforms) = match Self::load_shader(&compute_file, gl::COMPUTE_SHADER) {
             Ok(id) => id,
             Err(s) => return Err(s),
