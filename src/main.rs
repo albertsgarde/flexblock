@@ -44,10 +44,7 @@ lazy_static! {
                 panic!("Either the assets directory is missing or it is inaccessable.")
             }
         };
-        result
-            /*.canonicalize()
-            .expect("Could not find assets directory")*/
-            .into_boxed_path()
+        result.into_boxed_path()
     };
 }
 
