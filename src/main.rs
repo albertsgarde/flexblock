@@ -88,9 +88,14 @@ fn main() {
 
     // Create audio thread.
     let audio_handle = audio::setup_audio();
+    let logic_audio_message_handle = audio_handle.audio_message_handle();
 
     // Start threads.
-    let logic_thread = game::start_logic_thread(window_to_logic_receiver, logic_to_packing_sender);
+    let logic_thread = game::start_logic_thread(
+        window_to_logic_receiver,
+        logic_to_packing_sender,
+        logic_audio_message_handle,
+    );
     let packing_thread = graphics::start_packing_thread(
         logic_to_packing_receiver,
         packing_to_window_sender,

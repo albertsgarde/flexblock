@@ -1,5 +1,5 @@
 mod audio_handle;
-pub use audio_handle::AudioHandle;
+pub use audio_handle::{AudioHandle, AudioMessageHandle};
 mod audio_manager;
 pub use audio_manager::{AudioManager, AudioMessage};
 mod audio_setup;

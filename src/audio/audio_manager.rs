@@ -32,7 +32,6 @@ impl AudioManager {
     fn handle_message(&mut self, message: AudioMessage) {
         match message {
             AudioMessage::StartSound(sound_index) => {
-                dbg!(sound_index);
                 if sound_index >= self.sound_templates.len() {
                     panic!("No such sound. Sound index: {}", sound_index)
                 }

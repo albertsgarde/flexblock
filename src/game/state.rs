@@ -1,4 +1,7 @@
-use crate::game::{world, GraphicsStateModel, Player, StateInputEvent};
+use crate::{
+    audio::{AudioMessage, AudioMessageHandle},
+    game::{world, GraphicsStateModel, Player, StateInputEvent},
+};
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
 
@@ -37,7 +40,7 @@ impl State {
     /// # Arguments
     ///
     /// `_` - The input events received this tick.
-    pub fn tick(&mut self, events: &[StateInputEvent]) {
+    pub fn tick(&mut self, events: &[StateInputEvent], audio_message_handle: &AudioMessageHandle) {
         self.cur_tick += 1;
         for event in events {
             match *event {
@@ -60,8 +63,11 @@ impl State {
                         self.player.view().view_direction(),
                     );
                     if let Some(target) = point_at {
-                        self.terrain
-                            .set_voxel_type(target + Vec3::new(1., 0., 0.), VoxelType(1));
+                        let place_target = target + Vec3::new(1., 0., 0.);
+                        if self.terrain.voxel_type(place_target) == VoxelType(0) {
+                            self.terrain.set_voxel_type(place_target, VoxelType(1));
+                            audio_message_handle.send_message(AudioMessage::StartSound(0));
+                        }
                     }
                 }
             }
