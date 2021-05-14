@@ -1,4 +1,7 @@
-use crate::audio::{AudioHandle, Sound, SoundTemplate};
+use crate::{
+    audio::{AudioHandle, AudioPlayerState, Sound, SoundTemplate},
+    game::world::Location,
+};
 use cpal::traits::{DeviceTrait, HostTrait};
 use flexblock_synth::{start_stream, SampleProvider};
 use std::sync::mpsc;
@@ -6,7 +9,8 @@ use std::sync::mpsc;
 const MONO_SAMPLES_SIZE: usize = 8192;
 
 pub enum AudioMessage {
-    StartSound(usize),
+    StartSound(usize, Option<Location>),
+    PlayerState(AudioPlayerState),
 }
 
 pub struct AudioManager {
@@ -15,6 +19,7 @@ pub struct AudioManager {
     mono_samples: [f32; MONO_SAMPLES_SIZE],
     audio_message_receiver: mpsc::Receiver<AudioMessage>,
     audio_message_sender: mpsc::Sender<AudioMessage>,
+    player_state: AudioPlayerState,
 }
 
 impl AudioManager {
@@ -26,17 +31,21 @@ impl AudioManager {
             mono_samples: [0.; MONO_SAMPLES_SIZE],
             audio_message_receiver: receiver,
             audio_message_sender: sender,
+            player_state: AudioPlayerState::default(),
         }
     }
 
     fn handle_message(&mut self, message: AudioMessage) {
         match message {
-            AudioMessage::StartSound(sound_index) => {
+            AudioMessage::StartSound(sound_index, location) => {
                 if sound_index >= self.sound_templates.len() {
                     panic!("No such sound. Sound index: {}", sound_index)
                 }
                 self.current_audio
-                    .push(self.sound_templates[sound_index].create_instance())
+                    .push(self.sound_templates[sound_index].create_instance(location))
+            }
+            AudioMessage::PlayerState(player_state) => {
+                self.player_state = player_state;
             }
         };
     }
@@ -86,7 +95,6 @@ impl AudioManager {
             drop(stream);
         });
 
-        dbg!();
         AudioHandle::new(audio_message_sender, sender, audio_thread)
     }
 }
@@ -95,6 +103,19 @@ fn reset_samples(samples: &mut [f32]) {
     for sample in samples {
         *sample = 0.;
     }
+}
+
+/// Takes a mono sample and transforms it into the stereo samples the player hears using the samples
+/// generation location and information about the player's state.
+fn mono_to_stereo(
+    mut mono_sample: f32,
+    location: Location,
+    player_state: &AudioPlayerState,
+) -> (f32, f32) {
+    let vector = player_state.view().view_vector_to_loc(location);
+    let distance = vector.norm();
+    mono_sample *= f32::powi(distance, -2);
+    (mono_sample, mono_sample)
 }
 
 impl SampleProvider for AudioManager {
@@ -106,8 +127,13 @@ impl SampleProvider for AudioManager {
         for sound in self.current_audio.iter_mut() {
             sound.next(mono_samples);
             for (i, mono_sample) in mono_samples.iter().enumerate() {
-                samples[2 * i] += mono_sample;
-                samples[2 * i + 1] += mono_sample;
+                let (left, right) = if let Some(location) = sound.location() {
+                    mono_to_stereo(*mono_sample, location, &self.player_state)
+                } else {
+                    (*mono_sample, *mono_sample)
+                };
+                samples[2 * i] += left;
+                samples[2 * i + 1] += right;
             }
         }
         self.current_audio.retain(|sound| !sound.is_finished());

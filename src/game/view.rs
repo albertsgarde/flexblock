@@ -83,4 +83,15 @@ impl View {
             + vec.y * self.up
             + vec.x * glm::cross(&self.view_direction, &self.up)
     }
+
+    /// Given a location in the world, returns a vector from the view to the location in view coordinates.
+    pub fn view_vector_to_loc(&self, location: Location) -> Vec3 {
+        let world_vec_to_loc = location - self.location;
+        let right = glm::cross(&self.view_direction, &self.up);
+        Vec3::new(
+            right.dot(&world_vec_to_loc),
+            self.up().dot(&world_vec_to_loc),
+            self.view_direction().dot(&world_vec_to_loc),
+        )
+    }
 }

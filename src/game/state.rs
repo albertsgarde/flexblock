@@ -1,5 +1,5 @@
 use crate::{
-    audio::{AudioMessage, AudioMessageHandle},
+    audio::{AudioMessage, AudioMessageHandle, AudioPlayerState},
     game::{world, GraphicsStateModel, Player, StateInputEvent},
 };
 use glm::Vec3;
@@ -66,12 +66,16 @@ impl State {
                         let place_target = target + Vec3::new(1., 0., 0.);
                         if self.terrain.voxel_type(place_target) == VoxelType(0) {
                             self.terrain.set_voxel_type(place_target, VoxelType(1));
-                            audio_message_handle.send_message(AudioMessage::StartSound(0));
+                            audio_message_handle
+                                .send_message(AudioMessage::StartSound(0, Some(place_target)));
                         }
                     }
                 }
             }
         }
+        audio_message_handle.send_message(AudioMessage::PlayerState(AudioPlayerState::new(
+            self.player.view(),
+        )));
     }
 
     /// Updates the graphics model with any changes in the state.
