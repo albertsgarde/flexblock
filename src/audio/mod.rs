@@ -1,0 +1,11 @@
+mod audio_handle;
+pub use audio_handle::AudioHandle;
+mod audio_manager;
+pub use audio_manager::{AudioManager, AudioMessage};
+mod audio_setup;
+pub use audio_setup::setup_audio;
+mod sound;
+use sound::Sound;
+use sound::SoundTemplate;
+mod synth;
+pub use synth::Synth;

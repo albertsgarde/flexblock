@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![warn(missing_docs)]
 //! Flexiblock aims to be a messy, overengineered, feature-creeped, and generally super cool Minecraft clone.
+mod audio;
 mod channels;
 mod game;
 mod graphics;
@@ -85,6 +86,9 @@ fn main() {
     };
     let packing_to_window_receiver = channels::PackingToWindowReceiver { render_pack };
 
+    // Create audio thread.
+    let audio_handle = audio::setup_audio();
+
     // Start threads.
     let logic_thread = game::start_logic_thread(window_to_logic_receiver, logic_to_packing_sender);
     let packing_thread = graphics::start_packing_thread(
@@ -99,6 +103,7 @@ fn main() {
         window_to_logic_sender,
         window_to_packing_sender,
     );
+    audio_handle.stop_audio();
 
     packing_thread.join().expect("Panic in packing thread");
     logic_thread.join().expect("Panic in logic thread");

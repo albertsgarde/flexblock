@@ -1,6 +1,6 @@
 use cpal::traits::{DeviceTrait, HostTrait};
 use flexblock_synth::modules::*;
-use flexblock_synth::{start_stream, Synth};
+use flexblock_synth::{start_stream};
 use text_io::read;
 
 fn _sfx_fractal(value: (f32, f32), initial_value: (f32, f32)) -> (f32, f32) {
