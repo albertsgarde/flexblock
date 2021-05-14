@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![warn(missing_docs)]
 //! Flexiblock aims to be a messy, overengineered, feature-creeped, and generally super cool Minecraft clone.
+mod audio;
 mod channels;
 mod game;
 mod graphics;
@@ -44,10 +45,7 @@ lazy_static! {
                 panic!("Either the assets directory is missing or it is inaccessable.")
             }
         };
-        result
-            /*.canonicalize()
-            .expect("Could not find assets directory")*/
-            .into_boxed_path()
+        result.into_boxed_path()
     };
 }
 
@@ -88,8 +86,16 @@ fn main() {
     };
     let packing_to_window_receiver = channels::PackingToWindowReceiver { render_pack };
 
+    // Create audio thread.
+    let audio_handle = audio::setup_audio();
+    let logic_audio_message_handle = audio_handle.audio_message_handle();
+
     // Start threads.
-    let logic_thread = game::start_logic_thread(window_to_logic_receiver, logic_to_packing_sender);
+    let logic_thread = game::start_logic_thread(
+        window_to_logic_receiver,
+        logic_to_packing_sender,
+        logic_audio_message_handle,
+    );
     let packing_thread = graphics::start_packing_thread(
         logic_to_packing_receiver,
         packing_to_window_sender,
@@ -102,6 +108,7 @@ fn main() {
         window_to_logic_sender,
         window_to_packing_sender,
     );
+    audio_handle.stop_audio();
 
     packing_thread.join().expect("Panic in packing thread");
     logic_thread.join().expect("Panic in logic thread");
