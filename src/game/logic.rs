@@ -1,4 +1,5 @@
 use crate::{
+    audio::AudioMessageHandle,
     channels::*,
     game::{state::State, ExternalEventHandler, InputEventHistory},
 };
@@ -13,6 +14,7 @@ const SECONDS_PER_TICK: f32 = 1. / (TPS as f32);
 pub fn start_logic_thread(
     window_to_logic_receiver: WindowToLogicReceiver,
     logic_to_packing_sender: LogicToPackingSender,
+    audio_message_handle: AudioMessageHandle,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         println!("Running game logic!");
@@ -35,6 +37,7 @@ pub fn start_logic_thread(
                 event_history
                     .cur_tick_events()
                     .expect("This should not be possible"),
+                &audio_message_handle,
             );
 
             // Update graphics state model.
