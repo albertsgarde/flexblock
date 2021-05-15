@@ -122,7 +122,12 @@ fn mono_to_stereo(
     if distance == 0. {
         return (0., 0.);
     }
-    mono_sample *= f32::powi(distance, -2);
+    if distance < 0.25 {
+        // If the audio is too close, limit the amplification.
+        mono_sample *= 16.;
+    } else {
+        mono_sample *= f32::powi(distance, -2);
+    }
     let pan = (vector.x / distance + 1.) * 0.5;
     pan_sample(mono_sample, pan)
 }
