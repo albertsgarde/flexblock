@@ -13,7 +13,7 @@ pub use voxel::VoxelType;
 use crate::utils::maths;
 use glm::{IVec3, Vec3};
 use serde::{Deserialize, Serialize};
-use std::ops::{Add, AddAssign, Sub};
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 #[derive(PartialEq, PartialOrd, Clone, Copy, Debug)]
 pub struct LocationCoordinate {
@@ -170,6 +170,22 @@ impl Sub<Location> for Location {
 
     fn sub(self, rhs: Location) -> Vec3 {
         self.position - rhs.position + (self.chunk - rhs.chunk).map(|x| x as f32 * 16.)
+    }
+}
+
+impl Sub<Vec3> for Location {
+    type Output = Location;
+
+    fn sub(mut self, rhs: Vec3) -> Location {
+        self.position -= rhs;
+        self.coerce();
+        self
+    }
+}
+
+impl SubAssign<Vec3> for Location {
+    fn sub_assign(&mut self, other: Vec3) {
+        *self = *self - other;
     }
 }
 

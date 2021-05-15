@@ -50,6 +50,10 @@ impl View {
         self.up
     }
 
+    pub fn right(&self) -> Vec3 {
+        glm::cross(&self.view_direction, &self.up)
+    }
+
     /// Translates the location of the view.
     pub fn translate(&mut self, vec: Vec3) {
         self.location = self.location + vec;

@@ -1,5 +1,5 @@
 use crate::{
-    audio::{AudioMessage, AudioMessageHandle, AudioPlayerState},
+    audio::{AudioMessage, AudioMessageHandle, Listener},
     game::{world, GraphicsStateModel, Player, StateInputEvent},
 };
 use glm::Vec3;
@@ -73,9 +73,8 @@ impl State {
                 }
             }
         }
-        audio_message_handle.send_message(AudioMessage::PlayerState(AudioPlayerState::new(
-            self.player.view(),
-        )));
+        audio_message_handle
+            .send_message(AudioMessage::Listener(Listener::from_player(&self.player)));
     }
 
     /// Updates the graphics model with any changes in the state.

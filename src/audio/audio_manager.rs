@@ -1,5 +1,5 @@
 use crate::{
-    audio::{AudioHandle, AudioPlayerState, Sound, SoundTemplate},
+    audio::{AudioHandle, Listener, Sound, SoundTemplate},
     game::world::Location,
 };
 use cpal::traits::{DeviceTrait, HostTrait};
@@ -10,7 +10,7 @@ const MONO_SAMPLES_SIZE: usize = 8192;
 
 pub enum AudioMessage {
     StartSound(usize, Option<Location>),
-    PlayerState(AudioPlayerState),
+    Listener(Listener),
 }
 
 pub struct AudioManager {
@@ -19,7 +19,7 @@ pub struct AudioManager {
     mono_samples: [f32; MONO_SAMPLES_SIZE],
     audio_message_receiver: mpsc::Receiver<AudioMessage>,
     audio_message_sender: mpsc::Sender<AudioMessage>,
-    player_state: AudioPlayerState,
+    listener: Listener,
 }
 
 impl AudioManager {
@@ -31,7 +31,7 @@ impl AudioManager {
             mono_samples: [0.; MONO_SAMPLES_SIZE],
             audio_message_receiver: receiver,
             audio_message_sender: sender,
-            player_state: AudioPlayerState::default(),
+            listener: Listener::default(),
         }
     }
 
@@ -44,8 +44,8 @@ impl AudioManager {
                 self.current_audio
                     .push(self.sound_templates[sound_index].create_instance(location))
             }
-            AudioMessage::PlayerState(player_state) => {
-                self.player_state = player_state;
+            AudioMessage::Listener(listener) => {
+                self.listener = listener;
             }
         };
     }
@@ -105,33 +105,6 @@ fn reset_samples(samples: &mut [f32]) {
     }
 }
 
-fn pan_sample(mono_sample: f32, pan: f32) -> (f32, f32) {
-    let (sin, cos) = (std::f32::consts::FRAC_PI_2 * pan).sin_cos();
-    (mono_sample * cos, mono_sample * sin)
-}
-
-/// Takes a mono sample and transforms it into the stereo samples the player hears using the samples
-/// generation location and information about the player's state.
-fn mono_to_stereo(
-    mut mono_sample: f32,
-    location: Location,
-    player_state: &AudioPlayerState,
-) -> (f32, f32) {
-    let vector = player_state.view().view_vector_to_loc(location);
-    let distance = vector.norm();
-    if distance == 0. {
-        return (0., 0.);
-    }
-    if distance < 0.25 {
-        // If the audio is too close, limit the amplification.
-        mono_sample *= 16.;
-    } else {
-        mono_sample *= f32::powi(distance, -2);
-    }
-    let pan = (vector.x / distance + 1.) * 0.5;
-    pan_sample(mono_sample, pan)
-}
-
 impl SampleProvider for AudioManager {
     fn next(&mut self, samples: &mut [f32]) {
         reset_samples(samples);
@@ -142,7 +115,7 @@ impl SampleProvider for AudioManager {
             sound.next(mono_samples);
             for (i, mono_sample) in mono_samples.iter().enumerate() {
                 let (left, right) = if let Some(location) = sound.location() {
-                    mono_to_stereo(*mono_sample, location, &self.player_state)
+                    self.listener.mono_to_stereo(*mono_sample, location)
                 } else {
                     (*mono_sample * 0.5, *mono_sample * 0.5)
                 };
