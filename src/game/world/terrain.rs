@@ -114,7 +114,12 @@ impl Terrain {
         self.chunks.retain(|_, chunk| !matches!(chunk, Chunk::SingleType(voxel_type) if *voxel_type == voxel::DEFAULT_TYPE));
     }
 
-    pub fn trace_ray(&self, origin: Location, direction: Vec3) -> Option<Location> {
+    /// Traces the given ray and returns both the voxel it hits and the location where it hits the voxel.
+    pub fn trace_ray_with_position(
+        &self,
+        origin: Location,
+        direction: Vec3,
+    ) -> Option<(Location, Location)> {
         let mut loc = origin;
         let mut chunks = 0;
         while chunks < 100 {
@@ -142,11 +147,16 @@ impl Terrain {
                     ) + 1e-4);
             }
             if Chunk::within_chunk(loc.position) {
-                return Some(loc.round());
+                return Some((loc.round(), loc));
             }
             chunks += 1;
         }
         None
+    }
+
+    pub fn trace_ray(&self, origin: Location, direction: Vec3) -> Option<Location> {
+        self.trace_ray_with_position(origin, direction)
+            .map(|(voxel, _)| voxel)
     }
 
     pub fn voxel_type_iterator(
