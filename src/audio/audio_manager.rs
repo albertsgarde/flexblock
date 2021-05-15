@@ -105,6 +105,11 @@ fn reset_samples(samples: &mut [f32]) {
     }
 }
 
+fn pan_sample(mono_sample: f32, pan: f32) -> (f32, f32) {
+    let (sin, cos) = (std::f32::consts::FRAC_PI_2 * pan).sin_cos();
+    (mono_sample * cos, mono_sample * sin)
+}
+
 /// Takes a mono sample and transforms it into the stereo samples the player hears using the samples
 /// generation location and information about the player's state.
 fn mono_to_stereo(
@@ -114,8 +119,12 @@ fn mono_to_stereo(
 ) -> (f32, f32) {
     let vector = player_state.view().view_vector_to_loc(location);
     let distance = vector.norm();
+    if distance == 0. {
+        return (0., 0.);
+    }
     mono_sample *= f32::powi(distance, -2);
-    (mono_sample, mono_sample)
+    let pan = (vector.x / distance + 1.) * 0.5;
+    pan_sample(mono_sample, pan)
 }
 
 impl SampleProvider for AudioManager {
@@ -130,7 +139,7 @@ impl SampleProvider for AudioManager {
                 let (left, right) = if let Some(location) = sound.location() {
                     mono_to_stereo(*mono_sample, location, &self.player_state)
                 } else {
-                    (*mono_sample, *mono_sample)
+                    (*mono_sample * 0.5, *mono_sample * 0.5)
                 };
                 samples[2 * i] += left;
                 samples[2 * i + 1] += right;
