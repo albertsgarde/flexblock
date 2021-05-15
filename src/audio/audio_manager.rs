@@ -1,4 +1,7 @@
-use crate::audio::{AudioHandle, Sound, SoundTemplate};
+use crate::{
+    audio::{AudioHandle, Listener, Sound, SoundTemplate},
+    game::world::Location,
+};
 use cpal::traits::{DeviceTrait, HostTrait};
 use flexblock_synth::{start_stream, SampleProvider};
 use std::sync::mpsc;
@@ -6,7 +9,8 @@ use std::sync::mpsc;
 const MONO_SAMPLES_SIZE: usize = 8192;
 
 pub enum AudioMessage {
-    StartSound(usize),
+    StartSound(usize, Option<Location>),
+    Listener(Listener),
 }
 
 pub struct AudioManager {
@@ -15,6 +19,7 @@ pub struct AudioManager {
     mono_samples: [f32; MONO_SAMPLES_SIZE],
     audio_message_receiver: mpsc::Receiver<AudioMessage>,
     audio_message_sender: mpsc::Sender<AudioMessage>,
+    listener: Listener,
 }
 
 impl AudioManager {
@@ -26,17 +31,21 @@ impl AudioManager {
             mono_samples: [0.; MONO_SAMPLES_SIZE],
             audio_message_receiver: receiver,
             audio_message_sender: sender,
+            listener: Listener::default(),
         }
     }
 
     fn handle_message(&mut self, message: AudioMessage) {
         match message {
-            AudioMessage::StartSound(sound_index) => {
+            AudioMessage::StartSound(sound_index, location) => {
                 if sound_index >= self.sound_templates.len() {
                     panic!("No such sound. Sound index: {}", sound_index)
                 }
                 self.current_audio
-                    .push(self.sound_templates[sound_index].create_instance())
+                    .push(self.sound_templates[sound_index].create_instance(location))
+            }
+            AudioMessage::Listener(listener) => {
+                self.listener = listener;
             }
         };
     }
@@ -86,7 +95,6 @@ impl AudioManager {
             drop(stream);
         });
 
-        dbg!();
         AudioHandle::new(audio_message_sender, sender, audio_thread)
     }
 }
@@ -106,8 +114,13 @@ impl SampleProvider for AudioManager {
         for sound in self.current_audio.iter_mut() {
             sound.next(mono_samples);
             for (i, mono_sample) in mono_samples.iter().enumerate() {
-                samples[2 * i] += mono_sample;
-                samples[2 * i + 1] += mono_sample;
+                let (left, right) = if let Some(location) = sound.location() {
+                    self.listener.mono_to_stereo(*mono_sample, location)
+                } else {
+                    (*mono_sample * 0.5, *mono_sample * 0.5)
+                };
+                samples[2 * i] += left;
+                samples[2 * i + 1] += right;
             }
         }
         self.current_audio.retain(|sound| !sound.is_finished());

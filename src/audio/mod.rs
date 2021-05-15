@@ -9,3 +9,5 @@ use sound::Sound;
 use sound::SoundTemplate;
 mod synth;
 pub use synth::Synth;
+mod listener;
+pub use listener::Listener;

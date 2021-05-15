@@ -1,18 +1,23 @@
-use crate::audio::{Sound, SoundTemplate};
+use crate::{
+    audio::{Sound, SoundTemplate},
+    game::world::Location,
+};
 use flexblock_synth::modules::{Module, ModuleTemplate};
 
 pub struct Synth<M: Module> {
     module: M,
     length: u64,
     cur_time: u64,
+    location: Option<Location>,
 }
 
 impl<M: Module> Synth<M> {
-    fn new(module: M, length: u64) -> Self {
+    fn new(module: M, length: u64, location: Option<Location>) -> Self {
         Synth {
             module,
             length,
             cur_time: 0,
+            location,
         }
     }
 }
@@ -31,6 +36,10 @@ impl<M: Module + Send> Sound for Synth<M> {
     fn is_finished(&self) -> bool {
         self.cur_time >= self.length
     }
+
+    fn location(&self) -> Option<Location> {
+        self.location
+    }
 }
 
 pub struct SynthTemplate<M: Module + 'static> {
@@ -48,10 +57,11 @@ impl<M: Module> SynthTemplate<M> {
 }
 
 impl<M: Module + Send> SoundTemplate for SynthTemplate<M> {
-    fn create_instance(&self) -> Box<dyn Sound> {
+    fn create_instance(&self, location: Option<Location>) -> Box<dyn Sound> {
         Box::new(Synth::new(
             self.module_template.create_instance(),
             self.sound_length,
+            location,
         ))
     }
 }
