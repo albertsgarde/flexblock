@@ -119,35 +119,39 @@ impl Terrain {
         &self,
         origin: Location,
         direction: Vec3,
-    ) -> Option<(Location, Location)> {
+    ) -> Option<(f32, Location)> {
+        let mut t = 0.;
         let mut loc = origin;
         let mut chunks = 0;
         while chunks < 100 {
             loc.coerce();
             if let Some(chunk) = self.chunks.get(&loc.chunk) {
-                let origin = loc.position;
-                if let Some(position) = chunk.trace_ray(origin, direction) {
+                let new_origin = loc.position;
+                if let Some((chunk_t, position)) = chunk.trace_ray(new_origin, direction) {
                     loc.position = position;
+                    t += chunk_t;
                 } else {
-                    loc.position += direction
-                        * (raytrace::voxel_exit_t(
-                            loc.position,
-                            direction,
-                            Vec3::new(0., 0., 0.),
-                            chunk::CHUNK_SIZE_F,
-                        ) + 1e-4);
-                }
-            } else {
-                loc.position += direction
-                    * (raytrace::voxel_exit_t(
+                    let delta_t = raytrace::voxel_exit_t(
                         loc.position,
                         direction,
                         Vec3::new(0., 0., 0.),
                         chunk::CHUNK_SIZE_F,
-                    ) + 1e-4);
+                    ) + 1e-4;
+                    loc.position += direction * delta_t;
+                    t += delta_t;
+                }
+            } else {
+                let delta_t = raytrace::voxel_exit_t(
+                    loc.position,
+                    direction,
+                    Vec3::new(0., 0., 0.),
+                    chunk::CHUNK_SIZE_F,
+                ) + 1e-4;
+                loc.position += direction * delta_t;
+                t += delta_t
             }
             if Chunk::within_chunk(loc.position) {
-                return Some((loc.round(), loc));
+                return Some((t, loc.round()));
             }
             chunks += 1;
         }
@@ -156,7 +160,7 @@ impl Terrain {
 
     pub fn trace_ray(&self, origin: Location, direction: Vec3) -> Option<Location> {
         self.trace_ray_with_position(origin, direction)
-            .map(|(voxel, _)| voxel)
+            .map(|(_, voxel)| voxel)
     }
 
     pub fn voxel_type_iterator(
