@@ -133,7 +133,7 @@ pub fn voxel_exit_dimension_t(
 ///
 /// # Panics
 ///
-/// Panics if `directions` is the zero vector.
+/// Panics if `direction` is the zero vector.
 pub fn voxel_exit(
     origin: Vec3,
     direction: Vec3,
