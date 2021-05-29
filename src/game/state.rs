@@ -1,6 +1,9 @@
 use crate::{
     audio::{AudioMessage, AudioMessageHandle, Listener},
-    game::{world, GraphicsStateModel, Player, StateInputEvent},
+    game::{
+        world::{self, Location, Terrain},
+        GraphicsStateModel, Player, StateInputEvent,
+    },
 };
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +13,7 @@ use super::world::VoxelType;
 /// Everything that is part of the game is held within.
 #[derive(Deserialize, Serialize)]
 pub struct State {
-    terrain: world::Terrain,
+    terrain: Terrain,
     player: Player,
     cur_tick: u64,
 }
@@ -19,19 +22,23 @@ impl State {
     /// Initializes a state with no terrain and a default placed player.
     pub fn new() -> State {
         let mut state = State {
-            terrain: world::Terrain::new(),
+            terrain: Terrain::new(),
             player: Player::default(),
             cur_tick: 0,
         };
         for x in -128..128 {
             for z in -128..128 {
                 state.terrain.set_voxel_type(
-                    world::Location::from_coords(x as f32, -1., z as f32),
+                    Location::from_coords(x as f32, -1., z as f32),
                     world::VoxelType(1),
                 );
             }
         }
         state
+    }
+
+    pub fn terrain(&self) -> &Terrain {
+        &self.terrain
     }
 
     /// Runs one game tick reacting to the given input events.
@@ -42,6 +49,9 @@ impl State {
     pub fn tick(&mut self, events: &[StateInputEvent], audio_message_handle: &AudioMessageHandle) {
         self.cur_tick += 1;
         self.handle_events(events, audio_message_handle);
+
+        self.player.tick(&self.terrain);
+
         audio_message_handle
             .send_message(AudioMessage::Listener(Listener::from_player(&self.player)));
     }

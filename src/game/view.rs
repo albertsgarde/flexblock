@@ -59,6 +59,11 @@ impl View {
         self.location = self.location + vec;
     }
 
+    /// Moves the view to the given location.
+    pub fn teleport(&mut self, loc: Location) {
+        self.location = loc;
+    }
+
     /// Applies the given matrix to the view and up directions.
     pub fn rotate(&mut self, matrix: glm::Mat3x3) {
         self.view_direction = matrix * self.view_direction;

@@ -1,5 +1,5 @@
 use crate::game::{
-    physics::Aabb,
+    physics::{Aabb, PhysicsBody},
     world::{Location, Terrain},
     View,
 };
@@ -19,14 +19,14 @@ macro_rules! PLAYER_VIEW_LOC {
 
 #[derive(Deserialize, Serialize)]
 pub struct Player {
-    aabb: Aabb,
+    physics_body: PhysicsBody,
     view: View,
 }
 
 impl Player {
     pub fn new(location: Location, view_direction: Vec3) -> Player {
         Player {
-            aabb: Aabb::new(location, PLAYER_SIZE!()),
+            physics_body: PhysicsBody::new(Aabb::new(location, PLAYER_SIZE!())),
             view: View::new(
                 location + PLAYER_VIEW_LOC!(),
                 view_direction,
@@ -41,25 +41,17 @@ impl Player {
 
     /// Moves the player not considering collision.
     pub fn translate(&mut self, vec: Vec3) {
-        self.aabb.translate(vec);
+        self.physics_body.translate(vec);
         self.view.translate(vec);
-    }
-
-    /// Moves the player as far along the vector as possible without colliding with the terrain.
-    pub fn collide_move(&mut self, vec: Vec3, terrain: &Terrain) {
-        let move_distance = self.aabb.collide_distance(vec, terrain);
-        // Correct for collision.
-        let vec = vec * (move_distance.unwrap_or(1.) * 0.999);
-        // Remove very small movement, as it is probably an error...
-        let vec = vec.map(|coord| if coord.abs() < 1e-5 { 0. } else { coord });
-        self.translate(vec);
     }
 
     /// Converts vec from view coordinates to world coordinates and moves the player as far along
     /// the resulting vector as possible without colliding with the terrain.
     pub fn collide_move_relative(&mut self, vec: Vec3, terrain: &Terrain) {
         let move_vec = self.view.view_to_world(vec);
-        self.collide_move(move_vec, terrain);
+        self.physics_body.collide_move(move_vec, terrain);
+        self.view
+            .teleport(self.physics_body.location() + PLAYER_VIEW_LOC!());
     }
 
     /// Rotates the view direction along the great circle in the delta direction by |delta| radians.
@@ -69,5 +61,9 @@ impl Player {
 
     pub fn view(&self) -> View {
         self.view.clone()
+    }
+
+    pub fn tick(&mut self, terrain: &Terrain) {
+        self.physics_body.tick(terrain)
     }
 }
