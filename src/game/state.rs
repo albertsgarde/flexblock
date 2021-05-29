@@ -41,6 +41,16 @@ impl State {
     /// `_` - The input events received this tick.
     pub fn tick(&mut self, events: &[StateInputEvent], audio_message_handle: &AudioMessageHandle) {
         self.cur_tick += 1;
+        self.handle_events(events, audio_message_handle);
+        audio_message_handle
+            .send_message(AudioMessage::Listener(Listener::from_player(&self.player)));
+    }
+
+    fn handle_events(
+        &mut self,
+        events: &[StateInputEvent],
+        audio_message_handle: &AudioMessageHandle,
+    ) {
         for event in events {
             match *event {
                 StateInputEvent::RotateView { delta } => self.player.turn(delta),
@@ -74,8 +84,6 @@ impl State {
                 }
             }
         }
-        audio_message_handle
-            .send_message(AudioMessage::Listener(Listener::from_player(&self.player)));
     }
 
     /// Updates the graphics model with any changes in the state.
