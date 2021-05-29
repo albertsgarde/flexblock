@@ -23,14 +23,14 @@ impl State {
             player: Player::default(),
             cur_tick: 0,
         };
-        state.terrain.set_voxel_type(
-            world::Location::from_coords(3., 3., -8.),
-            world::VoxelType(1),
-        );
-        state.terrain.set_voxel_type(
-            world::Location::from_coords(19., 1., -8.),
-            world::VoxelType(1),
-        );
+        for x in -128..128 {
+            for z in -128..128 {
+                state.terrain.set_voxel_type(
+                    world::Location::from_coords(x as f32, -1., z as f32),
+                    world::VoxelType(1),
+                );
+            }
+        }
         state
     }
 
