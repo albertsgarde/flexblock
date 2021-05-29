@@ -1,6 +1,5 @@
 use crate::game::{
     physics::Aabb,
-    state::State,
     world::{Location, Terrain},
     SECONDS_PER_TICK,
 };
