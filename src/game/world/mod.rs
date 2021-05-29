@@ -138,6 +138,27 @@ impl Location {
     pub fn round(&self) -> Location {
         Location::new(self.chunk, raytrace::round(self.position))
     }
+
+    pub fn vec_to_nearest_other_voxel(&self) -> Vec3 {
+        dbg!(self);
+        let mut min_dist = 0.5;
+        let mut cur_result = Vec3::new(0., 0., 0.);
+        for i in 0..3 {
+            if self.position[i] % 1. <= min_dist {
+                dbg!();
+                min_dist = self.position[i] % 1.;
+                cur_result = Vec3::new(0., 0., 0.);
+                cur_result[i] = -1.;
+            }
+            if 1. - (self.position[i] % 1.) <= min_dist {
+                dbg!();
+                min_dist = 1. - (self.position[i] % 1.);
+                cur_result = Vec3::new(0., 0., 0.);
+                cur_result[i] = 1.;
+            }
+        }
+        dbg!(cur_result)
+    }
 }
 
 impl From<Vec3> for Location {

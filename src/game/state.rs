@@ -2,7 +2,6 @@ use crate::{
     audio::{AudioMessage, AudioMessageHandle, Listener},
     game::{world, GraphicsStateModel, Player, StateInputEvent},
 };
-use glm::Vec3;
 use serde::{Deserialize, Serialize};
 
 use super::world::VoxelType;
@@ -58,16 +57,18 @@ impl State {
                     }
                 }
                 StateInputEvent::PlayerInteract2 => {
-                    let point_at = self.terrain.trace_ray(
+                    if let Some((distance, point_at)) = self.terrain.trace_ray_with_position(
                         self.player.view().location(),
                         self.player.view().view_direction(),
-                    );
-                    if let Some(target) = point_at {
-                        let place_target = target + Vec3::new(1., 0., 0.);
-                        if self.terrain.voxel_type(place_target) == VoxelType(0) {
-                            self.terrain.set_voxel_type(place_target, VoxelType(1));
+                    ) {
+                        let target = point_at
+                            + (self.player.view().location()
+                                + self.player.view().view_direction() * (distance + 1e-4))
+                                .vec_to_nearest_other_voxel();
+                        if self.terrain.voxel_type(target) == VoxelType(0) {
+                            self.terrain.set_voxel_type(target, VoxelType(1));
                             audio_message_handle
-                                .send_message(AudioMessage::StartSound(0, Some(place_target)));
+                                .send_message(AudioMessage::StartSound(0, Some(target)));
                         }
                     }
                 }
