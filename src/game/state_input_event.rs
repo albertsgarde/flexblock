@@ -20,6 +20,7 @@ pub enum StateInputEvent {
     },
     PlayerInteract1,
     PlayerInteract2,
+    Jump,
 }
 
 /// Handles external events and produces state input events.
@@ -63,6 +64,13 @@ impl ExternalEventHandler {
                 })
             }
             ExternalEvent::KeyboardInput { keycode, state } => {
+                if !self.key_state.get(&keycode).unwrap_or(&false) {
+                    // Handling of key presses should happen here, as the if avoids repeated presses from holding down the button.
+                    if keycode == VirtualKeyCode::Space {
+                        println!("Space pressed");
+                        self.tick_events.push(StateInputEvent::Jump);
+                    }
+                }
                 self.key_state
                     .insert(keycode, state == ElementState::Pressed);
             }
@@ -100,12 +108,12 @@ impl ExternalEventHandler {
         if let Some(true) = self.key_state.get(&VirtualKeyCode::A) {
             move_vector += Vec3::new(-1., 0., 0.);
         }
-        if let Some(true) = self.key_state.get(&VirtualKeyCode::Space) {
+        /*if let Some(true) = self.key_state.get(&VirtualKeyCode::Space) {
             move_vector += Vec3::new(0., 1., 0.);
         }
         if let Some(true) = self.key_state.get(&VirtualKeyCode::LShift) {
             move_vector += Vec3::new(0., -1., 0.);
-        }
+        }*/
         if move_vector != Vec3::new(0., 0., 0.) {
             result.push(StateInputEvent::MovePlayerRelative { delta: move_vector });
         }

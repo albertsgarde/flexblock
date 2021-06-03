@@ -54,6 +54,10 @@ impl Player {
             .teleport(self.physics_body.location() + PLAYER_VIEW_LOC!());
     }
 
+    pub fn add_velocity(&mut self, vec: Vec3) {
+        self.physics_body.add_velocity(vec)
+    }
+
     /// Rotates the view direction along the great circle in the delta direction by |delta| radians.
     pub fn turn(&mut self, delta: (f32, f32)) {
         self.view.turn(delta);

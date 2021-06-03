@@ -5,6 +5,7 @@ use crate::{
         GraphicsStateModel, Player, StateInputEvent,
     },
 };
+use glm::Vec3;
 use serde::{Deserialize, Serialize};
 
 use super::world::VoxelType;
@@ -34,6 +35,9 @@ impl State {
                 );
             }
         }
+        state
+            .terrain
+            .set_voxel_type(Location::from_coords(4., 0., -4.), world::VoxelType(1));
         state
     }
 
@@ -92,6 +96,7 @@ impl State {
                         }
                     }
                 }
+                StateInputEvent::Jump => self.player.add_velocity(Vec3::new(0., 2., 0.)),
             }
         }
     }
