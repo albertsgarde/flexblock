@@ -8,8 +8,8 @@ use std::{
     time::{Duration, Instant},
 };
 
-const TPS: u32 = 24;
-const SECONDS_PER_TICK: f32 = 1. / (TPS as f32);
+pub const TPS: u32 = 24;
+pub const SECONDS_PER_TICK: f32 = 1. / (TPS as f32);
 
 pub fn start_logic_thread(
     window_to_logic_receiver: WindowToLogicReceiver,

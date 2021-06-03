@@ -11,12 +11,12 @@ pub struct Aabb {
 }
 
 impl Aabb {
-    /// Creates a new RigidBody with given location and size.
+    /// Creates a new AABB with given location and size.
     ///
     /// # Arguments
     ///
-    /// `location` - The location of the lower corner of the RigidBody.
-    /// `size` - Vector from the lower corner of the RigidBody to the upper corner.
+    /// `location` - The location of the lower corner of the AABB.
+    /// `size` - Vector from the lower corner of the AABB to the upper corner.
     pub fn new(location: Location, size: Vec3) -> Aabb {
         Aabb { location, size }
     }
@@ -29,7 +29,7 @@ impl Aabb {
         self.size
     }
 
-    /// Moves the RigidBody by the given vector.
+    /// Moves the AABB by the given vector.
     ///
     /// # Arguments
     ///
@@ -38,11 +38,11 @@ impl Aabb {
         self.location += vec;
     }
 
-    /// Returns true if self intersects with the given RigidBody.
+    /// Returns true if self intersects with the given AABB.
     ///
     /// # Arguments
     ///
-    /// `other` - The RigidBody to check for collisions with.
+    /// `other` - The AABB to check for collisions with.
     pub fn collides_with(&self, other: &Aabb) -> bool {
         let self_upper = self.location + self.size;
         let other_upper = other.location + other.size;

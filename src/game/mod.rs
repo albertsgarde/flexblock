@@ -9,7 +9,7 @@ mod graphics_state_model;
 pub use graphics_state_model::GraphicsStateModel;
 
 mod logic;
-pub use logic::start_logic_thread;
+pub use logic::{start_logic_thread, SECONDS_PER_TICK, TPS};
 
 pub mod physics;
 

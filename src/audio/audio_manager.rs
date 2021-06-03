@@ -85,7 +85,7 @@ impl AudioManager {
             println!("Sample format: {:?}", supported_config.sample_format());
             println!("Number of channels: {:?}", supported_config.channels());
 
-            let sample_rate = supported_config.sample_rate().0;
+            let _sample_rate = supported_config.sample_rate().0;
 
             let stream = start_stream(self, device);
 
