@@ -54,6 +54,21 @@ impl Player {
             .teleport(self.physics_body.location() + PLAYER_VIEW_LOC!());
     }
 
+    /// Converts vec from view coordinates to world coordinates, removes the y-component
+    /// normalizes to the same length as the original vec and moves the player as far
+    /// along the resulting vector as possible without colliding with terrain.
+    pub fn collide_move_relative_horizontal(&mut self, vec: Vec3, terrain: &Terrain) {
+        let mut move_vec = self.view.view_to_world(vec);
+        move_vec.y = 0.;
+        let move_vec = move_vec
+            .normalize()
+            .map(|coord| if coord.is_nan() { 0. } else { coord })
+            * vec.norm();
+        self.physics_body.collide_move(move_vec, terrain);
+        self.view
+            .teleport(self.physics_body.location() + PLAYER_VIEW_LOC!());
+    }
+
     pub fn add_velocity(&mut self, vec: Vec3) {
         self.physics_body.add_velocity(vec)
     }
@@ -68,6 +83,8 @@ impl Player {
     }
 
     pub fn tick(&mut self, terrain: &Terrain) {
-        self.physics_body.tick(terrain)
+        self.physics_body.tick(terrain);
+        self.view
+            .teleport(self.physics_body.location() + PLAYER_VIEW_LOC!());
     }
 }
