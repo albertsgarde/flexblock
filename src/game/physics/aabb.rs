@@ -61,6 +61,9 @@ impl Aabb {
     /// Returns None if no collision happens and the AABB can move the entire distance.
     pub fn collide_distance(&self, vec: Vec3, terrain: &Terrain) -> Option<f32> {
         let vec_norm = vec.norm();
+        if vec_norm == 0. {
+            return None;
+        }
         let vec = vec.normalize();
         let round_vec = vec.map(|coord| if coord < 0. { -1e-6 } else { 0. });
         let mut orig_rear_vertex = self.location;
