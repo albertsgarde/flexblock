@@ -56,7 +56,7 @@ impl Terrain {
     /// * `loc` - Will find the type of the voxel at this location.
     pub fn voxel_type(&self, loc: Location) -> VoxelType {
         match self.chunks.get(&loc.chunk) {
-            Some(chunk) => chunk.voxel_type_unchecked(loc.position.into()),
+            Some(chunk) => unsafe { chunk.voxel_type_unchecked(loc.position.into()) },
             _ => voxel::DEFAULT_TYPE,
         }
     }
@@ -84,7 +84,7 @@ impl Terrain {
     /// * `loc` - Will find the type and object of the voxel at this location.
     pub fn voxel(&self, loc: Location) -> (VoxelType, Option<&dyn Voxel>) {
         match self.chunks.get(&loc.chunk) {
-            Some(chunk) => chunk.voxel_unchecked(loc.position.into()),
+            Some(chunk) => unsafe { chunk.voxel_unchecked(loc.position.into()) },
             _ => (voxel::DEFAULT_TYPE, None),
         }
     }
@@ -126,6 +126,9 @@ impl Terrain {
         while chunks < 100 {
             loc.coerce();
             if let Some(chunk) = self.chunks.get(&loc.chunk) {
+                if t > 0. && !unsafe { chunk.ignore_voxel(loc.position.into()) } {
+                    return Some((t, loc.round()));
+                }
                 let new_origin = loc.position;
                 if let Some((chunk_t, position)) = chunk.trace_ray(new_origin, direction) {
                     loc.position = position;
