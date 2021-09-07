@@ -15,7 +15,7 @@ pub mod physics;
 
 mod state;
 
-mod view;
+pub mod view;
 pub use view::View;
 
 mod player;

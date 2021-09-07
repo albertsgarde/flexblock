@@ -20,6 +20,7 @@ lazy_static = "1.4.0"
 cpal = "0.13.3"
 rand = "0.8.3"
 rand_chacha = "0.3.0"
+dyn-clone = "1.0.4"
 
 bytepack = "0.4.1"
 bytepack_derive = "0.2.0"
