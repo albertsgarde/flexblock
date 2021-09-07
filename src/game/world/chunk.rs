@@ -173,13 +173,12 @@ impl Chunk {
         raytrace::ignore_voxel_type(self.voxel_type_unchecked(voxel))
     }
 
-    /// Traces a ray within the chunk returning the first non-ignored voxel hit or the
-    /// first position outside the chunk if none is hit.
-    /// Undefined behaviour occurs if the ray origin is outside chunk bounds.
+    /// If the ray hits anything in the chunk return the distance from origin and the position of the voxel hit.
     ///
     /// # Panics
     ///
     /// Panics if `direction` is the zero vector.
+    /// Panics if `origin` is outside of chunk bounds.
     pub fn trace_ray(&self, origin: Vec3, direction: Vec3) -> Option<(f32, Vec3)> {
         Chunk::debug_assert_within_chunk(origin);
         if let Chunk::SingleType(voxel_type) = self {
