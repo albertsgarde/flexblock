@@ -173,7 +173,7 @@ impl Chunk {
         raytrace::ignore_voxel_type(self.voxel_type_unchecked(voxel))
     }
 
-    /// If the ray hits anything in the chunk return the distance from origin and the position of the voxel hit.
+    /// If the ray hits anything in the chunk return the distance from origin and the position of the voxel hit, else return None.
     ///
     /// # Panics
     ///
