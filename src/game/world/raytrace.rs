@@ -100,6 +100,8 @@ pub fn voxel_exit_t(origin: Vec3, direction: Vec3, voxel_corner: Vec3, voxel_siz
     min_max
 }
 
+/// If the ray enters the voxel, returns both on which side of the voxel it exists (0: x, 1: y, 2: z),
+/// and how far from the ray origin the ray exits the voxel with the given corner
 pub fn voxel_exit_dimension_t(
     origin: Vec3,
     direction: Vec3,
