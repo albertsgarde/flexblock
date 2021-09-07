@@ -308,4 +308,13 @@ mod tests {
         let hit_type = terrain.voxel_type(hit);
         assert_eq!(hit_type, voxel::VoxelType(2));
     }
+
+    #[test]
+    fn ray_trace_chunk_border() {
+        let mut terrain = crate::game::world::terrain::Terrain::new();
+        terrain.set_voxel_type(Location::from_coords(16., 0., 0.), voxel::VoxelType(1));
+        let dir = Vec3::new(1., 0., 0.);
+        let loc = Location::from_coords(0.5, 0.5, 0.5);
+        terrain.trace_ray(loc, dir).unwrap();
+    }
 }
