@@ -93,7 +93,7 @@ impl Chunk {
     /// # Arguments
     ///
     /// * `loc` - Will find the type of the voxel at this location in the chunk.
-    pub fn voxel_type_unchecked(&self, loc: ChunkLocation) -> VoxelType {
+    pub unsafe fn voxel_type_unchecked(&self, loc: ChunkLocation) -> VoxelType {
         debug_assert!(loc.index < CHUNK_LENGTH);
         match self {
             Chunk::SingleType(voxel_type) => *voxel_type,
@@ -126,7 +126,7 @@ impl Chunk {
     /// # Arguments
     ///
     /// * `loc` - Will find the type of the voxel at this location in the chunk.
-    pub fn voxel_unchecked(&self, loc: ChunkLocation) -> (VoxelType, Option<&dyn Voxel>) {
+    pub unsafe fn voxel_unchecked(&self, loc: ChunkLocation) -> (VoxelType, Option<&dyn Voxel>) {
         debug_assert!(loc.index < CHUNK_LENGTH);
         match self {
             Chunk::SingleType(voxel_type) => (*voxel_type, None),
@@ -169,17 +169,16 @@ impl Chunk {
         }
     }
 
-    fn ignore_voxel(&self, voxel: ChunkLocation) -> bool {
+    pub unsafe fn ignore_voxel(&self, voxel: ChunkLocation) -> bool {
         raytrace::ignore_voxel_type(self.voxel_type_unchecked(voxel))
     }
 
-    /// Traces a ray within the chunk returning the first non-ignored voxel hit or the
-    /// first position outside the chunk if none is hit.
-    /// Undefined behaviour occurs if the ray origin is outside chunk bounds.
+    /// If the ray hits anything in the chunk return the distance from origin and the position of the voxel hit, else return None.
     ///
     /// # Panics
     ///
     /// Panics if `direction` is the zero vector.
+    /// Panics if `origin` is outside of chunk bounds.
     pub fn trace_ray(&self, origin: Vec3, direction: Vec3) -> Option<(f32, Vec3)> {
         Chunk::debug_assert_within_chunk(origin);
         if let Chunk::SingleType(voxel_type) = self {
@@ -193,7 +192,7 @@ impl Chunk {
             let (mut t, mut voxel) =
                 raytrace::voxel_exit(origin, direction, raytrace::round(origin), 1.).unwrap();
             while Chunk::within_chunk(voxel) {
-                if !self.ignore_voxel(voxel.into()) {
+                if !unsafe { self.ignore_voxel(voxel.into()) } {
                     return Some((t, voxel));
                 }
                 let temp = raytrace::voxel_exit(origin, direction, voxel, 1.).unwrap();

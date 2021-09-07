@@ -56,7 +56,7 @@ impl Terrain {
     /// * `loc` - Will find the type of the voxel at this location.
     pub fn voxel_type(&self, loc: Location) -> VoxelType {
         match self.chunks.get(&loc.chunk) {
-            Some(chunk) => chunk.voxel_type_unchecked(loc.position.into()),
+            Some(chunk) => unsafe { chunk.voxel_type_unchecked(loc.position.into()) },
             _ => voxel::DEFAULT_TYPE,
         }
     }
@@ -84,7 +84,7 @@ impl Terrain {
     /// * `loc` - Will find the type and object of the voxel at this location.
     pub fn voxel(&self, loc: Location) -> (VoxelType, Option<&dyn Voxel>) {
         match self.chunks.get(&loc.chunk) {
-            Some(chunk) => chunk.voxel_unchecked(loc.position.into()),
+            Some(chunk) => unsafe { chunk.voxel_unchecked(loc.position.into()) },
             _ => (voxel::DEFAULT_TYPE, None),
         }
     }
@@ -126,6 +126,9 @@ impl Terrain {
         while chunks < 100 {
             loc.coerce();
             if let Some(chunk) = self.chunks.get(&loc.chunk) {
+                if t > 0. && !unsafe { chunk.ignore_voxel(loc.position.into()) } {
+                    return Some((t, loc.round()));
+                }
                 let new_origin = loc.position;
                 if let Some((chunk_t, position)) = chunk.trace_ray(new_origin, direction) {
                     loc.position = position;
@@ -307,5 +310,14 @@ mod tests {
         let hit = terrain.trace_ray(loc, dir).unwrap();
         let hit_type = terrain.voxel_type(hit);
         assert_eq!(hit_type, voxel::VoxelType(2));
+    }
+
+    #[test]
+    fn ray_trace_chunk_border() {
+        let mut terrain = crate::game::world::terrain::Terrain::new();
+        terrain.set_voxel_type(Location::from_coords(16., 0., 0.), voxel::VoxelType(1));
+        let dir = Vec3::new(1., 0., 0.);
+        let loc = Location::from_coords(0.5, 0.5, 0.5);
+        terrain.trace_ray(loc, dir).unwrap();
     }
 }
