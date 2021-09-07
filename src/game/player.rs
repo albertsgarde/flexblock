@@ -1,10 +1,13 @@
 use crate::game::{
     physics::{Aabb, PhysicsBody},
+    view::PrincipalAxes,
     world::{Location, Terrain},
     View,
 };
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
+
+use super::view::ViewDirection;
 
 macro_rules! PLAYER_SIZE {
     () => {
@@ -24,19 +27,15 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(location: Location, view_direction: Vec3) -> Player {
+    pub fn new(location: Location, view_direction: impl 'static + ViewDirection) -> Player {
         Player {
             physics_body: PhysicsBody::new(Aabb::new(location, PLAYER_SIZE!())),
-            view: View::new(
-                location + PLAYER_VIEW_LOC!(),
-                view_direction,
-                Vec3::new(0., 1., 0.),
-            ),
+            view: View::new(location + PLAYER_VIEW_LOC!(), view_direction),
         }
     }
 
     pub fn default() -> Player {
-        Player::new(Location::origin(), Vec3::new(0., 0., -1.))
+        Player::new(Location::origin(), PrincipalAxes::default())
     }
 
     /// Moves the player not considering collision.
