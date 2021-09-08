@@ -45,11 +45,12 @@ impl PhysicsBody {
     }
 
     /// Moves the body as far along the vector as possible without colliding with the terrain.
-    /// Returns distance moved or none if no collision occurs.
-    pub fn collide_move(&mut self, vec: Vec3, terrain: &Terrain) -> Option<f32> {
-        let move_distance = self.aabb.collide_distance(vec, terrain);
+    /// Returns distance moved in vector units and the dimension of the normal of the surface hit, or none if no collision occurs.
+    /// The dimension is 0 for the x-axis, 1 for the y-axis and 2 for the z-axis.
+    pub fn collide_move(&mut self, vec: Vec3, terrain: &Terrain) -> Option<(f32, usize)> {
         // Correct for collision.
-        let vec = vec * (move_distance.unwrap_or(1.) * 0.999);
+        let move_distance = self.aabb.collide_distance(vec, terrain);
+        let vec = vec * (move_distance.map(|(distance, _)| distance).unwrap_or(1.) * 0.999);
         // Remove very small movement, as it is probably an error...
         let vec = vec.map(|coord| if coord.abs() < 1e-5 { 0. } else { coord });
         self.translate(vec);
