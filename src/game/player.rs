@@ -44,15 +44,6 @@ impl Player {
         self.view.translate(vec);
     }
 
-    /// Converts vec from view coordinates to world coordinates and moves the player as far along
-    /// the resulting vector as possible without colliding with the terrain.
-    pub fn collide_move_relative(&mut self, vec: Vec3, terrain: &Terrain) {
-        let move_vec = self.view.view_to_world(vec);
-        self.physics_body.collide_move(move_vec, terrain);
-        self.view
-            .teleport(self.physics_body.location() + PLAYER_VIEW_LOC!());
-    }
-
     /// Converts vec from view coordinates to world coordinates, removes the y-component
     /// normalizes to the same length as the original vec and moves the player as far
     /// along the resulting vector as possible without colliding with terrain.
