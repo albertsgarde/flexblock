@@ -50,11 +50,16 @@ impl Player {
     pub fn collide_move_relative_horizontal(&mut self, vec: Vec3, terrain: &Terrain) {
         let mut move_vec = self.view.view_to_world(vec);
         move_vec.y = 0.;
-        let move_vec = move_vec
+        let mut move_vec = move_vec
             .normalize()
             .map(|coord| if coord.is_nan() { 0. } else { coord })
             * vec.norm();
-        self.physics_body.collide_move(move_vec, terrain);
+        while let Some((move_distance, collision_dimension)) =
+            self.physics_body.collide_move(move_vec, terrain)
+        {
+            move_vec[collision_dimension] = 0.;
+            move_vec *= 1. - move_distance;
+        }
         self.view
             .teleport(self.physics_body.location() + PLAYER_VIEW_LOC!());
     }
