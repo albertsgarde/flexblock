@@ -5,9 +5,12 @@ mod audio;
 mod channels;
 mod game;
 mod graphics;
+mod logging;
 mod utils;
 
 use std::sync::{mpsc, Arc, Mutex};
+
+use log::{debug, error, info, trace, warn};
 
 extern crate nalgebra_glm as glm;
 #[macro_use]
@@ -50,6 +53,8 @@ lazy_static! {
 }
 
 fn main() {
+    logging::log_init();
+
     // Create game input event channel.
     let (game_event_sender, game_event_receiver) = mpsc::channel();
     let window_to_logic_sender = channels::WindowToLogicSender {

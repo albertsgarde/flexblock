@@ -32,3 +32,6 @@ nalgebra-glm = { version = "0.11.0", features = ["serde-serialize"] }
 png = "0.16.8"
 strum = { version = "0.20", features = ["derive"] }
 byteorder = "*"
+
+log = "0.4.14"
+simplelog = "0.10.0"
