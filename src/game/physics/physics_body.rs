@@ -7,7 +7,7 @@ use glm::Vec3;
 use serde::{Deserialize, Serialize};
 
 /// Downwards acceleration in voxels per second squared.
-const GRAVITY: f32 = 9.81;
+const GRAVITY: f32 = 1.8;
 
 #[derive(Serialize, Deserialize)]
 pub struct PhysicsBody {

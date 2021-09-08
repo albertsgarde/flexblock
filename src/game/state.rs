@@ -70,7 +70,7 @@ impl State {
                 StateInputEvent::RotateView { delta } => self.player.turn(delta),
                 StateInputEvent::MovePlayerRelative { delta } => self
                     .player
-                    .collide_move_relative_horizontal(delta * 0.12, &self.terrain),
+                    .collide_move_relative_horizontal(delta * 0.14, &self.terrain),
                 StateInputEvent::PlayerInteract1 => {
                     let point_at = self.terrain.trace_ray(
                         self.player.view().location(),
@@ -96,7 +96,7 @@ impl State {
                         }
                     }
                 }
-                StateInputEvent::Jump => self.player.add_velocity(Vec3::new(0., 2., 0.)),
+                StateInputEvent::Jump => self.player.add_velocity(Vec3::new(0., 0.5, 0.)),
             }
         }
     }
