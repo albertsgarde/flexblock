@@ -10,8 +10,6 @@ mod utils;
 
 use std::sync::{mpsc, Arc, Mutex};
 
-use log::{debug, error, info, trace, warn};
-
 extern crate nalgebra_glm as glm;
 #[macro_use]
 extern crate bytepack_derive;
