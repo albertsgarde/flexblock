@@ -57,9 +57,11 @@ impl Aabb {
         })
     }
 
-    /// Returns the distance measured in `vec` lengths the AABB can move in `vec` direction before it collides with an impassable voxel.
+    /// Returns the distance measured in `vec` lengths the AABB can move in `vec` direction before it collides with an impassable voxel,
+    /// and the dimension of the normal of the surface it hits.
+    /// The dimension is 0 for the x-axis, 1 for the y-axis and 2 for the z-axis.
     /// Returns None if no collision happens and the AABB can move the entire distance.
-    pub fn collide_distance(&self, vec: Vec3, terrain: &Terrain) -> Option<f32> {
+    pub fn collide_distance(&self, vec: Vec3, terrain: &Terrain) -> Option<(f32, usize)> {
         let vec_norm = vec.norm();
         if vec_norm == 0. {
             return None;
@@ -133,7 +135,7 @@ impl Aabb {
                 .voxel_type_iterator(test_box_rear, test_box_front)
                 .any(|voxel_type| voxel_type != VoxelType(0))
             {
-                return Some(cur_t / vec_norm);
+                return Some((cur_t / vec_norm, dim));
             }
         }
         panic!("Code should never get here.");
@@ -150,10 +152,11 @@ mod test {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(3., 0., 0.), VoxelType(1));
         let aabb = Aabb::new(Location::origin(), Vec3::new(1., 1., 1.));
-        let collide_distance = aabb
+        let (collide_distance, collide_dim) = aabb
             .collide_distance(Vec3::new(4., 0., 0.), &terrain)
             .unwrap();
         assert!(collide_distance > 0.4999 && collide_distance < 0.5001);
+        assert_eq!(collide_dim, 0);
     }
 
     #[test]
@@ -161,10 +164,11 @@ mod test {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(0., 3., 0.), VoxelType(1));
         let aabb = Aabb::new(Location::origin(), Vec3::new(1., 1., 1.));
-        let collide_distance = aabb
+        let (collide_distance, collide_dim) = aabb
             .collide_distance(Vec3::new(0., 40000., 0.), &terrain)
             .unwrap();
         assert!(collide_distance > 0.00004999 && collide_distance < 0.00005001);
+        assert_eq!(collide_dim, 1);
     }
 
     #[test]
@@ -172,10 +176,11 @@ mod test {
         let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(0., 0., 3.), VoxelType(1));
         let aabb = Aabb::new(Location::origin(), Vec3::new(1., 1., 1.));
-        let collide_distance = aabb
+        let (collide_distance, collide_dim) = aabb
             .collide_distance(Vec3::new(0., 0., 400.), &terrain)
             .unwrap();
         assert!(collide_distance > 0.004999 && collide_distance < 0.005001);
+        assert_eq!(collide_dim, 2);
     }
 
     #[test]
@@ -185,7 +190,7 @@ mod test {
         terrain.set_voxel_type(Location::from_coords(1., 5., 0.), VoxelType(1));
         let aabb = Aabb::new(Location::from_coords(1., 1., 0.), Vec3::new(1., 1., 1.));
         let move_vector = Vec3::new(4., 11., 0.);
-        let collide_distance = aabb.collide_distance(move_vector, &terrain).unwrap();
+        let (collide_distance, _) = aabb.collide_distance(move_vector, &terrain).unwrap();
         assert!(collide_distance > 6.37 / move_vector.norm());
         assert!(collide_distance < 6.39 / move_vector.norm());
     }
@@ -200,7 +205,7 @@ mod test {
             Vec3::new(0.64, 0.62, 1.),
         );
         let move_vector = Vec3::new(3.7, 9.52, 0.);
-        let collide_distance = aabb.collide_distance(move_vector, &terrain).unwrap();
+        let (collide_distance, _) = aabb.collide_distance(move_vector, &terrain).unwrap();
         assert!(collide_distance > 6.64 / move_vector.norm());
         assert!(collide_distance < 6.66 / move_vector.norm());
     }
@@ -215,7 +220,7 @@ mod test {
             Vec3::new(3.62, 1., 1.36),
         );
         let move_vector = Vec3::new(2.62, 0., 5.49);
-        let collide_distance = aabb.collide_distance(move_vector, &terrain).unwrap();
+        let (collide_distance, _) = aabb.collide_distance(move_vector, &terrain).unwrap();
         println!(
             "Collide distance * move_vector norm: {}",
             collide_distance * move_vector.norm()
@@ -234,7 +239,7 @@ mod test {
             Vec3::new(3.62, 1., 1.36),
         );
         let move_vector = Vec3::new(1.13, 0., -6.27);
-        let collide_distance = aabb.collide_distance(move_vector, &terrain).unwrap();
+        let (collide_distance, _) = aabb.collide_distance(move_vector, &terrain).unwrap();
         println!(
             "Collide distance * move_vector norm: {}",
             collide_distance * move_vector.norm()
@@ -252,7 +257,7 @@ mod test {
             Vec3::new(1., 1.24, 1.24),
         );
         let move_vector = Vec3::new(0., -0.1, -0.09);
-        let collide_distance = aabb.collide_distance(move_vector, &terrain).unwrap();
+        let (collide_distance, _) = aabb.collide_distance(move_vector, &terrain).unwrap();
         println!(
             "Collide distance * move_vector norm: {}",
             collide_distance * move_vector.norm()
@@ -270,8 +275,7 @@ mod test {
             Vec3::new(1., 1.24, 1.24),
         );
         let move_vector = Vec3::new(-0.08, 0., 0.02);
-        let collide_distance = aabb.collide_distance(move_vector, &terrain);
-        assert_eq!(collide_distance, None);
+        assert_eq!(aabb.collide_distance(move_vector, &terrain), None);
     }
 
     #[test]
@@ -283,7 +287,7 @@ mod test {
             Vec3::new(1., 1.24, 1.24),
         );
         let move_vector = Vec3::new(-0.05, 0., -0.01);
-        let collide_distance = aabb.collide_distance(move_vector, &terrain).unwrap();
+        let (collide_distance, _) = aabb.collide_distance(move_vector, &terrain).unwrap();
         assert!(collide_distance < 0.02 / move_vector.norm());
     }
 
@@ -296,7 +300,7 @@ mod test {
             Vec3::new(1., 1.24, 1.24),
         );
         let move_vector = Vec3::new(0.05, 0., -0.01);
-        let collide_distance = aabb.collide_distance(move_vector, &terrain).unwrap();
+        let (collide_distance, _) = aabb.collide_distance(move_vector, &terrain).unwrap();
         assert!(collide_distance < 0.02 / move_vector.norm());
     }
 
