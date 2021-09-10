@@ -1,4 +1,5 @@
 use super::TextureManager;
+use log::debug;
 use serde::{Deserialize, Serialize};
 use strum::{EnumCount, EnumIter};
 
@@ -104,7 +105,7 @@ impl Framebuffer {
         if let Some(ct) = identifier.color_texture() {
             let ct = texture_manager.get_texture(ct);
             if VERBOSE {
-                println!(
+                debug!(
                     "Framebuffer {:?} gets color texture {} with id {}",
                     identifier, ct.metadata.name, ct.id
                 );

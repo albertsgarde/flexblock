@@ -4,6 +4,7 @@ use super::{
 };
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
 use crate::utils::Vertex3D;
+use log::{debug, error};
 
 const VERBOSE: bool = false;
 
@@ -64,7 +65,7 @@ impl RenderCaller {
             );
         }
         if VERBOSE {
-            println!("Packing buffer {}", buffer);
+            debug!("Packing buffer {}", buffer);
         }
         self.vertex_array.fill_vbo(*buffer, &pack.vertices);
         self.vertex_array.fill_ebo(*buffer, &pack.elements);
@@ -79,17 +80,17 @@ impl RenderCaller {
             );
         }
         if VERBOSE {
-            println!("Clearing buffer {}", buffer);
+            debug!("Clearing buffer {}", buffer);
         }
         self.vertex_array.clear(*buffer);
     }
 
     unsafe fn choose_shader(&mut self, shader: ShaderIdentifier) {
         if let Err(s) = self.shader_manager.bind_shader(shader) {
-            println!("{}", s) //TODO: Log instead
+            error!("{}", s)
         }
         if VERBOSE {
-            println!("Choosing shader {}", shader.name());
+            debug!("Choosing shader {}", shader.name());
         }
     }
 
@@ -98,10 +99,10 @@ impl RenderCaller {
             .shader_manager
             .uniforms(uniforms, &self.texture_manager)
         {
-            println!("{}", s); //TOOD: Log instead
+            error!("{}", s);
         }
         if VERBOSE {
-            println!("Passing uniforms");
+            debug!("Passing uniforms");
         }
     }
 
@@ -129,7 +130,7 @@ impl RenderCaller {
     pub unsafe fn choose_framebuffer(&mut self, framebuffer: &Option<FramebufferIdentifier>) {
         self.framebuffer_manager.bind_framebuffer(&framebuffer);
         if VERBOSE {
-            println!("Choosing framebuffer {:?}", framebuffer);
+            debug!("Choosing framebuffer {:?}", framebuffer);
         }
     }
 
@@ -140,7 +141,7 @@ impl RenderCaller {
         );
         self.vertex_array.draw(*buffer);
         if VERBOSE {
-            println!("Rendering buffer {}", buffer);
+            debug!("Rendering buffer {}", buffer);
         }
     }
 
@@ -172,7 +173,7 @@ impl RenderCaller {
         );
         gl::DispatchCompute(dimensions.0, dimensions.1, dimensions.2);
         if VERBOSE {
-            println!(
+            debug!(
                 "Dispatching compute shader generating texture {}, id {}",
                 output_texture,
                 tex.get_id()

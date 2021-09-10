@@ -5,6 +5,7 @@ use crate::{
 };
 use glutin::event::{Event, WindowEvent};
 use glutin::event_loop::ControlFlow;
+use log::info;
 
 pub struct Window {
     event_loop: Option<glutin::event_loop::EventLoop<()>>,
@@ -31,7 +32,7 @@ impl Window {
 
         let windowed_context = windowed_context.make_current().unwrap();
 
-        println!("Loading gl!");
+        info!("Loading gl!");
         gl::load_with(|s| windowed_context.get_proc_address(s) as *const _);
 
         gl::ClearColor(0.3, 0.3, 0.5, 1.0);

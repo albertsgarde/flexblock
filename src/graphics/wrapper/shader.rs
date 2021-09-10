@@ -1,10 +1,12 @@
 use super::TextureManager;
-use crate::graphics::render_messages::UniformValue;
-use crate::graphics::UniformData;
+use crate::graphics::{render_messages::UniformValue, UniformData};
+use log::info;
 use macros::ShaderId;
-use std::collections::HashMap;
-use std::ffi::{CStr, CString};
-use std::fs;
+use std::{
+    collections::HashMap,
+    ffi::{CStr, CString},
+    fs,
+};
 use strum::{EnumCount, EnumIter};
 
 #[derive(Clone)]
@@ -145,7 +147,7 @@ impl Shader {
             .to_str()
             .unwrap()
             .to_owned();
-        println!("Loading shader {}", name);
+        info!("Loading shader {}", name);
         let (vsid, mut vsuniforms) = match Self::load_shader(&vertex_file, gl::VERTEX_SHADER) {
             Ok(id) => id,
             Err(s) => return Err(s),
@@ -280,7 +282,7 @@ impl Shader {
             let id =
                 gl::GetUniformLocation(program_id, (ename.as_ptr()) as *const gl::types::GLchar);
 
-            println!(
+            info!(
                 "Creating a uniform location for uniform {:?} at {}",
                 ename, id
             );

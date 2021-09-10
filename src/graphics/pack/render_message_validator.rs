@@ -2,6 +2,7 @@ use super::RenderState;
 use crate::graphics::{
     wrapper::ShaderMetadata, GraphicsCapabilities, RenderMessage, RenderMessages, UniformData,
 };
+use log::debug;
 use std::fmt;
 
 ///Types of validator errors.
@@ -118,7 +119,7 @@ impl RenderMessageValidator {
         }
 
         if verbose {
-            println!(
+            debug!(
                 "Validating render message pack with {} messages!",
                 messages.size()
             );
@@ -141,7 +142,7 @@ impl RenderMessageValidator {
                         bound_uniforms = Vec::new();
 
                         if verbose {
-                            println!("Choosing shader {}", shader.name());
+                            debug!("Choosing shader {}", shader.name());
                         }
                     }
                     RenderMessage::ClearArray { buffer } => {
@@ -177,7 +178,7 @@ impl RenderMessageValidator {
                         }
 
                         if verbose {
-                            println!("Clearing VBO {}", buffer);
+                            debug!("Clearing VBO {}", buffer);
                         }
                     }
                     RenderMessage::ClearBuffers {
@@ -198,7 +199,7 @@ impl RenderMessageValidator {
                             });
                         }
                         if verbose {
-                            println!(
+                            debug!(
                                 "Clearing color? {} and depth? {}",
                                 color_buffer, depth_buffer
                             );
@@ -288,7 +289,7 @@ impl RenderMessageValidator {
                         }
 
                         if verbose {
-                            println!("Drawing buffer {}", buffer);
+                            debug!("Drawing buffer {}", buffer);
                         }
                     }
                     RenderMessage::Pack { buffer, pack } => {
@@ -354,7 +355,7 @@ impl RenderMessageValidator {
                         }
 
                         if verbose {
-                            println!("filling VBO {}", buffer);
+                            debug!("filling VBO {}", buffer);
                         }
                     }
                     RenderMessage::Uniforms { uniforms } => {
@@ -380,7 +381,7 @@ impl RenderMessageValidator {
                             }
                         }
                         if verbose {
-                            println!("Filling in uniforms");
+                            debug!("Filling in uniforms");
                         }
                     }
                     RenderMessage::ChooseFramebuffer { framebuffer: _ } => {

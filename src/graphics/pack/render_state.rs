@@ -8,6 +8,7 @@ use crate::{
     },
     graphics::wrapper::ShaderIdentifier,
 };
+use log::error;
 use std::collections::VecDeque;
 use std::sync::MutexGuard;
 
@@ -272,7 +273,7 @@ impl RenderState {
         if let Some(chunk) = terrain.chunk(location) {
             match self.pack_chunk(chunk, location, messages) {
                 Err(s) => {
-                    println!("{}", s)
+                    error!("{}", s)
                 }
                 Ok(()) => {}
             }
@@ -294,7 +295,7 @@ impl RenderState {
             match self.unpack_chunk(i, messages) {
                 Ok(()) => {}
                 Err(s) => {
-                    println!("{}", s)
+                    error!("{}", s)
                 }
             }
         }

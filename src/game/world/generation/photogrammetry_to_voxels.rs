@@ -1,5 +1,6 @@
 use crate::utils::ply::{read_aligned_points, VertAligned};
 use crate::utils::Locatedf32;
+use log::debug;
 use std::path::Path;
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -87,7 +88,7 @@ impl<T: Locatedf32, const LEAF_CAPACITY: usize, const MAX_DEPTH: usize>
 
         let mut nodes = vec![OctreeNode::new()];
 
-        println!("Adding {} vertices!", vertices.len());
+        debug!("Adding {} vertices!", vertices.len());
         let mut i = 0;
         for v in &vertices {
             if v.x() <= max_bounds.x
@@ -113,11 +114,11 @@ impl<T: Locatedf32, const LEAF_CAPACITY: usize, const MAX_DEPTH: usize>
 
         i = 0;
         for node in &nodes {
-            println!("Node {}: {:?}", i, node);
+            debug!("Node {}: {:?}", i, node);
             i += 1;
         }
 
-        println!("Returning octree!");
+        debug!("Returning octree!");
 
         Octree {
             nodes,
@@ -203,7 +204,7 @@ impl<T: Locatedf32, const LEAF_CAPACITY: usize, const MAX_DEPTH: usize>
 
 fn create_voxels<P: AsRef<Path>>(file: P) -> std::io::Result<Octree<VertAligned, 20, 9>> {
     let points = read_aligned_points(file)?;
-    println!("Available points: {}", points.len());
+    debug!("Available points: {}", points.len());
 
     let octree = Octree::new(glm::vec3(-5., -5., -5.), glm::vec3(5., 5., 5.), points);
 
