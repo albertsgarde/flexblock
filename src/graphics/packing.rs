@@ -107,8 +107,6 @@ pub fn start_packing_thread(
     let mut validator = RenderMessageValidator::new();
 
     thread::spawn(move || {
-        println!("Ready to pack graphics state!");
-
         for _ in logic_rx.channel_receiver.iter() {
             while let Ok(cap) = window_rx.channel_receiver.try_recv() {
                 state.update_capabilities(cap);

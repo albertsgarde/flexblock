@@ -1,13 +1,15 @@
 use super::Locatedf32;
 use byteorder::{BigEndian, ByteOrder, LittleEndian};
-use std::cmp::PartialEq;
-use std::default::Default;
-use std::fs::File;
-use std::io::BufReader;
-use std::io::{self, Read, Write};
-use std::path::Path;
-use std::slice;
-use std::str::FromStr;
+use log::debug;
+use std::{
+    cmp::PartialEq,
+    default::Default,
+    fs::File,
+    io::{self, BufReader, Read, Write},
+    path::Path,
+    slice,
+    str::FromStr,
+};
 
 #[derive(PartialEq)]
 enum PlyTypes {
@@ -212,14 +214,14 @@ fn read_unaligned_ply<P: AsRef<Path>>(path: P) -> Result<Vec<VertAligned>, PlyEr
         count += tmp;
         //reader.read_line(&mut line_buffer).unwrap();
 
-        println!("Line: {}", line_buffer);
+        debug!("Line: {}", line_buffer);
 
         if line_buffer.starts_with("end_header") {
             break;
         } else if line_buffer.starts_with("element vertex ") {
             let len = line_buffer.len();
             let line_buffer = String::from(&line_buffer[15..len]);
-            println!("Reading {} vertices!", line_buffer);
+            debug!("Reading {} vertices!", line_buffer);
             num_vertices = line_buffer.parse::<usize>()?;
         } else if line_buffer.starts_with("property ") {
             let mut iter = line_buffer.split(' ');
@@ -274,7 +276,7 @@ fn read_unaligned_ply<P: AsRef<Path>>(path: P) -> Result<Vec<VertAligned>, PlyEr
             return Err(PlyError::UnknownHeaderElement(line_buffer.to_owned()));
         }
     }
-    println!("Read {} ascii characters!", count);
+    debug!("Read {} ascii characters!", count);
 
     if types_in_file.len() < 9 || types_in_file.len() > 10 {
         return Err(PlyError::WrongTypeAmount);
