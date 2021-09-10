@@ -34,12 +34,17 @@ pub fn log_init() {
     let log_file_path = log_file_path(log_index());
 
     CombinedLogger::init(vec![
+        // Write to terminal.
         TermLogger::new(
+            // Debug messages are only written to file.
+            // This can be changed here.
+            // Could be set so debug messages are printed only in debug mode.
             LevelFilter::Info,
             Config::default(),
             TerminalMode::Mixed,
             ColorChoice::Auto,
         ),
+        // Write to file.
         WriteLogger::new(
             LevelFilter::Debug,
             Config::default(),
