@@ -230,6 +230,7 @@ mod tests {
     use super::super::InternalFormat;
     use super::TextureMetadata;
     use crate::utils::ColorFormat;
+    use log::debug;
 
     fn serialize_texture_metadata() {
         let metadata = TextureMetadata {
@@ -242,6 +243,6 @@ mod tests {
         };
         let j = serde_json::to_string(&metadata).unwrap();
 
-        println!("{}", j);
+        debug!("{}", j);
     }
 }

@@ -3,12 +3,13 @@ use super::{
     ShaderManager, Texture, TextureManager, TextureMetadata,
 };
 use crate::utils::read_png;
+use log::{debug, error};
 use strum::IntoEnumIterator;
 
 pub unsafe fn load_shaders() -> ShaderManager {
     let folder = crate::ASSETS_PATH.join("graphics/shaders").to_owned();
-    println!("{}", folder.to_str().unwrap());
-    println!("{}", folder.canonicalize().unwrap().to_str().unwrap());
+    debug!("{}", folder.to_str().unwrap());
+    debug!("{}", folder.canonicalize().unwrap().to_str().unwrap());
 
     let mut compute_shaders: Vec<String> = Vec::new();
     let mut fragment_shaders: Vec<String> = Vec::new();
@@ -35,7 +36,7 @@ pub unsafe fn load_shaders() -> ShaderManager {
             let name = &entry.1[0..(entry.1.len() - 5)];
             compute_shaders.push(String::from(name));
         } else {
-            eprintln!("File {:?} does not contain a shader!", &entry.0);
+            error!("File {:?} does not contain a shader!", &entry.0);
         }
     }
 
@@ -44,7 +45,7 @@ pub unsafe fn load_shaders() -> ShaderManager {
         let shader = match Shader::new(identifier) {
             Ok(s) => s,
             Err(s) => {
-                eprintln!("Loading shader {:?} failed! Error: {}", identifier, s);
+                error!("Loading shader {:?} failed! Error: {}", identifier, s);
                 continue;
             }
         };
@@ -59,13 +60,13 @@ pub unsafe fn load_shaders() -> ShaderManager {
     }
 
     for vs in vertex_shaders {
-        eprintln!(
+        error!(
             "Vertex shader {} doesn't exist in the shader identifier enum.",
             vs
         );
     }
     for fs in fragment_shaders {
-        eprintln!(
+        error!(
             "Fragment shader {} doesn't exist in the shader identifier enum.",
             fs
         );
@@ -115,7 +116,7 @@ pub unsafe fn load_textures(screen_dimensions: (u32, u32)) -> TextureManager {
                 screen_dimensions,
             );
             t.fill(data.data);
-            println!("Loaded texture {}!", &t.metadata.name);
+            debug!("Loaded texture {}!", &t.metadata.name);
             texture_manager.add_texture(t).unwrap();
         } else if entry.1.ends_with(".json") {
             let metadatas: Vec<TextureMetadata> =

@@ -4,6 +4,7 @@ use crate::{
 };
 use cpal::traits::{DeviceTrait, HostTrait};
 use flexblock_synth::{start_stream, SampleProvider};
+use log::debug;
 use std::sync::mpsc;
 
 const MONO_SAMPLES_SIZE: usize = 8192;
@@ -61,7 +62,7 @@ impl AudioManager {
         let audio_thread = std::thread::spawn(move || {
             let host = cpal::default_host();
             let device = host.default_output_device().unwrap();
-            println!("Chosen device: {}", device.name().unwrap());
+            debug!("Chosen device: {}", device.name().unwrap());
 
             let mut supported_configs_range = device
                 .supported_output_configs()
@@ -71,19 +72,19 @@ impl AudioManager {
                 .next()
                 .expect("no supported config?!");
 
-            println!(
+            debug!(
                 "Max sample rate: {:?}",
                 supported_stream_config_range.max_sample_rate()
             );
-            println!(
+            debug!(
                 "Min sample rate: {:?}",
                 supported_stream_config_range.min_sample_rate()
             );
 
             let supported_config = supported_stream_config_range.with_max_sample_rate();
 
-            println!("Sample format: {:?}", supported_config.sample_format());
-            println!("Number of channels: {:?}", supported_config.channels());
+            debug!("Sample format: {:?}", supported_config.sample_format());
+            debug!("Number of channels: {:?}", supported_config.channels());
 
             let _sample_rate = supported_config.sample_rate().0;
 

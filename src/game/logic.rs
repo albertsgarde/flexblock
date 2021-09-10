@@ -17,7 +17,6 @@ pub fn start_logic_thread(
     audio_message_handle: AudioMessageHandle,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
-        println!("Running game logic!");
         let gsm_mutex = logic_to_packing_sender.graphics_state_model;
         let gsm_channel = logic_to_packing_sender.channel_sender;
 

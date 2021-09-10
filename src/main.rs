@@ -8,6 +8,7 @@ mod graphics;
 mod logging;
 mod utils;
 
+use log::info;
 use std::sync::{mpsc, Arc, Mutex};
 
 extern crate nalgebra_glm as glm;
@@ -24,7 +25,7 @@ lazy_static! {
     static ref ASSETS_PATH: Box<std::path::Path> = {
         let path = std::env::current_exe().map_or_else(
             |_| {
-                println!("Executable path unavailable. Using working directory instead");
+                info!("Executable path unavailable. Using working directory instead");
                 std::env::current_dir()
                     .expect("Both executable path and working directory are unavailable.")
             },
