@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 /// The side length of a chunk.
 /// The number of voxels per chunk is this value to the third power.
-pub const CHUNK_SIZE: u32 = 32;
+pub const CHUNK_SIZE: u32 = 16;
 pub const CHUNK_SIZE_F: f32 = CHUNK_SIZE as f32;
 
 /// The number of elements in a chunk's voxel vector.
