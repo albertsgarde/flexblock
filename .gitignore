@@ -8,3 +8,5 @@
 # Flexblock saves.
 *.flex
 build_args.txt
+# IntelliJ files.
+/.idea
