@@ -134,6 +134,19 @@ impl Location {
         Vec3::new(x, y, z).into()
     }
 
+    /// Converts the Location to absolute floating point coordinates.
+    ///
+    /// # Warning
+    ///
+    /// This will lose precision the further out the Location's chunk is.
+    pub fn as_coords(&self) -> Vec3 {
+        Vec3::new(
+            (self.chunk.x as f32 * chunk::CHUNK_SIZE_F) + self.position.x,
+            (self.chunk.y as f32 * chunk::CHUNK_SIZE_F) + self.position.y,
+            (self.chunk.z as f32 * chunk::CHUNK_SIZE_F) + self.position.z,
+        )
+    }
+
     /// Rounds the location to the nearest whole voxel.
     pub fn round(&self) -> Location {
         Location::new(self.chunk, raytrace::round(self.position))
@@ -187,7 +200,8 @@ impl Sub<Location> for Location {
     type Output = Vec3;
 
     fn sub(self, rhs: Location) -> Vec3 {
-        self.position - rhs.position + (self.chunk - rhs.chunk).map(|x| x as f32 * 16.)
+        self.position - rhs.position
+            + (self.chunk - rhs.chunk).map(|x| x as f32 * chunk::CHUNK_SIZE_F)
     }
 }
 
@@ -234,7 +248,11 @@ mod tests {
         assert!(loc.position.y > 2.999 && loc.position.y < 3.001);
         assert!(loc.position.z > 3.999 && loc.position.z < 4.001);
 
-        let loc = Location::from_coords(16. + 2., 16. + 3., 16. + 4.);
+        let loc = Location::from_coords(
+            chunk::CHUNK_SIZE_F + 2.,
+            chunk::CHUNK_SIZE_F + 3.,
+            chunk::CHUNK_SIZE_F + 4.,
+        );
         assert_eq!(loc.chunk, IVec3::new(1, 1, 1));
         assert!(loc.position.x > 1.999 && loc.position.x < 2.001);
         assert!(loc.position.y > 2.999 && loc.position.y < 3.001);

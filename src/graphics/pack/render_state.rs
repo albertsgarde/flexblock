@@ -3,7 +3,7 @@ use crate::graphics::VertexPack;
 use crate::graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
 use crate::{
     game::{
-        world::{Chunk, Terrain},
+        world::{self, Chunk, Terrain},
         View,
     },
     graphics::wrapper::ShaderIdentifier,
@@ -78,13 +78,7 @@ pub fn get_vp_matrix(view: &View, screen_dimensions: (u32, u32)) -> glm::Mat4 {
     let (width, height) = screen_dimensions;
 
     let direction = view.view_direction();
-    let chunk = &view.location().chunk;
-    let position: glm::Vec3 = view.location().position
-        + glm::vec3(
-            (chunk.x * 16) as f32,
-            (chunk.y * 16) as f32,
-            (chunk.z * 16) as f32,
-        );
+    let position = view.location().as_coords();
     let center = position + direction;
     let up = view.up();
 
@@ -310,14 +304,7 @@ impl RenderState {
     ) {
         for (counter, location) in self.packed_chunks.iter().enumerate() {
             if let Some(location) = location {
-                let mvp = glm::translate(
-                    vp_matrix,
-                    &glm::vec3(
-                        location.x as f32 * 16.,
-                        location.y as f32 * 16.,
-                        location.z as f32 * 16.,
-                    ),
-                );
+                let mvp = glm::translate(vp_matrix, &world::chunk_index_to_position(*location));
                 let mut ud = UniformData::new();
                 ud.texture(String::from("/atlas.png"), String::from("test_texture"));
                 ud.mat4(mvp, String::from("MVP"));
