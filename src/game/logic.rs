@@ -3,6 +3,7 @@ use crate::{
     channels::*,
     game::{state::State, ExternalEventHandler, InputEventHistory},
 };
+use log::info;
 use std::{
     thread::{self, JoinHandle},
     time::{Duration, Instant},
@@ -17,6 +18,7 @@ pub fn start_logic_thread(
     audio_message_handle: AudioMessageHandle,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
+        info!("Using chunk size={}", crate::game::world::chunk::CHUNK_SIZE);
         let gsm_mutex = logic_to_packing_sender.graphics_state_model;
         let gsm_channel = logic_to_packing_sender.channel_sender;
 
