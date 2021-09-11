@@ -4,11 +4,15 @@ use crate::game::world::{
 };
 use glm::Vec3;
 use hashbrown::hash_map::HashMap;
+use konst::{option::unwrap_or, primitive::parse_u32, result::unwrap_ctx};
 use serde::{Deserialize, Serialize};
 
 /// The side length of a chunk.
 /// The number of voxels per chunk is this value to the third power.
-pub const CHUNK_SIZE: u32 = 16;
+pub const CHUNK_SIZE: u32 = unwrap_ctx!(parse_u32(unwrap_or!(
+    option_env!("FLEXBLOCK_CHUNK_SIZE"),
+    "16"
+)));
 pub const CHUNK_SIZE_F: f32 = CHUNK_SIZE as f32;
 
 /// The number of elements in a chunk's voxel vector.
