@@ -115,6 +115,7 @@ impl ExternalEventHandler {
 }
 
 /// Represents the entire history of input events.
+#[derive(Serialize, Deserialize)]
 pub struct InputEventHistory {
     input_events: Vec<Vec<StateInputEvent>>,
 }
