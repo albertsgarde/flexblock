@@ -47,7 +47,7 @@ impl ExternalEvent {
                             })
                     }
                 }
-                // To avoid annoying warning on the modifiers field.
+                // To avoid annoying warning on the modifiers field which isn't used anyway.
                 #[allow(deprecated)]
                 WindowEvent::MouseInput {
                     device_id: _,
