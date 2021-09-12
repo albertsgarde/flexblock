@@ -104,8 +104,8 @@ impl ExternalEventHandler {
     }
 
     /// Returns and clears the current event buffer.
-    pub fn tick_events(&mut self) -> Vec<StateInputEvent> {
-        let mut result = std::mem::replace(&mut self.tick_state_events, Vec::new());
+    pub fn tick_events(&mut self) -> (Vec<StateInputEvent>, Vec<LogicEvent>) {
+        let mut state_result = std::mem::replace(&mut self.tick_state_events, Vec::new());
         let mut move_vector = Vec3::new(0., 0., 0.);
         if self.key_state(VirtualKeyCode::W) {
             move_vector += Vec3::new(0., 0., -1.);
@@ -120,8 +120,9 @@ impl ExternalEventHandler {
             move_vector += Vec3::new(-1., 0., 0.);
         }
         if move_vector != Vec3::new(0., 0., 0.) {
-            result.push(StateInputEvent::MovePlayerRelative { delta: move_vector });
+            state_result.push(StateInputEvent::MovePlayerRelative { delta: move_vector });
         }
-        result
+        let logic_result = std::mem::replace(&mut self.tick_logic_events, Vec::new());
+        (state_result, logic_result)
     }
 }
