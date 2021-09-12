@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 /// Examples are player actions and game closing.
 /// Examples do _not_ include mouse clicks or button presses.
 /// These events should be abstracted away before-hand.
+/// Stuff like saving and loading should be handled by logic around the state.
+/// These events are only for events to be sent into the game world.
 #[derive(Debug, Serialize, Deserialize)]
 pub enum StateInputEvent {
     /// Rotates the view along the great circle in the delta direction by |delta| radians.

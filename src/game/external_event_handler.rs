@@ -1,4 +1,7 @@
-use crate::{game::StateInputEvent, graphics::ExternalEvent};
+use crate::{
+    game::{LogicEvent, StateInputEvent},
+    graphics::ExternalEvent,
+};
 use glm::Vec3;
 use glutin::event::{ElementState, MouseButton, VirtualKeyCode};
 use std::{collections::HashMap, sync::mpsc};
@@ -9,8 +12,10 @@ pub struct ExternalEventHandler {
     key_state: HashMap<VirtualKeyCode, bool>,
     /// The state of each mouse button.
     button_state: HashMap<MouseButton, bool>,
-    /// The events generated this tick.
-    tick_events: Vec<StateInputEvent>,
+    /// The state events generated this tick.
+    tick_state_events: Vec<StateInputEvent>,
+    /// The logic events generated this tick.
+    tick_logic_events: Vec<LogicEvent>,
 }
 
 impl ExternalEventHandler {
@@ -18,8 +23,17 @@ impl ExternalEventHandler {
         ExternalEventHandler {
             key_state: HashMap::new(),
             button_state: HashMap::new(),
-            tick_events: Vec::new(),
+            tick_state_events: Vec::new(),
+            tick_logic_events: Vec::new(),
         }
+    }
+
+    fn key_state(&self, key_code: VirtualKeyCode) -> bool {
+        *self.key_state.get(&key_code).unwrap_or(&false)
+    }
+
+    fn button_state(&self, mouse_button: MouseButton) -> bool {
+        *self.button_state.get(&mouse_button).unwrap_or(&false)
     }
 
     /// Empties the channel of new events and handles them.
@@ -40,15 +54,30 @@ impl ExternalEventHandler {
     fn handle_event(&mut self, event: ExternalEvent) {
         match event {
             ExternalEvent::MouseMotion { delta } => {
-                self.tick_events.push(StateInputEvent::RotateView {
+                self.tick_state_events.push(StateInputEvent::RotateView {
                     delta: (0.003 * delta.0 as f32, 0.003 * delta.1 as f32),
                 })
             }
             ExternalEvent::KeyboardInput { keycode, state } => {
-                if !self.key_state.get(&keycode).unwrap_or(&false) {
+                if !self.key_state(keycode) {
                     // Handling of key presses should happen here, as the if avoids repeated presses from holding down the button.
-                    if keycode == VirtualKeyCode::Space {
-                        self.tick_events.push(StateInputEvent::Jump);
+                    match keycode {
+                        VirtualKeyCode::Space => self.tick_state_events.push(StateInputEvent::Jump),
+                        VirtualKeyCode::S => {
+                            if self.key_state(VirtualKeyCode::LControl)
+                                || self.key_state(VirtualKeyCode::RControl)
+                            {
+                                self.tick_logic_events.push(LogicEvent::Save)
+                            }
+                        }
+                        VirtualKeyCode::L => {
+                            if self.key_state(VirtualKeyCode::LControl)
+                                || self.key_state(VirtualKeyCode::RControl)
+                            {
+                                self.tick_logic_events.push(LogicEvent::LoadLatest)
+                            }
+                        }
+                        _ => {}
                     }
                 }
                 self.key_state
@@ -60,10 +89,12 @@ impl ExternalEventHandler {
                 if state == ElementState::Pressed {
                     match button {
                         MouseButton::Left => {
-                            self.tick_events.push(StateInputEvent::PlayerInteract1);
+                            self.tick_state_events
+                                .push(StateInputEvent::PlayerInteract1);
                         }
                         MouseButton::Right => {
-                            self.tick_events.push(StateInputEvent::PlayerInteract2);
+                            self.tick_state_events
+                                .push(StateInputEvent::PlayerInteract2);
                         }
                         _ => {}
                     }
@@ -74,18 +105,18 @@ impl ExternalEventHandler {
 
     /// Returns and clears the current event buffer.
     pub fn tick_events(&mut self) -> Vec<StateInputEvent> {
-        let mut result = std::mem::replace(&mut self.tick_events, Vec::new());
+        let mut result = std::mem::replace(&mut self.tick_state_events, Vec::new());
         let mut move_vector = Vec3::new(0., 0., 0.);
-        if let Some(true) = self.key_state.get(&VirtualKeyCode::W) {
+        if self.key_state(VirtualKeyCode::W) {
             move_vector += Vec3::new(0., 0., -1.);
         }
-        if let Some(true) = self.key_state.get(&VirtualKeyCode::D) {
+        if self.key_state(VirtualKeyCode::D) {
             move_vector += Vec3::new(1., 0., 0.);
         }
-        if let Some(true) = self.key_state.get(&VirtualKeyCode::S) {
+        if self.key_state(VirtualKeyCode::S) {
             move_vector += Vec3::new(0., 0., 1.);
         }
-        if let Some(true) = self.key_state.get(&VirtualKeyCode::A) {
+        if self.key_state(VirtualKeyCode::A) {
             move_vector += Vec3::new(-1., 0., 0.);
         }
         if move_vector != Vec3::new(0., 0., 0.) {
