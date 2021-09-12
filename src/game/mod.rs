@@ -1,7 +1,9 @@
 pub mod world;
 
+mod external_event_handler;
+pub use external_event_handler::ExternalEventHandler;
+
 mod state_input_event;
-pub use state_input_event::ExternalEventHandler;
 pub use state_input_event::InputEventHistory;
 pub use state_input_event::StateInputEvent;
 
