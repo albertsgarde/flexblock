@@ -36,6 +36,7 @@ impl ExternalEventHandler {
         }
     }
 
+    /// Handles the ExternalEvent by turning it into the right StateInputEvents.
     fn handle_event(&mut self, event: ExternalEvent) {
         match event {
             ExternalEvent::MouseMotion { delta } => {
