@@ -21,6 +21,7 @@ rand = "0.8.*"
 rand_chacha = "0.3.*"
 dyn-clone = "1.0.*"
 konst = "0.2.*"
+flate2 = "1.0.*"
 
 bytepack = "0.4.*"
 bytepack_derive = "0.2.*"
