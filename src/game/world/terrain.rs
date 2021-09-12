@@ -9,8 +9,8 @@ use crate::{
     utils::mesh_iterator::MeshIterator,
 };
 use glm::{IVec3, Vec3};
-use hashbrown::hash_map::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 const CHUNK_SIZE: f32 = super::chunk::CHUNK_SIZE as f32;
 

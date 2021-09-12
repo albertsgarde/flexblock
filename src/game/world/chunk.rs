@@ -3,9 +3,9 @@ use crate::game::world::{
     *,
 };
 use glm::Vec3;
-use hashbrown::hash_map::HashMap;
 use konst::{option::unwrap_or, primitive::parse_u32, result::unwrap_ctx};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// The side length of a chunk.
 /// The number of voxels per chunk is this value to the third power.
