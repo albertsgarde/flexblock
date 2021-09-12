@@ -3,6 +3,7 @@ use crate::{
     channels::*,
     game::{state::State, ExternalEventHandler, InputEventHistory, LogicEvent},
 };
+use flate2::{bufread::DeflateDecoder, write::DeflateEncoder, Compression};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -105,7 +106,7 @@ fn save(save_data: &SaveData) {
     }
     // Write save data to file in bincode format.
 
-    let mut file = {
+    let file = {
         let file = match File::create(save_path) {
             Ok(file) => file,
             Err(error) => {
@@ -115,7 +116,8 @@ fn save(save_data: &SaveData) {
         };
         BufWriter::new(file)
     };
-    if let Err(error) = bincode::serialize_into(&mut file, &save_data) {
+    let mut encoder = DeflateEncoder::new(file, Compression::fast());
+    if let Err(error) = bincode::serialize_into(&mut encoder, &save_data) {
         error!("Save failed with error: {:?}", *error)
     }
 }
@@ -132,6 +134,7 @@ fn load(save_data: &mut SaveData) {
         };
         BufReader::new(file)
     };
-    let loaded_save_data: SaveData = bincode::deserialize_from(file).unwrap();
+    let decoder = DeflateDecoder::new(file);
+    let loaded_save_data: SaveData = bincode::deserialize_from(decoder).unwrap();
     *save_data = loaded_save_data;
 }
