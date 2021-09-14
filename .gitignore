@@ -7,6 +7,6 @@
 /wix/assets.wxs
 # Flexblock saves.
 *.flex
-build_args.txt
+build_config.toml
 # IntelliJ files.
 /.idea
