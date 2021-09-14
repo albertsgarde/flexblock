@@ -21,6 +21,8 @@ pub struct AudioManager {
     audio_message_receiver: mpsc::Receiver<AudioMessage>,
     audio_message_sender: mpsc::Sender<AudioMessage>,
     listener: Listener,
+    // The number of samples since last tick.
+    tick_sample: u32,
 }
 
 impl AudioManager {
@@ -33,6 +35,7 @@ impl AudioManager {
             audio_message_receiver: receiver,
             audio_message_sender: sender,
             listener: Listener::default(),
+            tick_sample: 0,
         }
     }
 
@@ -47,6 +50,7 @@ impl AudioManager {
             }
             AudioMessage::Listener(listener) => {
                 self.listener = listener;
+                self.tick_sample = 0;
             }
         };
     }
@@ -113,17 +117,24 @@ impl SampleProvider for AudioManager {
         let mono_samples = &mut self.mono_samples[0..samples.len() / 2];
 
         for sound in self.current_audio.iter_mut() {
+            let mut tick_sample = self.tick_sample;
             sound.next(mono_samples);
             for (i, mono_sample) in mono_samples.iter().enumerate() {
+                // Estimate of how much of the current game tick has passed.
+                let tick_passed = (tick_sample as f32 * crate::audio::TICKS_PER_SAMPLE).min(1.);
                 let (left, right) = if let Some(location) = sound.location() {
-                    self.listener.mono_to_stereo(*mono_sample, location)
+                    self.listener
+                        .mono_to_stereo(*mono_sample, location, tick_passed)
                 } else {
                     (*mono_sample * 0.5, *mono_sample * 0.5)
                 };
                 samples[2 * i] += left;
                 samples[2 * i + 1] += right;
+
+                tick_sample += 1;
             }
         }
+        self.tick_sample += (samples.len() / 2) as u32;
         self.current_audio.retain(|sound| !sound.is_finished());
         loop {
             match self.audio_message_receiver.try_recv() {
