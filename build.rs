@@ -3,6 +3,7 @@ use std::{fs, process::Command};
 
 #[derive(Serialize, Deserialize)]
 struct BuildConfig {
+    #[serde(default = "BuildConfig::default_fmt")]
     pub fmt: bool,
 }
 
@@ -20,11 +21,17 @@ impl BuildConfig {
             BuildConfig::default()
         }
     }
+
+    fn default_fmt() -> bool {
+        true
+    }
 }
 
 impl Default for BuildConfig {
     fn default() -> Self {
-        BuildConfig { fmt: false }
+        BuildConfig {
+            fmt: Self::default_fmt(),
+        }
     }
 }
 
