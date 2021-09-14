@@ -7,10 +7,8 @@ const MIN_ATTENUATION_DIST: f32 = 0.25;
 const HEAD_RADIUS: f32 = 0.1;
 
 pub struct Listener {
-    dest_right_vec: Vec3,
-    dest_center: Location,
-    prev_right_vec: Vec3,
-    prev_center: Location,
+    right_vec: Vec3,
+    center: Location,
 }
 
 impl Listener {
@@ -19,20 +17,71 @@ impl Listener {
         let player_right_vec = player.view().right();
         let center = player.view().location();
         Listener {
-            dest_right_vec: player_right_vec,
-            dest_center: center,
-            prev_right_vec: player_right_vec,
-            prev_center: center,
+            right_vec: player_right_vec,
+            center: center,
         }
     }
 
-    pub fn update(prev_listener: Listener, player: &Player) -> Listener {
-        let player_right_vec = player.view().right();
-        let center = player.view().location();
+    /// Takes a mono sample and transforms it into the stereo samples the listener hears using the samples
+    /// generation location and information about the player's state.
+    pub fn mono_to_stereo(&self, mono_sample: f32, location: Location) -> (f32, f32) {
+        // Vector from the center of the listener to the location of the sound.
+        let center_to_sound = location - self.center;
+        let right_to_sound = center_to_sound - self.right_vec * HEAD_RADIUS;
+        let left_to_sound = center_to_sound + self.right_vec * HEAD_RADIUS;
+        let (left_sample, right_sample) = pan_sample(mono_sample, self.right_vec, center_to_sound);
+        let left_sample = distance_attenuation(left_sample, left_to_sound);
+        let right_sample = distance_attenuation(right_sample, right_to_sound);
+        (left_sample, right_sample)
+    }
+
+    pub fn interpolate_to(self, destination_listener: &Listener) -> ListenerInterpolation {
+        ListenerInterpolation::new(self, destination_listener)
+    }
+}
+
+impl Default for Listener {
+    fn default() -> Self {
         Listener {
-            dest_right_vec: player_right_vec,
-            dest_center: center,
-            ..prev_listener
+            right_vec: Vec3::new(1., 0., 0.),
+            center: Location::origin(),
+        }
+    }
+}
+
+/// Pans a sample depending on its source location.
+fn pan_sample(mono_sample: f32, right_vec: Vec3, vec_to_sound: Vec3) -> (f32, f32) {
+    // The cosine of the angle between the right direction of the listener and the vector from the center to the sound.
+    // This represents how far to the left or right the sound should be panned.
+    let x = vec_to_sound.dot(&right_vec) / (vec_to_sound.norm());
+    // (x+1)/2 normalizes x to the interval [0;1].
+    // The rest is an application of constant power panning to keep the signal power constant across all angles (assuming constant distance).
+    let (sin, cos) = ((x + 1.) * std::f32::consts::FRAC_PI_4).sin_cos();
+    (mono_sample * cos, mono_sample * sin)
+}
+
+/// Attenuate sample according to distance.
+fn distance_attenuation(sample: f32, vec_to_sound: Vec3) -> f32 {
+    let distance = vec_to_sound.norm();
+    // Attenuate sound according to the inverse square law.
+    // Set a minimum distance to avoid volumes approaching infinite very close to the ears.
+    sample * f32::powi(MIN_ATTENUATION_DIST.max(distance), -2)
+}
+
+pub struct ListenerInterpolation {
+    prev_listener: Listener,
+    right_vec_prev_to_dest: Vec3,
+    center_prev_to_dest: Vec3,
+}
+
+impl ListenerInterpolation {
+    fn new(prev_listener: Listener, dest_listener: &Listener) -> Self {
+        let right_vec_prev_to_dest = dest_listener.right_vec - prev_listener.right_vec;
+        let center_prev_to_dest = dest_listener.center - prev_listener.center;
+        ListenerInterpolation {
+            prev_listener,
+            right_vec_prev_to_dest,
+            center_prev_to_dest,
         }
     }
 
@@ -44,52 +93,24 @@ impl Listener {
         location: Location,
         tick_passed: f32,
     ) -> (f32, f32) {
-        // Calculates the current right direction vector by interpolating between the destination
-        let cur_right_vec = interpolate(self.prev_right_vec, self.dest_right_vec, tick_passed);
-        let center_to_sound = interpolate(
-            location - self.prev_center,
-            location - self.dest_center,
-            tick_passed,
-        );
-        let right_to_sound = center_to_sound - cur_right_vec;
-        let left_to_sound = center_to_sound + cur_right_vec;
-        let (left_sample, right_sample) = pan_sample(mono_sample, center_to_sound, cur_right_vec);
+        let listener = Listener {
+            right_vec: self.prev_listener.right_vec + self.right_vec_prev_to_dest * tick_passed,
+            center: self.prev_listener.center + self.center_prev_to_dest * tick_passed,
+        };
+        // Vector from the center of the listener to the location of the sound.
+        let center_to_sound = location - listener.center;
+        let right_to_sound = center_to_sound - listener.right_vec * HEAD_RADIUS;
+        let left_to_sound = center_to_sound + listener.right_vec * HEAD_RADIUS;
+        let (left_sample, right_sample) =
+            pan_sample(mono_sample, listener.right_vec, center_to_sound);
         let left_sample = distance_attenuation(left_sample, left_to_sound);
         let right_sample = distance_attenuation(right_sample, right_to_sound);
         (left_sample, right_sample)
     }
 }
 
-impl Default for Listener {
+impl Default for ListenerInterpolation {
     fn default() -> Self {
-        Listener {
-            dest_center: Location::origin(),
-            dest_right_vec: Vec3::new(1., 0., 0.),
-            prev_center: Location::origin(),
-            prev_right_vec: Vec3::new(1., 0., 0.),
-        }
+        ListenerInterpolation::new(Listener::default(), &Listener::default())
     }
-}
-
-fn interpolate(prev: Vec3, dest: Vec3, interpolation_value: f32) -> Vec3 {
-    prev * (1. - interpolation_value) + dest * interpolation_value
-}
-
-/// Pans a sample depending on its source location.
-fn pan_sample(mono_sample: f32, sound_vec: Vec3, right_vec: Vec3) -> (f32, f32) {
-    // The cosine of the angle between the right direction of the listener and the vector from the center to the sound.
-    // This represents how far to the left or right the sound should be panned.
-    let x = sound_vec.dot(&(right_vec)) / (sound_vec.norm());
-    // (x+1)/2 normalizes x to the interval [0;1].
-    // The rest is an application of constant power panning to keep the signal power constant across all angles (assuming constant distance).
-    let (sin, cos) = ((x + 1.) * std::f32::consts::FRAC_PI_4).sin_cos();
-    (mono_sample * cos, mono_sample * sin)
-}
-
-/// Attenuate sample according to distance.
-fn distance_attenuation(sample: f32, sound_vec: Vec3) -> f32 {
-    let distance = sound_vec.norm();
-    // Attenuate sound according to the inverse square law.
-    // Set a minimum distance to avoid volumes approaching infinite very close to the ears.
-    sample * f32::powi(MIN_ATTENUATION_DIST.max(distance), -2)
 }
