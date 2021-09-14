@@ -7,6 +7,8 @@ use flexblock_synth::{start_stream, SampleProvider};
 use log::debug;
 use std::sync::mpsc;
 
+use super::listener::ListenerInterpolation;
+
 const MONO_SAMPLES_SIZE: usize = 8192;
 
 pub enum AudioMessage {
@@ -20,7 +22,8 @@ pub struct AudioManager {
     mono_samples: [f32; MONO_SAMPLES_SIZE],
     audio_message_receiver: mpsc::Receiver<AudioMessage>,
     audio_message_sender: mpsc::Sender<AudioMessage>,
-    listener: Listener,
+    next_listener: Listener,
+    listener_interpolation: ListenerInterpolation,
     // The number of samples since last tick.
     tick_sample: u32,
 }
@@ -34,7 +37,8 @@ impl AudioManager {
             mono_samples: [0.; MONO_SAMPLES_SIZE],
             audio_message_receiver: receiver,
             audio_message_sender: sender,
-            listener: Listener::default(),
+            next_listener: Listener::default(),
+            listener_interpolation: ListenerInterpolation::default(),
             tick_sample: 0,
         }
     }
@@ -49,7 +53,9 @@ impl AudioManager {
                     .push(self.sound_templates[sound_index].create_instance(location))
             }
             AudioMessage::Listener(listener) => {
-                self.listener = listener;
+                let mut old_listener = listener;
+                std::mem::swap(&mut old_listener, &mut self.next_listener);
+                self.listener_interpolation = old_listener.interpolate_to(&self.next_listener);
                 self.tick_sample = 0;
             }
         };
@@ -123,7 +129,7 @@ impl SampleProvider for AudioManager {
                 // Estimate of how much of the current game tick has passed.
                 let tick_passed = (tick_sample as f32 * crate::audio::TICKS_PER_SAMPLE).min(1.);
                 let (left, right) = if let Some(location) = sound.location() {
-                    self.listener
+                    self.listener_interpolation
                         .mono_to_stereo(*mono_sample, location, tick_passed)
                 } else {
                     (*mono_sample * 0.5, *mono_sample * 0.5)
