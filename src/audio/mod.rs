@@ -11,3 +11,7 @@ mod synth;
 pub use synth::Synth;
 mod listener;
 pub use listener::Listener;
+
+/// Number of audio samples per game tick.
+/// Will be made a runtime constant when the sample rate is allowed to vary.
+pub const SAMPLES_PER_TICK: u32 = crate::game::TPS * 48000;
