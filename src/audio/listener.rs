@@ -13,6 +13,7 @@ pub struct Listener {
 }
 
 impl Listener {
+    /// Create a listener from a player based on the player's position and view direction.
     pub fn from_player(player: &Player) -> Listener {
         let player_right_vec = player.view().right();
         Listener {
@@ -22,9 +23,15 @@ impl Listener {
         }
     }
 
+    /// Pans a sample depending on its source location.
     fn pan_sample(&self, mono_sample: f32, location: Location) -> (f32, f32) {
+        // Vector from the center of the listener to the location of the sound.
         let vector = location - self.center;
+        // The cosine of the angle between the right direction of the listener and the vector from the center to the sound.
+        // This represents how far to the left or right the sound should be panned.
         let x = vector.dot(&(self.right - self.left)) / (vector.norm() * HEAD_RADIUS * 2.);
+        // (x+1)/2 normalizes x to the interval [0;1].
+        // The rest is an application of constant power panning to keep the signal power constant across all angles (assuming constant distance).
         let (sin, cos) = ((x + 1.) * std::f32::consts::FRAC_PI_4).sin_cos();
         (mono_sample * cos, mono_sample * sin)
     }
