@@ -1,17 +1,33 @@
+use serde::{Deserialize, Serialize};
 use std::{fs, process::Command};
 
+#[derive(Serialize, Deserialize)]
+struct BuildConfig {
+    pub fmt: bool,
+}
+
+impl BuildConfig {
+    pub fn load_from_file() -> Self {
+        if let Ok(config_string) = fs::read_to_string("build_config.toml") {
+            toml::from_str(&config_string).unwrap_or_default()
+        } else {
+            BuildConfig::default()
+        }
+    }
+}
+
+impl Default for BuildConfig {
+    fn default() -> Self {
+        BuildConfig { fmt: false }
+    }
+}
+
 fn main() {
-    let args = if let Ok(args_string) = fs::read_to_string("build_args.txt") {
-        args_string
-            .split(',')
-            .map(|str| str.to_owned())
-            .collect::<Vec<String>>()
-    } else {
-        Vec::new()
-    };
-    if !args.is_empty() {
+    let build_config = BuildConfig::load_from_file();
+
+    if build_config.fmt {
         Command::new("cargo")
-            .args(args)
+            .arg("fmt")
             .status()
             .expect("Failed to run `cargo fmt`.");
     }

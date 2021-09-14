@@ -596,6 +596,7 @@ dependencies = [
  "serde_json",
  "simplelog",
  "strum",
+ "toml",
  "typetag",
 ]
 
