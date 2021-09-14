@@ -52,10 +52,7 @@ impl Default for Listener {
 /// Attenuate sample according to distance.
 fn distance_attenuation(sample: f32, transmit_loc: Location, receive_loc: Location) -> f32 {
     let distance = (receive_loc - transmit_loc).norm();
-    // Why multiply by 16?
-    if distance < MIN_ATTENUATION_DIST {
-        sample * 16.
-    } else {
-        sample * f32::powi(distance, -2)
-    }
+    // Attenuate sound according to the inverse square law.
+    // Set a minimum distance to avoid volumes approaching infinite very close to the ears.
+    sample * f32::powi(MIN_ATTENUATION_DIST.max(distance), -2)
 }
