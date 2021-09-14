@@ -134,6 +134,7 @@ impl SampleProvider for AudioManager {
                 tick_sample += 1;
             }
         }
+        self.tick_sample += (samples.len() / 2) as u32;
         self.current_audio.retain(|sound| !sound.is_finished());
         loop {
             match self.audio_message_receiver.try_recv() {
@@ -142,6 +143,5 @@ impl SampleProvider for AudioManager {
                 Err(mpsc::TryRecvError::Disconnected) => panic!("Event channel disconnected!"),
             }
         }
-        self.tick_sample += samples.len() as u32;
     }
 }

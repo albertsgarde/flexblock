@@ -14,6 +14,6 @@ pub use listener::Listener;
 
 /// Number of audio samples per game tick.
 /// Will be made a runtime constant when the sample rate is allowed to vary.
-pub const SAMPLES_PER_TICK: u32 = crate::game::TPS * 48000;
+pub const SAMPLES_PER_TICK: u32 = 48000 / crate::game::TPS;
 /// Reciprocal of SAMPLES_PER_TICK.
 pub const TICKS_PER_SAMPLE: f32 = 1. / SAMPLES_PER_TICK as f32;
