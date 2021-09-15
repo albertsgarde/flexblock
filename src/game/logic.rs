@@ -1,7 +1,7 @@
 use crate::{
     audio::AudioMessageHandle,
     channels::*,
-    game::{state::State, ExternalEventHandler, InputEventHistory, LogicEvent},
+    game::{controls, state::State, ExternalEventHandler, InputEventHistory, LogicEvent},
 };
 use flate2::{bufread::DeflateDecoder, write::DeflateEncoder, Compression};
 use log::{error, info};
@@ -33,7 +33,9 @@ pub fn start_logic_thread(
         let gsm_mutex = logic_to_packing_sender.graphics_state_model;
         let gsm_channel = logic_to_packing_sender.channel_sender;
 
-        let mut external_event_handler = ExternalEventHandler::new();
+        let control_config = controls::load_control_config("config/controls.toml");
+        controls::save_control_config("config/controls.toml", &control_config);
+        let mut external_event_handler = ExternalEventHandler::new(control_config);
         let mut save_data = SaveData {
             state: State::new(),
             event_history: InputEventHistory::new(),

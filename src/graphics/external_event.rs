@@ -5,7 +5,7 @@ pub enum ExternalEvent {
         delta: (f64, f64),
     },
     KeyboardInput {
-        keycode: VirtualKeyCode,
+        key_code: VirtualKeyCode,
         state: ElementState,
     },
     MouseInput {
@@ -41,8 +41,8 @@ impl ExternalEvent {
                     } else {
                         input
                             .virtual_keycode
-                            .map(|keycode| ExternalEvent::KeyboardInput {
-                                keycode,
+                            .map(|key_code| ExternalEvent::KeyboardInput {
+                                key_code: key_code,
                                 state: input.state,
                             })
                     }
