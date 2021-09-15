@@ -75,10 +75,10 @@ impl ExternalEventHandler {
                     delta: (0.003 * delta.0 as f32, 0.003 * delta.1 as f32),
                 })
             }
-            ExternalEvent::KeyboardInput { keycode, state } => {
-                if !self.key_state(keycode) {
+            ExternalEvent::KeyboardInput { key_code, state } => {
+                if !self.key_state(key_code) {
                     // Handling of key presses should happen here, as the if avoids repeated presses from holding down the button.
-                    match keycode {
+                    match key_code {
                         VirtualKeyCode::Space => self.tick_state_events.push(StateInputEvent::Jump),
                         VirtualKeyCode::S => {
                             if self.key_state(VirtualKeyCode::LControl)
@@ -98,7 +98,7 @@ impl ExternalEventHandler {
                     }
                 }
                 self.key_state
-                    .insert(keycode, state == ElementState::Pressed);
+                    .insert(key_code, state == ElementState::Pressed);
             }
             ExternalEvent::MouseInput { button, state } => {
                 self.button_state
