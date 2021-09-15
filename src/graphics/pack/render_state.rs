@@ -1,6 +1,7 @@
 use crate::game::GraphicsStateModel;
 use crate::graphics::VertexPack;
 use crate::graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
+use crate::utils::mesh_iterator::MeshIterator;
 use crate::{
     game::{
         world::{self, Chunk, Terrain},
@@ -8,6 +9,7 @@ use crate::{
     },
     graphics::wrapper::ShaderIdentifier,
 };
+use konst::{option::unwrap_or, primitive::parse_u32, result::unwrap_ctx};
 use log::error;
 use std::collections::VecDeque;
 use std::sync::MutexGuard;
@@ -379,39 +381,32 @@ impl RenderState {
             depth_buffer: true,
         });
 
-        // state.pack_next_chunk(data.view.location().chunk, &mut messages, &data.terrain);
-        self.repack_chunk(data.view.location().chunk, &mut messages, &data.terrain);
-        self.repack_chunk(
-            data.view.location().chunk + glm::vec3(1, 0, 0),
-            &mut messages,
-            &data.terrain,
-        );
-        self.repack_chunk(
-            data.view.location().chunk + glm::vec3(-1, 0, 0),
-            &mut messages,
-            &data.terrain,
-        );
-        self.repack_chunk(
-            data.view.location().chunk + glm::vec3(0, 1, 0),
-            &mut messages,
-            &data.terrain,
-        );
-        self.repack_chunk(
-            data.view.location().chunk + glm::vec3(0, -1, 0),
-            &mut messages,
-            &data.terrain,
-        );
-        self.repack_chunk(
-            data.view.location().chunk + glm::vec3(0, 0, 1),
-            &mut messages,
-            &data.terrain,
-        );
-        self.repack_chunk(
-            data.view.location().chunk + glm::vec3(0, 0, -1),
-            &mut messages,
-            &data.terrain,
+        // Read chunk render distance from environment variable. Default is 1 chunk and the value should be given in thousandths of chunks.
+        const REPACK_CHUNK_RADIUS: f32 = unwrap_ctx!(parse_u32(unwrap_or!(
+            option_env!("FLEXBLOCK_RENDER_RADIUS"),
+            "1100"
+        ))) as f32
+            / 1000.;
+        let repack_chunk_vec = glm::TVec3::new(
+            REPACK_CHUNK_RADIUS.floor() as i32,
+            REPACK_CHUNK_RADIUS.floor() as i32,
+            REPACK_CHUNK_RADIUS.floor() as i32,
         );
 
+        // Create a mesh iterator walking through all possible chunks to draw.
+        let chunk_mesh = MeshIterator::create(repack_chunk_vec.map(|x| x * 2 + 1))
+            .map(|chunk_vec| chunk_vec - repack_chunk_vec);
+
+        // Walk through the mesh iterator and repack the chunks that are close enough.
+        for chunk_vec in chunk_mesh {
+            if chunk_vec.map(|x| x as f32).norm() <= REPACK_CHUNK_RADIUS {
+                self.repack_chunk(
+                    data.view.location().chunk + chunk_vec,
+                    &mut messages,
+                    &data.terrain,
+                );
+            }
+        }
         self.clear_distant_chunks(data.view.location().chunk, &mut messages);
 
         let vp = get_vp_matrix(&data.view, (width, height));
