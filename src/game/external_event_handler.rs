@@ -1,5 +1,8 @@
 use crate::{
-    game::{LogicEvent, StateInputEvent},
+    game::{
+        controls::{Control, ControlConfig},
+        LogicEvent, StateInputEvent,
+    },
     graphics::ExternalEvent,
 };
 use glm::Vec3;
@@ -16,15 +19,18 @@ pub struct ExternalEventHandler {
     tick_state_events: Vec<StateInputEvent>,
     /// The logic events generated this tick.
     tick_logic_events: Vec<LogicEvent>,
+    /// Configuration for controls.
+    control_config: ControlConfig,
 }
 
 impl ExternalEventHandler {
-    pub fn new() -> ExternalEventHandler {
+    pub fn new(control_config: ControlConfig) -> ExternalEventHandler {
         ExternalEventHandler {
             key_state: HashMap::new(),
             button_state: HashMap::new(),
             tick_state_events: Vec::new(),
             tick_logic_events: Vec::new(),
+            control_config,
         }
     }
 
@@ -34,6 +40,17 @@ impl ExternalEventHandler {
 
     fn button_state(&self, mouse_button: MouseButton) -> bool {
         *self.button_state.get(&mouse_button).unwrap_or(&false)
+    }
+
+    fn control_state(&self, control: Control) -> bool {
+        match control {
+            Control::Mouse { mouse_button } => self.button_state(mouse_button),
+            Control::Keyboard { key_code } => self.key_state(key_code),
+        }
+    }
+
+    pub fn replace_control_config(&mut self, control_config: ControlConfig) {
+        self.control_config = control_config
     }
 
     /// Empties the channel of new events and handles them.
@@ -107,16 +124,16 @@ impl ExternalEventHandler {
     pub fn tick_events(&mut self) -> (Vec<StateInputEvent>, Vec<LogicEvent>) {
         let mut state_result = std::mem::replace(&mut self.tick_state_events, Vec::new());
         let mut move_vector = Vec3::new(0., 0., 0.);
-        if self.key_state(VirtualKeyCode::W) {
+        if self.control_state(self.control_config.move_forward) {
             move_vector += Vec3::new(0., 0., -1.);
         }
-        if self.key_state(VirtualKeyCode::D) {
+        if self.control_state(self.control_config.strafe_right) {
             move_vector += Vec3::new(1., 0., 0.);
         }
-        if self.key_state(VirtualKeyCode::S) {
+        if self.control_state(self.control_config.move_back) {
             move_vector += Vec3::new(0., 0., 1.);
         }
-        if self.key_state(VirtualKeyCode::A) {
+        if self.control_state(self.control_config.strafe_left) {
             move_vector += Vec3::new(-1., 0., 0.);
         }
         if move_vector != Vec3::new(0., 0., 0.) {
