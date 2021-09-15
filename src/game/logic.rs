@@ -7,7 +7,7 @@ use flate2::{bufread::DeflateDecoder, write::DeflateEncoder, Compression};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::{self, File},
+    fs::File,
     io::{BufReader, BufWriter},
     path::Path,
     thread::{self, JoinHandle},
