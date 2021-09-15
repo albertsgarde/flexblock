@@ -7,7 +7,7 @@ use glutin::event::{MouseButton, VirtualKeyCode};
 use log::error;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum Control {
     Mouse { mouse_button: MouseButton },
@@ -24,6 +24,16 @@ pub struct ControlConfig {
     pub strafe_right: Control,
     #[serde(default = "strafe_left_default")]
     pub strafe_left: Control,
+    #[serde(default = "jump_default")]
+    pub jump: Control,
+    #[serde(default = "save_default")]
+    pub save: Control,
+    #[serde(default = "load_default")]
+    pub load: Control,
+    #[serde(default = "player_interact_1_default")]
+    pub player_interact_1: Control,
+    #[serde(default = "player_interact_2_default")]
+    pub player_interact_2: Control,
 }
 
 impl Default for ControlConfig {
@@ -33,6 +43,11 @@ impl Default for ControlConfig {
             move_back: move_back_default(),
             strafe_right: strafe_right_default(),
             strafe_left: strafe_left_default(),
+            jump: jump_default(),
+            save: save_default(),
+            load: load_default(),
+            player_interact_1: player_interact_1_default(),
+            player_interact_2: player_interact_2_default(),
         }
     }
 }
@@ -58,6 +73,33 @@ fn strafe_right_default() -> Control {
 fn strafe_left_default() -> Control {
     Control::Keyboard {
         key_code: VirtualKeyCode::A,
+    }
+}
+
+fn jump_default() -> Control {
+    Control::Keyboard {
+        key_code: VirtualKeyCode::Space,
+    }
+}
+
+fn save_default() -> Control {
+    Control::Keyboard {
+        key_code: VirtualKeyCode::S,
+    }
+}
+fn load_default() -> Control {
+    Control::Keyboard {
+        key_code: VirtualKeyCode::L,
+    }
+}
+fn player_interact_1_default() -> Control {
+    Control::Mouse {
+        mouse_button: MouseButton::Left,
+    }
+}
+fn player_interact_2_default() -> Control {
+    Control::Mouse {
+        mouse_button: MouseButton::Right,
     }
 }
 

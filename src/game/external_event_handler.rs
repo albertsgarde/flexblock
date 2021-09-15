@@ -77,25 +77,9 @@ impl ExternalEventHandler {
             }
             ExternalEvent::KeyboardInput { key_code, state } => {
                 if !self.key_state(key_code) {
+                    let control = Control::Keyboard { key_code };
+                    self.handle_control_press(control);
                     // Handling of key presses should happen here, as the if avoids repeated presses from holding down the button.
-                    match key_code {
-                        VirtualKeyCode::Space => self.tick_state_events.push(StateInputEvent::Jump),
-                        VirtualKeyCode::S => {
-                            if self.key_state(VirtualKeyCode::LControl)
-                                || self.key_state(VirtualKeyCode::RControl)
-                            {
-                                self.tick_logic_events.push(LogicEvent::Save)
-                            }
-                        }
-                        VirtualKeyCode::L => {
-                            if self.key_state(VirtualKeyCode::LControl)
-                                || self.key_state(VirtualKeyCode::RControl)
-                            {
-                                self.tick_logic_events.push(LogicEvent::LoadLatest)
-                            }
-                        }
-                        _ => {}
-                    }
                 }
                 self.key_state
                     .insert(key_code, state == ElementState::Pressed);
@@ -104,19 +88,38 @@ impl ExternalEventHandler {
                 self.button_state
                     .insert(button, state == ElementState::Pressed);
                 if state == ElementState::Pressed {
-                    match button {
-                        MouseButton::Left => {
-                            self.tick_state_events
-                                .push(StateInputEvent::PlayerInteract1);
-                        }
-                        MouseButton::Right => {
-                            self.tick_state_events
-                                .push(StateInputEvent::PlayerInteract2);
-                        }
-                        _ => {}
-                    }
+                    let control = Control::Mouse {
+                        mouse_button: button,
+                    };
+                    self.handle_control_press(control);
                 };
             }
+        }
+    }
+
+    fn handle_control_press(&mut self, control: Control) {
+        if control == self.control_config.jump {
+            self.tick_state_events.push(StateInputEvent::Jump)
+        }
+        if control == self.control_config.save {
+            if self.key_state(VirtualKeyCode::LControl) || self.key_state(VirtualKeyCode::RControl)
+            {
+                self.tick_logic_events.push(LogicEvent::Save)
+            }
+        }
+        if control == self.control_config.load {
+            if self.key_state(VirtualKeyCode::LControl) || self.key_state(VirtualKeyCode::RControl)
+            {
+                self.tick_logic_events.push(LogicEvent::LoadLatest)
+            }
+        }
+        if control == self.control_config.player_interact_1 {
+            self.tick_state_events
+                .push(StateInputEvent::PlayerInteract1);
+        }
+        if control == self.control_config.player_interact_2 {
+            self.tick_state_events
+                .push(StateInputEvent::PlayerInteract2);
         }
     }
 
