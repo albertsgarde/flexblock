@@ -1,5 +1,7 @@
 pub mod world;
 
+pub mod controls;
+
 mod external_event_handler;
 pub use external_event_handler::ExternalEventHandler;
 

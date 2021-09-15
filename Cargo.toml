@@ -22,10 +22,12 @@ rand_chacha = "0.3.*"
 dyn-clone = "1.0.*"
 konst = "0.2.*"
 flate2 = "1.0.*"
+enum-map = "1.1.*"
+toml = "0.5.*"
 
 bytepack = "0.4.*"
 bytepack_derive = "0.2.*"
-glutin = "0.26.*"
+glutin = { version = "0.26.*", features = ["serde"] }
 gl = "0.10.*"
 raw-window-handle = "0.3.*"
 regex = "1.4.*"
