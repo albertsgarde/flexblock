@@ -9,7 +9,7 @@ pub fn setup_audio() -> AudioHandle {
     let mut audio_manager = AudioManager::new();
     let module = modules::SineOscillator::new((130.).into(), 48000);
     let module = module + modules::NoiseOscillator::new(rng) * 0.2;
-    let sound = Box::new(SynthTemplate::new(module * 0.6, (48000. * 5.15) as u64));
+    let sound = Box::new(SynthTemplate::new(module * 0.6, (48000. * 0.15) as u64));
     audio_manager.add_sound(sound);
 
     audio_manager.start()
