@@ -3,7 +3,8 @@ use crate::graphics::{RenderMessage, RenderMessages, UniformData};
 use super::ShaderIdentifier;
 
 /// Constructs a RenderMessage from widgets
-/// Locations are in the [0,1] square
+/// Note that you place widgets in the rectangle [0, canvas_width], [0, canvas_height]
+/// y=0 is the top of the screen, and y=canvas_height is the bottom.
 pub struct Gui {
     widgets: Vec<LocatedWidget>,
     settings: GuiSettings,
@@ -54,6 +55,12 @@ impl Gui {
         }
     }
 
+    /// Removes all widgets from the GUI
+    pub fn reset_gui(&mut self) {
+        self.widgets.clear();
+    }
+
+    /// Adds a text widghet to the guy in the given location, with given scale, width, and height.
     pub fn add_text(
         &mut self,
         text: &str,
@@ -248,6 +255,9 @@ mod widgets {
                 x += 1;
                 if x as f32 * self.scale > location.width {
                     y += 1;
+                    if y as f32 * self.scale > location.height {
+                        break;
+                    }
                     x = 0;
                 }
             }
