@@ -23,5 +23,5 @@ mod texture;
 pub use texture::{InternalFormat, TextureMetadata};
 use texture::{Texture, TextureManager};
 
-mod gui;
+pub mod gui;
 mod loader;

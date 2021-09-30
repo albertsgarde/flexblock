@@ -77,7 +77,6 @@ pub unsafe fn load_shaders() -> ShaderManager {
 
 pub unsafe fn load_textures(screen_dimensions: (u32, u32)) -> TextureManager {
     let mut texture_manager = TextureManager::new();
-
     let entries = crate::utils::dir_entries(&crate::ASSETS_PATH.join("graphics/textures"), "");
     let entries = match entries {
         Ok(e) => e,

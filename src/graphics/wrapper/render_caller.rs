@@ -110,9 +110,11 @@ impl RenderCaller {
 
     unsafe fn switch_to_2d(&mut self) {
         gl::Clear(gl::DEPTH_BUFFER_BIT);
-        // TODO: IS ANYTHING ELSE NEEDED FOR THE SWITCH TO 2D?
-        // SHADER HAS TO BE HANDLED BY THE RENDERER
-        // gl::Disable(gl::DEPTH_TEST);
+        gl::Disable(gl::DEPTH_TEST);
+        gl::Disable(gl::CULL_FACE); // TODO: This should not actually be done.
+                                    // TODO: IS ANYTHING ELSE NEEDED FOR THE SWITCH TO 2D?
+                                    // SHADER HAS TO BE HANDLED BY THE RENDERER
+                                    // gl::Disable(gl::DEPTH_TEST);
     }
 
     pub unsafe fn read_message(&mut self, message: &RenderMessage) {
