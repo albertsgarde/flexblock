@@ -1,3 +1,4 @@
+use super::gui::Gui;
 use super::RenderCaller;
 use crate::{
     channels::{PackingToWindowReceiver, WindowToPackingSender},
@@ -13,6 +14,7 @@ pub struct Window {
     render_caller: RenderCaller,
     render_messages: PackingToWindowReceiver,
     capabilities_sender: WindowToPackingSender,
+    gui: Gui,
 }
 
 pub type EventHandler = Box<dyn FnMut(glutin::event::Event<()>) + Send + 'static>;
@@ -50,12 +52,22 @@ impl Window {
         );
         let render_caller = RenderCaller::new(screen_dimensions);
 
+        let mut gui = Gui::new((400.0, 400.0), (-1.0, -1.0));
+        gui.add_text(
+            "the quick brown fox jumped over the lazy dog",
+            (100.0, 100.0),
+            200.0,
+            200.0,
+            16.0,
+        );
+
         let res = Window {
             event_loop: Some(el),
             context: windowed_context,
             render_caller,
             render_messages: rx,
             capabilities_sender: packing_tx,
+            gui,
         };
         res.send_capabilities();
 
@@ -96,7 +108,15 @@ impl Window {
         let render_messages = self.render_messages.render_pack.try_lock();
 
         if let Ok(mut render_messages) = render_messages {
+            gl::Enable(gl::DEPTH_TEST);
+            gl::Enable(gl::CULL_FACE); // This should not actually be done.
             if let Some(messages) = render_messages.take() {
+                for message in messages.iter() {
+                    self.render_caller.read_message(message);
+                }
+
+                // TODO: VALIDATE GUI RENDER MESSAGES
+                let messages = self.gui.collect_render_messages();
                 for message in messages.iter() {
                     self.render_caller.read_message(message);
                 }

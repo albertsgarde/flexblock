@@ -4,6 +4,7 @@ pub use uniform_data::{UniformData, UniformValue};
 mod vertex_pack;
 pub use vertex_pack::VertexPack;
 
+use crate::graphics::wrapper::BufferTarget;
 use crate::graphics::wrapper::{FramebufferIdentifier, ShaderIdentifier};
 use std::slice::Iter;
 
@@ -74,12 +75,12 @@ impl RenderMessages {
 pub enum RenderMessage {
     /// buffer = which buffer in the vertex array to target
     Pack {
-        buffer: usize,
+        buffer: BufferTarget,
         pack: VertexPack,
     },
     /// buffer = which buffer in the vertex array to target.
     ClearArray {
-        buffer: usize,
+        buffer: BufferTarget,
     },
     ClearBuffers {
         /// Whether to clear the color buffer
@@ -95,16 +96,19 @@ pub enum RenderMessage {
     },
     /// buffer = which buffer in the vertex array to target.
     Draw {
-        buffer: usize,
+        buffer: BufferTarget,
     },
     /// framebuffer = which framebuffer to draw to. None for the screen.
     ChooseFramebuffer {
         framebuffer: Option<FramebufferIdentifier>,
     },
+    /// Runs the currently bound compute shader.
     Compute {
         output_texture: String,
         dimensions: (u32, u32, u32),
     },
+    /// Switches the rendering to a 2D context.
+    SwitchTo2D {},
 }
 
 impl RenderMessage {
@@ -127,6 +131,7 @@ impl RenderMessage {
                 output_texture: _,
                 dimensions: _,
             } => false,
+            RenderMessage::SwitchTo2D {} => false,
         }
     }
 }
