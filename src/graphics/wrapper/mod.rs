@@ -1,4 +1,5 @@
 mod buffer;
+pub use buffer::BufferTarget;
 use buffer::{ArrayBuffer, ElementBuffer};
 
 mod framebuffer;
@@ -22,4 +23,5 @@ mod texture;
 pub use texture::{InternalFormat, TextureMetadata};
 use texture::{Texture, TextureManager};
 
+pub mod gui;
 mod loader;

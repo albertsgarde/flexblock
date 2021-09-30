@@ -48,6 +48,10 @@ pub enum ShaderIdentifier {
     #[extensionless_path("graphics/shaders/s2")]
     #[is_compute(false)]
     Color,
+    #[name("Gui")]
+    #[extensionless_path("graphics/shaders/gui")]
+    #[is_compute(false)]
+    Gui,
 }
 
 #[derive(Clone)]

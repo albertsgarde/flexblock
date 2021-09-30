@@ -1,4 +1,33 @@
+use std::fmt::Display;
+
 use crate::utils::vertex::Vertex;
+
+#[derive(Debug, Clone, Copy)]
+pub enum BufferTarget {
+    //TODO: RENAME TO VERTEXBUFFERTARGET
+    GuiBuffer,
+    NormalBuffer(usize),
+}
+
+impl BufferTarget {
+    pub fn get_target_id(&self) -> usize {
+        match &self {
+            BufferTarget::GuiBuffer => 0,
+            BufferTarget::NormalBuffer(i) => i + 1,
+        }
+    }
+}
+
+impl Display for BufferTarget {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            BufferTarget::GuiBuffer => f.write_fmt(format_args!("BufferTarget::GuiBuffer")),
+            BufferTarget::NormalBuffer(i) => {
+                f.write_fmt(format_args!("BufferTarget::NormalBuffer({})", i))
+            }
+        }
+    }
+}
 
 ///
 /// Has size*components members.

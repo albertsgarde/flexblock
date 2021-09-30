@@ -5,6 +5,7 @@ use super::wrapper::ShaderIdentifier;
 use super::*;
 use super::{RenderMessage, RenderMessages};
 use crate::channels::*;
+use crate::graphics::wrapper::BufferTarget;
 use crate::utils::Vertex3D;
 use std::thread::{self, JoinHandle};
 
@@ -168,7 +169,7 @@ pub fn start_packing_thread(
                     depth_buffer: true,
                 });
                 messages.add_message(RenderMessage::Pack {
-                    buffer: 80,
+                    buffer: BufferTarget::NormalBuffer(80),
                     pack: VertexPack::new(
                         vec![
                             Vertex3D {
@@ -215,8 +216,12 @@ pub fn start_packing_thread(
                         Some(vec![0, 1, 2, 0, 2, 3]),
                     ),
                 });
-                messages.add_message(RenderMessage::Draw { buffer: 80 });
-                messages.add_message(RenderMessage::ClearArray { buffer: 80 });
+                messages.add_message(RenderMessage::Draw {
+                    buffer: BufferTarget::NormalBuffer(80),
+                });
+                messages.add_message(RenderMessage::ClearArray {
+                    buffer: BufferTarget::NormalBuffer(80),
+                });
                 messages.add_message(RenderMessage::ChooseShader {
                     shader: ShaderIdentifier::Color,
                 });
@@ -225,11 +230,15 @@ pub fn start_packing_thread(
                     depth_buffer: true,
                 });
                 messages.add_message(RenderMessage::Pack {
-                    buffer: 80,
+                    buffer: BufferTarget::NormalBuffer(80),
                     pack: get_reticle_pack(),
                 });
-                messages.add_message(RenderMessage::Draw { buffer: 80 });
-                messages.add_message(RenderMessage::ClearArray { buffer: 80 });
+                messages.add_message(RenderMessage::Draw {
+                    buffer: BufferTarget::NormalBuffer(80),
+                });
+                messages.add_message(RenderMessage::ClearArray {
+                    buffer: BufferTarget::NormalBuffer(80),
+                });
             }
 
             let mut message_mutex = tx.render_pack.lock().unwrap();
