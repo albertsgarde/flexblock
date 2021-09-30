@@ -52,22 +52,13 @@ impl Window {
         );
         let render_caller = RenderCaller::new(screen_dimensions);
 
-        let mut gui = Gui::new((400.0, 400.0), (-1.0, -1.0));
-        gui.add_text(
-            "the quick brown fox jumped over the lazy dog",
-            (100.0, 100.0),
-            200.0,
-            200.0,
-            16.0,
-        );
-
         let res = Window {
             event_loop: Some(el),
             context: windowed_context,
             render_caller,
             render_messages: rx,
             capabilities_sender: packing_tx,
-            gui,
+            gui: Gui::new((400.0, 400.0), (-1.0, -1.0)),
         };
         res.send_capabilities();
 
@@ -106,6 +97,14 @@ impl Window {
     unsafe fn render(&mut self) {
         // Try getting the lock; only render if there's render messages available.
         let render_messages = self.render_messages.render_pack.try_lock();
+        self.gui.reset_gui();
+        self.gui.add_text(
+            "the quick brown fox jumped over the lazy dog",
+            (100.0, 100.0),
+            200.0,
+            200.0,
+            16.0,
+        );
 
         if let Ok(mut render_messages) = render_messages {
             gl::Enable(gl::DEPTH_TEST);
