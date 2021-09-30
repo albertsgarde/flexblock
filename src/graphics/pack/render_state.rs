@@ -1,4 +1,5 @@
 use crate::game::GraphicsStateModel;
+use crate::graphics::wrapper::BufferTarget;
 use crate::graphics::VertexPack;
 use crate::graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
 use crate::utils::mesh_iterator::MeshIterator;
@@ -221,7 +222,7 @@ impl RenderState {
             let pack = create_chunk_pack(chunk);
             if !pack.vertices.is_empty() {
                 messages.add_message(RenderMessage::Pack {
-                    buffer,
+                    buffer: BufferTarget::NormalBuffer(buffer),
                     pack: create_chunk_pack(chunk),
                 });
                 self.register_packed_chunk(location, buffer);
@@ -238,7 +239,9 @@ impl RenderState {
         if self.packed_chunks[buffer].is_none() {
             return Err(String::from("Unpacking an unpacked buffer!"));
         }
-        messages.add_message(RenderMessage::ClearArray { buffer });
+        messages.add_message(RenderMessage::ClearArray {
+            buffer: BufferTarget::NormalBuffer(buffer),
+        });
 
         self.unregister_packed_chunk(buffer);
         Ok(())
@@ -260,7 +263,9 @@ impl RenderState {
             if let Some(chunk) = chunk {
                 if *chunk == location {
                     self.unregister_packed_chunk(counter);
-                    messages.add_message(RenderMessage::ClearArray { buffer: counter });
+                    messages.add_message(RenderMessage::ClearArray {
+                        buffer: BufferTarget::NormalBuffer(counter),
+                    });
                     break;
                 }
             }
@@ -314,7 +319,9 @@ impl RenderState {
                     uniforms: Box::new(ud),
                 });
 
-                render_messages.add_message(RenderMessage::Draw { buffer: counter });
+                render_messages.add_message(RenderMessage::Draw {
+                    buffer: BufferTarget::NormalBuffer(counter),
+                });
             }
         }
     }
