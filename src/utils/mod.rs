@@ -15,3 +15,5 @@ mod colors;
 pub use colors::ColorFormat;
 
 pub mod ply;
+mod csv_reader;
+pub use csv_reader::{read_csv, CsvGrid};

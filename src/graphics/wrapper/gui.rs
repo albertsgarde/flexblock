@@ -1,3 +1,5 @@
+use std::path::{Path};
+
 use crate::graphics::{RenderMessage, RenderMessages, UniformData};
 
 use super::ShaderIdentifier;
@@ -15,7 +17,50 @@ struct GuiSettings {
     canvas_height: f32,
     x_zero: f32,
     y_zero: f32,
+    font_settings : FontSettings
 }
+
+struct Letter {
+    u0 : f32, v0 : f32, u1 : f32, v1 : f32, width : f32, height : f32
+}
+
+
+struct FontSettings {
+    letters : Vec<Letter>
+}
+
+impl FontSettings {
+    pub fn load_letters<T : AsRef<Path>>(path : T) -> FontSettings {
+        let mut result = Vec::with_capacity(256);
+        
+        let data : crate::utils::CsvGrid<i32> = crate::utils::read_csv(&crate::ASSETS_PATH.join(path)).unwrap();
+
+        for i in 0..256 {
+            let u0 = *data.data_point(0, i);
+            let v0 = *data.data_point(1, i);
+            let u1 = *data.data_point(2, i);
+            let v1 = *data.data_point(3, i);
+            result.push( 
+                Letter {
+                    u0 : u0 as f32 / 256.0,
+                    v0 : v0 as f32 / 256.0,
+                    u1 : u1 as f32 / 256.0,
+                    v1 : v1 as f32 / 256.0,
+                    width : (u1-u0) as f32 / 16.0,
+                    height : (v1-v0) as f32 / 16.0
+                }
+            );
+        }
+
+        result[96] = Letter {
+            u0 : 0.0, u1 : 0.0, v0 : 0.0, v1 : 0.0, width : 0.5, height : 1.0
+        };
+        FontSettings {
+            letters : result
+        }
+    }
+}
+
 
 impl GuiSettings {
     pub fn x_scale(&self) -> f32 {
@@ -44,6 +89,7 @@ trait Widget {
 
 impl Gui {
     pub fn new(canvas_dimensions: (f32, f32), zero_point: (f32, f32)) -> Self {
+        let font_settings = FontSettings::load_letters(&crate::ASSETS_PATH.join("graphics/textures/font_info.csv"));
         Self {
             widgets: Vec::new(),
             settings: GuiSettings {
@@ -51,6 +97,7 @@ impl Gui {
                 canvas_height: canvas_dimensions.1,
                 x_zero: zero_point.0,
                 y_zero: zero_point.1,
+                font_settings
             },
         }
     }
@@ -186,22 +233,23 @@ mod widgets {
         fn render_messages(
             &self,
             location: &LocatedWidget,
-            _settings: &GuiSettings,
+            settings: &GuiSettings,
         ) -> Vec<RenderMessage> {
             let mut result = Vec::new();
 
             let mut vertices: Vec<Vertex3D> = Vec::with_capacity(self.text.len() * 4);
             let mut indices: Vec<u32> = Vec::with_capacity(self.text.len() * 6);
 
-            let mut x = 0;
-            let mut y = 0;
+            let mut x = 0.0;
+            let mut y = 0.0;
             let mut idx = 0;
             for char in self.text.chars() {
                 let i = Text::char_to_index(char);
+                let letter = &settings.font_settings.letters[i as usize];
 
-                let xl = location.x + x as f32 * self.scale;
-                let yl = location.y + y as f32 * self.scale;
-                let u = (i % 16) as f32 / 16.0;
+                let xl = location.x + x;
+                let yl = location.y + y;
+                let u = (i % 16) as f32 / 16.0 + letter.u0;
                 let v = (i / 16) as f32 / 16.0;
                 vertices.push(Vertex3D {
                     x: xl,
@@ -214,25 +262,25 @@ mod widgets {
                     v,
                 });
                 vertices.push(Vertex3D {
-                    x: xl + self.scale,
+                    x: xl + self.scale*letter.width,
                     y: yl,
                     z: 0.0,
                     r: 1.0,
                     g: 1.0,
                     b: 1.0,
-                    u: u + 1. / 16.0,
+                    u: u  + letter.u1,
                     v,
                 });
 
                 vertices.push(Vertex3D {
-                    x: xl + self.scale,
+                    x: xl + self.scale*letter.width,
                     y: yl + self.scale,
                     z: 0.0,
                     r: 1.0,
                     g: 1.0,
                     b: 1.0,
-                    u: u + 1. / 16.0,
-                    v: v + 1. / 16.0,
+                    u: u + letter.u1,
+                    v: v + 1.0/16.0,
                 });
                 vertices.push(Vertex3D {
                     x: xl,
@@ -242,7 +290,7 @@ mod widgets {
                     g: 1.0,
                     b: 1.0,
                     u,
-                    v: v + 1. / 16.0,
+                    v: v + 1.0/16.0,
                 });
                 indices.push(idx + 0);
                 indices.push(idx + 1);
@@ -252,13 +300,13 @@ mod widgets {
                 indices.push(idx + 3);
 
                 idx += 4;
-                x += 1;
-                if x as f32 * self.scale > location.width {
-                    y += 1;
-                    if y as f32 * self.scale > location.height {
+                x += letter.width*self.scale;
+                if x > location.width {
+                    y += self.scale;
+                    if y > location.height {
                         break;
                     }
-                    x = 0;
+                    x = 0.0;
                 }
             }
 
