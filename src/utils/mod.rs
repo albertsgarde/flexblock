@@ -14,4 +14,6 @@ pub use file_utilities::dir_entries;
 mod colors;
 pub use colors::ColorFormat;
 
+mod csv_reader;
 pub mod ply;
+pub use csv_reader::{read_csv, CsvGrid};
