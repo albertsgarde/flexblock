@@ -1,11 +1,11 @@
 use cpal::traits::{DeviceTrait, StreamTrait};
 
 pub trait SampleProvider {
-    fn next(&mut self, samples: &mut[f32]);
+    fn next(&mut self, samples: &mut [f32]);
 }
 
 pub trait MonoSampleProvider {
-    fn next(&mut self, samples: &mut[f32]);
+    fn next(&mut self, samples: &mut [f32]);
 }
 
 pub fn start_stream<S, D>(mut sample_provider: S, device: D) -> impl StreamTrait

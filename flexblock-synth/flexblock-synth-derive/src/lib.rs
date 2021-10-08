@@ -1,5 +1,5 @@
 use proc_macro::TokenStream;
-use proc_macro2::{self, Span, Ident};
+use proc_macro2::{self, Ident, Span};
 use quote::quote;
 use syn::{self};
 
@@ -23,7 +23,12 @@ fn module_inner(item: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
     gen
 }
 
-fn _impl_operator(ast: &syn::DeriveInput, operator: &Ident, operator_function: &Ident, operator_module: &Ident) -> proc_macro2::TokenStream {
+fn _impl_operator(
+    ast: &syn::DeriveInput,
+    operator: &Ident,
+    operator_function: &Ident,
+    operator_module: &Ident,
+) -> proc_macro2::TokenStream {
     let name = &ast.ident;
     let generics = &ast.generics;
     let type_params = generics.type_params();
@@ -47,7 +52,7 @@ mod test {
     #[test]
     fn module_for_one_pole_filter() {
         let generated = module_inner(
-            quote!{
+            quote! {
                 pub struct OnePoleFilter<S: Module, C: Module> {
                     source: S,
                     coefficient: C,
@@ -64,7 +69,7 @@ mod test {
     #[test]
     fn no_module_generics() {
         let generated = module_inner(
-            quote!{
+            quote! {
                 pub struct Foo {
                     bar: f32,
                 }
