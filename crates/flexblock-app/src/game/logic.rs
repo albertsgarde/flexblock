@@ -29,12 +29,13 @@ pub fn start_logic_thread(
     audio_message_handle: AudioMessageHandle,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
-        info!("Using chunk size={}", crate::game::world::chunk::CHUNK_SIZE);
+        info!("Using chunk size={}", world::chunk::CHUNK_SIZE);
         let gsm_mutex = logic_to_packing_sender.graphics_state_model;
         let gsm_channel = logic_to_packing_sender.channel_sender;
 
-        let control_config = controls::load_control_config("config/controls.toml");
-        controls::save_control_config("config/controls.toml", &control_config);
+        let control_config_path = utils::ASSETS_PATH.join("config/controls.toml");
+        let control_config = controls::load_control_config(&control_config_path);
+        controls::save_control_config(&control_config_path, &control_config);
         let mut external_event_handler = ExternalEventHandler::new(control_config);
         let mut save_data = SaveData {
             state: State::new(),

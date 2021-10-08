@@ -3,8 +3,8 @@ use super::{
     TextureManager, VertexArray,
 };
 use crate::graphics::{RenderMessage, UniformData, VertexPack};
-use crate::utils::Vertex3D;
 use log::{debug, error};
+use utils::Vertex3D;
 
 const VERBOSE: bool = false;
 

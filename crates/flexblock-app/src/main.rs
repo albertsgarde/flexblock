@@ -6,50 +6,13 @@ mod channels;
 mod game;
 mod graphics;
 mod logging;
-mod utils;
 
-use log::info;
 use std::sync::{mpsc, Arc, Mutex};
 
 extern crate nalgebra_glm as glm;
-#[macro_use]
-extern crate bytepack_derive;
 
 use crate::game::GraphicsStateModel;
 use crate::graphics::RenderMessages;
-
-#[macro_use]
-extern crate lazy_static;
-
-lazy_static! {
-    static ref ASSETS_PATH: Box<std::path::Path> = {
-        let path = std::env::current_exe().map_or_else(
-            |_| {
-                info!("Executable path unavailable. Using working directory instead");
-                std::env::current_dir()
-                    .expect("Both executable path and working directory are unavailable.")
-            },
-            |exe_path| exe_path.join(".."),
-        );
-        let root_path = path.join("../..");
-        let result = if root_path.join("Cargo.toml").is_file() {
-            if root_path.join("assets").is_dir() {
-                root_path.join("assets")
-            } else {
-                panic!("No assets directory at project root.");
-            }
-        } else {
-            if path.join("../assets").is_dir() {
-                path.join("../assets")
-            } else if path.join("assets").is_dir() {
-                path.join("assets")
-            } else {
-                panic!("Either the assets directory is missing or it is inaccessable.")
-            }
-        };
-        result.into_boxed_path()
-    };
-}
 
 fn main() {
     logging::log_init();

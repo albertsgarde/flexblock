@@ -536,8 +536,8 @@ mod tests {
     };
     use crate::graphics::{wrapper::InternalFormat, GraphicsCapabilities};
     use crate::graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
-    use crate::utils::ColorFormat;
     use std::collections::HashMap;
+    use utils::ColorFormat;
 
     fn create_shader_metadata(extra_uniform: bool) -> Vec<ShaderMetadata> {
         let mut res = Vec::new();

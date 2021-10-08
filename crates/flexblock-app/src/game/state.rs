@@ -1,14 +1,10 @@
 use crate::{
     audio::{AudioMessage, AudioMessageHandle, Listener},
-    game::{
-        world::{self, Location, Terrain},
-        GraphicsStateModel, Player, StateInputEvent,
-    },
+    game::{GraphicsStateModel, Player, StateInputEvent},
 };
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
-
-use super::world::VoxelType;
+use world::{self, Location, Terrain, VoxelType};
 
 /// Holds the entire world state.
 /// Everything that is part of the game is held within.

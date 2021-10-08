@@ -140,7 +140,7 @@ impl Shader {
             ));
         }
         let name = identifier.name();
-        let extensionless_path = crate::ASSETS_PATH.join(identifier.extensionless_path());
+        let extensionless_path = utils::ASSETS_PATH.join(identifier.extensionless_path());
         let vertex_file = extensionless_path
             .with_extension("vert")
             .to_str()
@@ -219,7 +219,7 @@ impl Shader {
                 identifier.name()
             ));
         }
-        let extensionless_path = crate::ASSETS_PATH.join(identifier.extensionless_path());
+        let extensionless_path = utils::ASSETS_PATH.join(identifier.extensionless_path());
         let compute_file = extensionless_path
             .with_extension("comp")
             .to_str()

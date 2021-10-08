@@ -2,12 +2,12 @@ use super::{
     framebuffer::FramebufferIdentifier, Framebuffer, FramebufferManager, Shader, ShaderIdentifier,
     ShaderManager, Texture, TextureManager, TextureMetadata,
 };
-use crate::utils::read_png;
 use log::{debug, error};
 use strum::IntoEnumIterator;
+use utils::read_png;
 
 pub unsafe fn load_shaders() -> ShaderManager {
-    let folder = crate::ASSETS_PATH.join("graphics/shaders").to_owned();
+    let folder = utils::ASSETS_PATH.join("graphics/shaders").to_owned();
     debug!("{}", folder.to_str().unwrap());
     debug!("{}", folder.canonicalize().unwrap().to_str().unwrap());
 
@@ -17,7 +17,7 @@ pub unsafe fn load_shaders() -> ShaderManager {
 
     // First, we find every file in the folder we're loading from, and see if it's a shader file
 
-    let entries = crate::utils::dir_entries(&folder, folder.to_str().unwrap());
+    let entries = utils::dir_entries(&folder, folder.to_str().unwrap());
     let entries = match entries {
         Ok(e) => e,
         Err(error) => {
@@ -77,7 +77,7 @@ pub unsafe fn load_shaders() -> ShaderManager {
 
 pub unsafe fn load_textures(screen_dimensions: (u32, u32)) -> TextureManager {
     let mut texture_manager = TextureManager::new();
-    let entries = crate::utils::dir_entries(&crate::ASSETS_PATH.join("graphics/textures"), "");
+    let entries = utils::dir_entries(&utils::ASSETS_PATH.join("graphics/textures"), "");
     let entries = match entries {
         Ok(e) => e,
         Err(error) => {
@@ -100,7 +100,7 @@ pub unsafe fn load_textures(screen_dimensions: (u32, u32)) -> TextureManager {
             };
 
             use super::InternalFormat;
-            use crate::utils::ColorFormat;
+            use utils::ColorFormat;
             let int_format = match data.format {
                 ColorFormat::RGB => InternalFormat::RGB8,
                 ColorFormat::RGBA => InternalFormat::RGBA8,
@@ -143,7 +143,7 @@ pub unsafe fn load_textures(screen_dimensions: (u32, u32)) -> TextureManager {
         }
     }
     //let mut t1 = Texture::new(800, 800, TextureFormat::RGB, "atlas");
-    //t1.fill(crate::utils::read_png("textures/atlas.png"));
+    //t1.fill(utils::read_png("textures/atlas.png"));
     //texture_manager.add_texture(t1);
 
     texture_manager

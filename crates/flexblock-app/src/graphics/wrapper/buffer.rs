@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::utils::vertex::Vertex;
+use utils::vertex::Vertex;
 
 #[derive(Debug, Clone, Copy)]
 pub enum BufferTarget {

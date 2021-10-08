@@ -1,0 +1,26 @@
+[move_forward]
+key_code = "W"
+
+[move_back]
+key_code = "S"
+
+[strafe_right]
+key_code = "D"
+
+[strafe_left]
+key_code = "A"
+
+[jump]
+key_code = "Space"
+
+[save]
+key_code = "S"
+
+[load]
+key_code = "L"
+
+[player_interact_1]
+mouse_button = "Left"
+
+[player_interact_2]
+mouse_button = "Right"

@@ -1,8 +1,8 @@
 //TODO: THIS IS ALL WRONG; ONE VERTEX ARRAY HOLDS A GROUP OF BUFFERS
 use super::ArrayBuffer;
 use super::ElementBuffer;
-use crate::utils::vertex::{AttributePointerList, Vertex};
-use crate::utils::Vertex3D;
+use utils::vertex::{AttributePointerList, Vertex};
+use utils::Vertex3D;
 
 pub struct VertexArray<T: Vertex> {
     id: u32,

@@ -1,7 +1,7 @@
-use crate::game::world::{raytrace, Location, Terrain, VoxelType};
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
 use std::mem::swap;
+use world::{raytrace, Location, Terrain, VoxelType};
 
 /// Represents a physical body that can collide with terrain and other physical bodies.
 #[derive(Deserialize, Serialize)]
@@ -145,7 +145,7 @@ impl Aabb {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::game::world::{Location, Terrain, VoxelType};
+    use world::{Location, Terrain, VoxelType};
 
     #[test]
     fn simple_x() {

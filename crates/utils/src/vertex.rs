@@ -1,4 +1,5 @@
 use bytepack::Packed;
+use bytepack_derive::Packed;
 
 use std::ops::Index;
 

@@ -1,4 +1,4 @@
-use crate::utils::Vertex3D;
+use utils::Vertex3D;
 
 /// TODO: FIX ORIENTATION OF CUBE FACE
 pub fn left(

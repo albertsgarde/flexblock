@@ -1,4 +1,4 @@
-use crate::game::world::voxel;
+use crate::voxel;
 use glm::Vec3;
 use std::mem::swap;
 

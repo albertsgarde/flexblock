@@ -1,4 +1,4 @@
-use crate::utils::maths::{One, Zero};
+use crate::maths::{One, Zero};
 use glm::{Scalar, TVec3};
 use std::ops::{AddAssign, Neg};
 

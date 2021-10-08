@@ -1,19 +1,8 @@
-pub mod chunk;
-mod generation;
-pub mod raytrace;
-mod terrain;
-mod voxel;
-
-pub use chunk::chunk_index_to_position;
-pub use chunk::Chunk;
-pub use terrain::Terrain;
-pub use voxel::Voxel;
-pub use voxel::VoxelType;
-
-use crate::utils::maths;
+use crate::{chunk, raytrace};
 use glm::{IVec3, Vec3};
 use serde::{Deserialize, Serialize};
 use std::ops::{Add, AddAssign, Sub, SubAssign};
+use utils::maths;
 
 #[derive(PartialEq, PartialOrd, Clone, Copy, Debug)]
 pub struct LocationCoordinate {

@@ -1,8 +1,8 @@
-use crate::game::world::{
+use crate::{
     voxel::{Voxel, VoxelType},
     *,
 };
-use glm::Vec3;
+use glm::{IVec3, Vec3};
 use konst::{option::unwrap_or, primitive::parse_u32, result::unwrap_ctx};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

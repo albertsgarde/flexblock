@@ -1,5 +1,5 @@
-use crate::utils::Vertex3D;
 use std::fmt;
+use utils::Vertex3D;
 pub struct VertexPack {
     pub vertices: Vec<Vertex3D>,
     pub elements: Vec<u32>,

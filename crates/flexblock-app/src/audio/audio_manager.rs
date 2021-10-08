@@ -1,11 +1,9 @@
-use crate::{
-    audio::{AudioHandle, Listener, Sound, SoundTemplate},
-    game::world::Location,
-};
+use crate::audio::{AudioHandle, Listener, Sound, SoundTemplate};
 use cpal::traits::{DeviceTrait, HostTrait};
 use flexblock_synth::{start_stream, SampleProvider};
 use log::debug;
 use std::sync::mpsc;
+use world::Location;
 
 use super::listener::ListenerInterpolation;
 

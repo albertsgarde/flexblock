@@ -1,7 +1,3 @@
-pub mod ray;
-
-/// Finds the mathematical modulus.
-/// That is, the modulus is always positive.
 pub fn modulus(lhs: f32, rhs: f32) -> f32 {
     if lhs < 0. {
         (lhs % rhs + rhs) % rhs
@@ -19,7 +15,6 @@ pub fn integer_division(lhs: i32, rhs: i32) -> i32 {
         lhs / rhs
     }
 }
-
 /// A struct implementing this trait has a additive identity.
 pub trait Zero {
     fn zero() -> Self;
@@ -51,16 +46,5 @@ impl One for f32 {
 impl One for i32 {
     fn one() -> Self {
         1
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn modulus_negative() {
-        assert_eq!(modulus(-1., 1.), 0.);
-        assert!((modulus(-0.9, 1.) - 0.1).abs() < 1e-4);
     }
 }

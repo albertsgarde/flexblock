@@ -1,7 +1,4 @@
-use std::{
-    fs::{self},
-    path::Path,
-};
+use std::{fs, path::Path};
 
 use glutin::event::{MouseButton, VirtualKeyCode};
 use log::error;
@@ -103,9 +100,12 @@ fn player_interact_2_default() -> Control {
     }
 }
 
-pub fn save_control_config(path: &str, control_config: &ControlConfig) {
-    let config_path = Path::new(path);
-    if let Err(error) = std::fs::create_dir_all(config_path.parent().unwrap()) {
+pub fn save_control_config<P>(path: P, control_config: &ControlConfig)
+where
+    P: AsRef<Path>,
+{
+    let path = path.as_ref();
+    if let Err(error) = std::fs::create_dir_all(path.parent().unwrap()) {
         error!(
             "Control config save failed. Could not create directory. Error: {:?}",
             error
@@ -129,7 +129,10 @@ pub fn save_control_config(path: &str, control_config: &ControlConfig) {
     }
 }
 
-pub fn load_control_config(path: &str) -> ControlConfig {
+pub fn load_control_config<P>(path: P) -> ControlConfig
+where
+    P: AsRef<Path>,
+{
     match fs::read_to_string(path) {
         Ok(config_string) => toml::from_str(&config_string).unwrap_or_else(|error| {
             error!(

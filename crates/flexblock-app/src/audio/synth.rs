@@ -1,8 +1,6 @@
-use crate::{
-    audio::{Sound, SoundTemplate},
-    game::world::Location,
-};
+use crate::audio::{Sound, SoundTemplate};
 use flexblock_synth::modules::{Module, ModuleTemplate};
+use world::Location;
 
 pub struct Synth<M: Module> {
     module: M,

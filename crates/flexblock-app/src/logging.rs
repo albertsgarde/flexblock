@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 fn log_file_path(index: u32) -> PathBuf {
     let mut result = PathBuf::new();
-    result.push(Path::new(&format!("target/logs/log{}.log", index)));
+    result.push(Path::new(&format!("../target/logs/log{}.log", index)));
     result
 }
 

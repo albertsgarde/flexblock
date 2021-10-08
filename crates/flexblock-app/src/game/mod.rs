@@ -1,5 +1,3 @@
-pub mod world;
-
 pub mod controls;
 
 mod external_event_handler;

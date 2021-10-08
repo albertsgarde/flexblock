@@ -1,5 +1,5 @@
-use crate::game::{world::Terrain, View};
-
+use crate::game::View;
+use world::Terrain;
 pub struct GraphicsStateModel {
     pub terrain: Terrain,
     pub view: View,

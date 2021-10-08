@@ -1,7 +1,7 @@
-use crate::utils::ColorFormat;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ptr::null;
+use utils::ColorFormat;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum InternalFormat {
@@ -229,8 +229,8 @@ impl TextureManager {
 mod tests {
     use super::super::InternalFormat;
     use super::TextureMetadata;
-    use crate::utils::ColorFormat;
     use log::debug;
+    use utils::ColorFormat;
 
     fn serialize_texture_metadata() {
         let metadata = TextureMetadata {

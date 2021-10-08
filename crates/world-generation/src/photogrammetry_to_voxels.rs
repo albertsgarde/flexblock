@@ -1,7 +1,9 @@
-use crate::utils::ply::{read_aligned_points, VertAligned};
-use crate::utils::Locatedf32;
 use log::debug;
 use std::path::Path;
+use utils::{
+    ply::{read_aligned_points, VertAligned},
+    Locatedf32,
+};
 
 #[derive(Clone, Copy, Debug, Default)]
 /// Points to a node in an Octree
@@ -219,6 +221,6 @@ mod tests {
     #[ignore]
     fn basic_test() {
         let _oct =
-            create_voxels(crate::ASSETS_PATH.join("graphics/ply/test/minimal.points")).unwrap();
+            create_voxels(utils::ASSETS_PATH.join("graphics/ply/test/minimal.points")).unwrap();
     }
 }

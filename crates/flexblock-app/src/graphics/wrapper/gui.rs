@@ -37,8 +37,7 @@ impl FontSettings {
     pub fn load_letters<T: AsRef<Path>>(path: T) -> FontSettings {
         let mut result = Vec::with_capacity(256);
 
-        let data: crate::utils::CsvGrid<i32> =
-            crate::utils::read_csv(&crate::ASSETS_PATH.join(path)).unwrap();
+        let data: utils::CsvGrid<i32> = utils::read_csv(&utils::ASSETS_PATH.join(path)).unwrap();
 
         for i in 0..256 {
             let u0 = *data.data_point(0, i);
@@ -95,7 +94,7 @@ trait Widget {
 impl Gui {
     pub fn new(canvas_dimensions: (f32, f32), zero_point: (f32, f32)) -> Self {
         let font_settings =
-            FontSettings::load_letters(&crate::ASSETS_PATH.join("graphics/textures/font_info.csv"));
+            FontSettings::load_letters(&utils::ASSETS_PATH.join("graphics/textures/font_info.csv"));
         Self {
             widgets: Vec::new(),
             settings: GuiSettings {
@@ -157,10 +156,8 @@ impl Gui {
 }
 
 mod widgets {
-    use crate::{
-        graphics::{wrapper::BufferTarget, VertexPack},
-        utils::Vertex3D,
-    };
+    use crate::graphics::{wrapper::BufferTarget, VertexPack};
+    use utils::Vertex3D;
 
     use super::*;
     pub struct Text {

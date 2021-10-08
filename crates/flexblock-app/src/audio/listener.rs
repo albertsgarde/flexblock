@@ -1,5 +1,6 @@
-use crate::game::{world::Location, Player};
+use crate::game::Player;
 use glm::Vec3;
+use world::Location;
 
 /// All distances less than this will attentuate audio the same as this distance.
 const MIN_ATTENUATION_DIST: f32 = 0.25;

@@ -1,6 +1,7 @@
-use crate::game::{view::view_direction::ViewDirection, world::Location};
+use crate::game::view::view_direction::ViewDirection;
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
+use world::Location;
 
 use super::principal_axes::PrincipalAxes;
 

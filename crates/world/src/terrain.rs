@@ -1,18 +1,15 @@
 use std::mem::swap;
 
 use crate::{
-    game::world::{
-        chunk::Chunk,
-        voxel::{Voxel, VoxelType},
-        Location, *,
-    },
-    utils::mesh_iterator::MeshIterator,
+    chunk::{self, Chunk},
+    raytrace,
+    voxel::{self, Voxel, VoxelType},
+    Location,
 };
 use glm::{IVec3, Vec3};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-const CHUNK_SIZE: f32 = super::chunk::CHUNK_SIZE as f32;
+use utils::mesh_iterator::MeshIterator;
 
 pub struct VoxelTypeBoxIterator<'a> {
     lower_bound: Location,
@@ -187,13 +184,13 @@ impl Terrain {
 
 #[cfg(test)]
 mod tests {
-    use super::super::*;
+    use super::*;
     use std::fs::File;
     use std::io::{BufReader, BufWriter};
     #[test]
     fn negative_numbers() {
         // Create a terrain and add two voxels.
-        let mut terrain = terrain::Terrain::new();
+        let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(0., -3., 0.), voxel::VoxelType(1));
         terrain.set_voxel_type(Location::from_coords(25., 0., 0.), voxel::VoxelType(1));
 
@@ -226,7 +223,7 @@ mod tests {
     #[test]
     fn write_read() {
         // Create a terrain and add two voxels.
-        let mut terrain = terrain::Terrain::new();
+        let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(0., 0., 0.), voxel::VoxelType(1));
         terrain.set_voxel_type(Location::from_coords(25., 0., 0.), voxel::VoxelType(1));
 
@@ -237,7 +234,7 @@ mod tests {
         }
         // Read terrain back from file.
         let file = BufReader::new(File::open("save.flex").unwrap());
-        let terrain: terrain::Terrain = bincode::deserialize_from(file).unwrap();
+        let terrain: Terrain = bincode::deserialize_from(file).unwrap();
         std::fs::remove_file("save.flex").unwrap();
         assert_eq!(
             terrain.voxel_type(Location::from_coords(0., 0., 0.)),
@@ -259,7 +256,7 @@ mod tests {
 
     #[test]
     fn ray_trace_2d() {
-        let mut terrain = crate::game::world::terrain::Terrain::new();
+        let mut terrain = Terrain::new();
         terrain.set_voxel_type(Location::from_coords(-6.48, 10.63, 0.), voxel::VoxelType(3));
         terrain.set_voxel_type(Location::from_coords(-5.73, 10.21, 0.), voxel::VoxelType(4));
 
@@ -273,7 +270,7 @@ mod tests {
 
     #[test]
     fn ray_trace_3d() {
-        let mut terrain = crate::game::world::terrain::Terrain::new();
+        let mut terrain = Terrain::new();
         terrain.set_voxel_type(
             Location::from_coords(19.01, -3.64, -7.58),
             voxel::VoxelType(1),
@@ -295,7 +292,7 @@ mod tests {
 
     #[test]
     fn ray_trace_3d_long_distance() {
-        let mut terrain = crate::game::world::terrain::Terrain::new();
+        let mut terrain = Terrain::new();
         terrain.set_voxel_type(
             Location::from_coords(19.01, -3.64, -7.58),
             voxel::VoxelType(1),
@@ -314,7 +311,7 @@ mod tests {
 
     #[test]
     fn ray_trace_chunk_border() {
-        let mut terrain = crate::game::world::terrain::Terrain::new();
+        let mut terrain = Terrain::new();
         terrain.set_voxel_type(
             Location::from_coords(chunk::CHUNK_SIZE_F, 0., 0.),
             voxel::VoxelType(1),

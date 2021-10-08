@@ -1,11 +1,11 @@
 use crate::game::{
     physics::{Aabb, PhysicsBody},
     view::PrincipalAxes,
-    world::{Location, Terrain},
     View,
 };
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
+use world::{Location, Terrain};
 
 use super::view::ViewDirection;
 

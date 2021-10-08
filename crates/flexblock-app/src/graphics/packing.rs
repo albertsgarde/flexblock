@@ -6,8 +6,8 @@ use super::*;
 use super::{RenderMessage, RenderMessages};
 use crate::channels::*;
 use crate::graphics::wrapper::BufferTarget;
-use crate::utils::Vertex3D;
 use std::thread::{self, JoinHandle};
+use utils::Vertex3D;
 
 fn get_reticle_pack() -> VertexPack {
     VertexPack::new(

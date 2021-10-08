@@ -1,10 +1,7 @@
-use crate::game::{
-    physics::Aabb,
-    world::{Location, Terrain},
-    SECONDS_PER_TICK,
-};
+use crate::game::{physics::Aabb, SECONDS_PER_TICK};
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
+use world::{Location, Terrain};
 
 /// Downwards acceleration in voxels per second squared.
 const GRAVITY: f32 = 1.8;
