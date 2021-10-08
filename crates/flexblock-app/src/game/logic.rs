@@ -1,8 +1,8 @@
 use crate::{
-    audio::AudioMessageHandle,
     channels::*,
     game::{controls, state::State, ExternalEventHandler, InputEventHistory, LogicEvent},
 };
+use audio::AudioMessageHandle;
 use flate2::{bufread::DeflateDecoder, write::DeflateEncoder, Compression};
 use log::{error, info};
 use serde::{Deserialize, Serialize};

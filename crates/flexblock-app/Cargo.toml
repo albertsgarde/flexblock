@@ -13,7 +13,8 @@ include = ["src/**/*", "Cargo.toml", "../../assets/**"]
 macros = { path = "macros"}
 utils = { path = "../utils"}
 world = { path = "../world"}
-flexblock-synth = { path = "../flexblock-synth"}
+synth = { path = "../synth"}
+audio = { path = "../audio"}
 
 serde = { version = "1.0.*", features = ["derive"] }
 serde_json = "1.0.*"

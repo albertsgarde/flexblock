@@ -599,6 +599,7 @@ dependencies = [
 name = "flexblock"
 version = "0.1.0"
 dependencies = [
+ "audio",
  "bincode",
  "byteorder",
  "bytepack",
@@ -607,7 +608,6 @@ dependencies = [
  "dyn-clone",
  "enum-map",
  "flate2",
- "flexblock-synth",
  "gl",
  "glutin",
  "konst",
@@ -623,33 +623,11 @@ dependencies = [
  "serde_json",
  "simplelog",
  "strum",
+ "synth",
  "toml",
  "typetag",
  "utils",
  "world",
-]
-
-[[package]]
-name = "flexblock-synth"
-version = "0.1.0"
-dependencies = [
- "array-init",
- "cpal",
- "flexblock-synth-derive",
- "hound",
- "midi",
- "rand",
- "rand_distr",
- "text_io",
-]
-
-[[package]]
-name = "flexblock-synth-derive"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote 1.0.10",
- "syn 1.0.80",
 ]
 
 [[package]]
@@ -1914,10 +1892,6 @@ dependencies = [
  "wayland-cursor",
  "wayland-protocols",
 ]
-
-[[package]]
-name = "sound-engine"
-version = "0.0.0"
 
 [[package]]
 name = "stdweb"

@@ -1,7 +1,7 @@
-use crate::{
-    audio::{AudioMessage, AudioMessageHandle, Listener},
-    game::{GraphicsStateModel, Player, StateInputEvent},
-};
+use crate::
+    game::{GraphicsStateModel, Player, StateInputEvent}
+;
+use audio::{AudioMessage, AudioMessageHandle, Listener};
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
 use world::{self, Location, Terrain, VoxelType};
@@ -53,7 +53,7 @@ impl State {
         self.player.tick(&self.terrain);
 
         audio_message_handle
-            .send_message(AudioMessage::Listener(Listener::from_player(&self.player)));
+            .send_message(AudioMessage::Listener(Listener::new(self.player.view().location(), self.player.view().right())));
     }
 
     fn handle_events(
