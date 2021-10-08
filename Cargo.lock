@@ -86,6 +86,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6945cc5422176fc5e602e590c2878d2c2acd9a4fe20a4baa7c28022521698ec6"
 
 [[package]]
+name = "audio"
+version = "0.0.0"
+dependencies = [
+ "cpal",
+ "log",
+ "nalgebra-glm",
+ "rand",
+ "rand_chacha",
+ "synth",
+ "world",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1968,6 +1981,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a393066ed9010ebaed60b9eafa373d4b1baac186dd7e008555b0f702b51945b6"
 dependencies = [
  "unicode-xid 0.0.4",
+]
+
+[[package]]
+name = "synth"
+version = "0.1.0"
+dependencies = [
+ "array-init",
+ "cpal",
+ "hound",
+ "midi",
+ "rand",
+ "rand_distr",
+ "synth-derive",
+ "text_io",
+]
+
+[[package]]
+name = "synth-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote 1.0.10",
+ "syn 1.0.80",
 ]
 
 [[package]]
