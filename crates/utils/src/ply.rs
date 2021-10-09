@@ -384,11 +384,17 @@ pub fn convert_unaligned_to_aligned<P: AsRef<Path>>(
 #[cfg(test)]
 mod tests {
 
+    use std::path::PathBuf;
+
     use super::*;
+
+    fn ply_test_dir() -> PathBuf {
+        PathBuf::from(r"../../assets/graphics/ply/test")
+    }
 
     #[test]
     fn load_simple() {
-        let result = read_unaligned_ply("assets/graphics/ply/test/minimal.ply");
+        let result = read_unaligned_ply(ply_test_dir().join("minimal.ply"));
         if let Err(result) = &result {
             println!("{:?}", result);
         }
@@ -401,21 +407,21 @@ mod tests {
     fn read_minimal_unaligned_ply() -> Result<(), PlyError> {
         use std::time::Instant;
         let start = Instant::now();
-        let vs = read_unaligned_ply::<&str>("assets/graphics/ply/test/minimal.ply")?;
+        let vs = read_unaligned_ply(ply_test_dir().join("minimal.ply"))?;
         let first_read = Instant::now();
         println!(
             "Read unaligned ply in {}µs!",
             (first_read - start).as_micros()
         );
 
-        write_aligned_points(&vs, "assets/graphics/ply/test/minimal.points")?;
+        write_aligned_points(&vs, ply_test_dir().join("minimal.points"))?;
         let post_write = Instant::now();
         println!(
             "Wrote aligned points in {}µs!",
             (post_write - first_read).as_micros()
         );
 
-        let vs2 = read_aligned_points("assets/graphics/ply/test/minimal.points")?;
+        let vs2 = read_aligned_points(ply_test_dir().join("minimal.points"))?;
         let second_read = Instant::now();
         println!(
             "Read aligned points in {}µs!",
@@ -471,8 +477,8 @@ mod tests {
     #[test]
     fn convert_directly() -> Result<(), PlyError> {
         convert_unaligned_to_aligned(
-            "assets/graphics/ply/test/minimal.ply",
-            "assets/graphics/ply/test/minimal.points",
+            ply_test_dir().join("minimal.ply"),
+            ply_test_dir().join("minimal.points"),
         )
     }
 }

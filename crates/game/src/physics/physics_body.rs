@@ -1,4 +1,4 @@
-use crate::game::{physics::Aabb, SECONDS_PER_TICK};
+use crate::{physics::Aabb, SECONDS_PER_TICK};
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
 use world::{Location, Terrain};

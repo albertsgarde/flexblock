@@ -1,5 +1,4 @@
-use crate::
-    game::{GraphicsStateModel, Player, StateInputEvent}
+use crate::{GraphicsStateModel, Player, StateInputEvent}
 ;
 use audio::{AudioMessage, AudioMessageHandle, Listener};
 use glm::Vec3;

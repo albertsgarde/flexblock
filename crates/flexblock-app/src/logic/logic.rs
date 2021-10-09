@@ -1,7 +1,8 @@
 use crate::{
     channels::*,
-    game::{controls, state::State, ExternalEventHandler, InputEventHistory, LogicEvent},
+    logic::{controls, ExternalEventHandler, LogicEvent},
 };
+use game::{State, InputEventHistory};
 use audio::AudioMessageHandle;
 use flate2::{bufread::DeflateDecoder, write::DeflateEncoder, Compression};
 use log::{error, info};
@@ -13,9 +14,6 @@ use std::{
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
-
-pub const TPS: u32 = 24;
-pub const SECONDS_PER_TICK: f32 = 1. / (TPS as f32);
 
 #[derive(Serialize, Deserialize)]
 struct SaveData {
@@ -79,9 +77,9 @@ pub fn start_logic_thread(
             }
 
             // Wait for next tick if necessary.
-            if last_tick.elapsed().as_secs_f32() < SECONDS_PER_TICK {
+            if last_tick.elapsed().as_secs_f32() < game::SECONDS_PER_TICK {
                 thread::sleep(Duration::from_secs_f32(
-                    SECONDS_PER_TICK - last_tick.elapsed().as_secs_f32(),
+                    game::SECONDS_PER_TICK - last_tick.elapsed().as_secs_f32(),
                 ));
             }
             last_tick = Instant::now();

@@ -1,14 +1,15 @@
-use crate::game::GraphicsStateModel;
+
 use crate::graphics::wrapper::BufferTarget;
 use crate::graphics::VertexPack;
 use crate::graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
-use crate::{game::View, graphics::wrapper::ShaderIdentifier};
+use crate::graphics::wrapper::ShaderIdentifier;
+use utils::mesh_iterator::MeshIterator;
+use world::{self, Chunk, Terrain};
+use game::{GraphicsStateModel, View};
 use konst::{option::unwrap_or, primitive::parse_u32, result::unwrap_ctx};
 use log::error;
 use std::collections::VecDeque;
 use std::sync::MutexGuard;
-use utils::mesh_iterator::MeshIterator;
-use world::{self, Chunk, Terrain};
 
 /// This creates the vertex pack for a specific chunk. It just goes through all the voxels and adds their faces.
 fn create_chunk_pack(chunk: &Chunk) -> VertexPack {

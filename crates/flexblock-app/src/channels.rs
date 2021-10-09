@@ -1,6 +1,7 @@
 use crate::graphics::ExternalEvent;
 use crate::graphics::RenderMessages;
-use crate::{game::GraphicsStateModel, graphics::GraphicsCapabilities};
+use crate::graphics::GraphicsCapabilities;
+use game::GraphicsStateModel;
 use std::sync::{mpsc, Arc, Mutex};
 
 pub struct Update;

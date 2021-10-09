@@ -1,0 +1,15 @@
+[package]
+name = "game"
+version = "0.0.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+world = { path = "../world" }
+audio = { path = "../audio" }
+
+serde = { version = "1.0.*", features = ["derive"] }
+nalgebra-glm = { version = "0.11.*", features = ["serde-serialize"] }
+typetag = "0.1.*"
+dyn-clone = "1.0.*"

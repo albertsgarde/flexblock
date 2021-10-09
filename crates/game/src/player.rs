@@ -1,4 +1,4 @@
-use crate::game::{
+use crate::{
     physics::{Aabb, PhysicsBody},
     view::PrincipalAxes,
     View,

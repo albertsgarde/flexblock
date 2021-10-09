@@ -2,7 +2,7 @@
 #![warn(missing_docs)]
 //! Flexiblock aims to be a messy, overengineered, feature-creeped, and generally super cool Minecraft clone.
 mod channels;
-mod game;
+mod logic;
 mod graphics;
 mod logging;
 
@@ -10,7 +10,7 @@ use std::sync::{mpsc, Arc, Mutex};
 
 extern crate nalgebra_glm as glm;
 
-use crate::game::GraphicsStateModel;
+use game::GraphicsStateModel;
 use crate::graphics::RenderMessages;
 
 fn main() {
@@ -53,11 +53,11 @@ fn main() {
     let packing_to_window_receiver = channels::PackingToWindowReceiver { render_pack };
 
     // Create audio thread.
-    let audio_handle = audio::setup_audio(crate::game::TPS);
+    let audio_handle = audio::setup_audio(game::TPS);
     let logic_audio_message_handle = audio_handle.audio_message_handle();
 
     // Start threads.
-    let logic_thread = game::start_logic_thread(
+    let logic_thread = logic::start_logic_thread(
         window_to_logic_receiver,
         logic_to_packing_sender,
         logic_audio_message_handle,

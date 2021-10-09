@@ -1,4 +1,4 @@
-use crate::game::view::view_direction::ViewDirection;
+use crate::view::view_direction::ViewDirection;
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
 use std::f32::consts::*;

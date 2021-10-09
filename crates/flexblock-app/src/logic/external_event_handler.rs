@@ -1,10 +1,9 @@
-use crate::{
-    game::{
-        controls::{Control, ControlConfig},
-        LogicEvent, StateInputEvent,
-    },
+use crate::{logic::{
+    controls::{Control, ControlConfig},
+    LogicEvent,},
     graphics::ExternalEvent,
 };
+use game::StateInputEvent;
 use glm::Vec3;
 use glutin::event::{ElementState, MouseButton, VirtualKeyCode};
 use std::{collections::HashMap, sync::mpsc};
