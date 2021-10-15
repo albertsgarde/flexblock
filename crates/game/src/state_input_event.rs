@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 /// These events should be abstracted away before-hand.
 /// Stuff like saving and loading should be handled by logic around the state.
 /// These events are only for events to be sent into the game world.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum StateInputEvent {
     /// Rotates the view along the great circle in the delta direction by |delta| radians.
     RotateView {
