@@ -61,7 +61,7 @@ mod tests {
     fn read_png() {
         use std::fs::File;
 
-        let decoder = png::Decoder::new(File::open("textures/atlas.png").unwrap());
+        let decoder = png::Decoder::new(File::open("../../assets/graphics/textures/atlas.png").unwrap());
         let (info, mut reader) = decoder.read_info().unwrap();
         // Allocate the output buffer.
         let mut buf = vec![0; info.buffer_size()];
@@ -77,7 +77,7 @@ mod tests {
         use std::io::BufWriter;
         use std::path::Path;
 
-        let path = Path::new(r"textures/write.png");
+        let path = Path::new(r"../../assets/graphics/textures/write.png");
         let file = File::create(path).unwrap();
         let ref mut w = BufWriter::new(file);
 
