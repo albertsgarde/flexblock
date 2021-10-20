@@ -1,0 +1,15 @@
+[package]
+name = "multiplayer"
+version = "0.0.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+game = { path = "../game" }
+
+bincode = "1.2.1"
+serde = { version = "1.0.130", features = ["derive"] }
+bytes = "1.1.0"
+tokio = { version = "1.12.0", features = ["rt-multi-thread", "io-util", "net", "sync", "macros" ] }
+log = "0.4.*"
