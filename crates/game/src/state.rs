@@ -7,7 +7,7 @@ use world::{self, Location, Terrain, VoxelType};
 
 /// Holds the entire world state.
 /// Everything that is part of the game is held within.
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct State {
     terrain: Terrain,
     player: Player,
@@ -41,11 +41,9 @@ impl State {
     }
 
     /// Runs one game tick reacting to the given input events.
-    ///
-    /// # Arguments
-    ///
-    /// `_` - The input events received this tick.
-    pub fn tick(&mut self, events: &[StateInputEvent], audio_message_handle: &AudioMessageHandle) {
+    pub fn tick<A>(&mut self, events: &[StateInputEvent], audio_message_handle: &A)
+        where A: AudioMessageHandle,
+    {
         self.cur_tick += 1;
         self.handle_events(events, audio_message_handle);
 
@@ -55,11 +53,12 @@ impl State {
             .send_message(AudioMessage::Listener(Listener::new(self.player.view().location(), self.player.view().right())));
     }
 
-    fn handle_events(
+    fn handle_events<A>(
         &mut self,
         events: &[StateInputEvent],
-        audio_message_handle: &AudioMessageHandle,
-    ) {
+        audio_message_handle: &A,
+    )
+    where A: AudioMessageHandle, {
         for event in events {
             match *event {
                 StateInputEvent::RotateView { delta } => self.player.turn(delta),
