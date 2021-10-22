@@ -3,7 +3,7 @@ use crate::{
     logic::{controls, ExternalEventHandler, LogicEvent},
 };
 use game::{State, InputEventHistory};
-use audio::AudioMessageHandle;
+use audio::AudioMessageSender;
 use flate2::{bufread::DeflateDecoder, write::DeflateEncoder, Compression};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
@@ -21,10 +21,57 @@ struct SaveData {
     pub event_history: InputEventHistory,
 }
 
+impl SaveData {
+
+    fn save(&self) {
+        let save_path = Path::new("saves/save.flex");
+        if let Err(error) = std::fs::create_dir_all(save_path.parent().unwrap()) {
+            error!(
+                "Save failed. Could not create directory. Error: {:?}",
+                error
+            );
+            return;
+        }
+        // Write save data to file in bincode format.
+    
+        let file = {
+            let file = match File::create(save_path) {
+                Ok(file) => file,
+                Err(error) => {
+                    error!("Could not open save file. Error: {:?}", error);
+                    return;
+                }
+            };
+            BufWriter::new(file)
+        };
+        let mut encoder = DeflateEncoder::new(file, Compression::fast());
+        if let Err(error) = bincode::serialize_into(&mut encoder, &self) {
+            error!("Save failed with error: {:?}", *error)
+        }
+    }
+    
+    fn load() -> Result<SaveData, std::io::Error> {
+        let save_path = Path::new("saves/save.flex");
+        let file = {
+            let file = match File::open(save_path) {
+                Ok(file) => file,
+                Err(error) => {
+                    error!("Could not open save file. Error: {:?}", error);
+                    return Err(error);
+                }
+            };
+            BufReader::new(file)
+        };
+        let decoder = DeflateDecoder::new(file);
+        let loaded_save_data: SaveData = bincode::deserialize_from(decoder).unwrap();
+        Ok(loaded_save_data)
+    }
+}
+
 pub fn start_logic_thread(
     window_to_logic_receiver: WindowToLogicReceiver,
     logic_to_packing_sender: LogicToPackingSender,
-    audio_message_handle: AudioMessageHandle,
+    audio_message_handle: AudioMessageSender,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         info!("Using chunk size={}", world::chunk::CHUNK_SIZE);
@@ -90,52 +137,8 @@ pub fn start_logic_thread(
 fn handle_logic_events(events: &Vec<LogicEvent>, save_data: &mut SaveData) {
     for event in events.iter() {
         match event {
-            LogicEvent::Save => save(save_data),
-            LogicEvent::LoadLatest => load(save_data),
+            LogicEvent::Save => save_data.save(),
+            LogicEvent::LoadLatest => *save_data = SaveData::load().unwrap(),
         }
     }
-}
-
-fn save(save_data: &SaveData) {
-    let save_path = Path::new("saves/save.flex");
-    if let Err(error) = std::fs::create_dir_all(save_path.parent().unwrap()) {
-        error!(
-            "Save failed. Could not create directory. Error: {:?}",
-            error
-        );
-        return;
-    }
-    // Write save data to file in bincode format.
-
-    let file = {
-        let file = match File::create(save_path) {
-            Ok(file) => file,
-            Err(error) => {
-                error!("Could not open save file. Error: {:?}", error);
-                return;
-            }
-        };
-        BufWriter::new(file)
-    };
-    let mut encoder = DeflateEncoder::new(file, Compression::fast());
-    if let Err(error) = bincode::serialize_into(&mut encoder, &save_data) {
-        error!("Save failed with error: {:?}", *error)
-    }
-}
-
-fn load(save_data: &mut SaveData) {
-    let save_path = Path::new("saves/save.flex");
-    let file = {
-        let file = match File::open(save_path) {
-            Ok(file) => file,
-            Err(error) => {
-                error!("Could not open save file. Error: {:?}", error);
-                return;
-            }
-        };
-        BufReader::new(file)
-    };
-    let decoder = DeflateDecoder::new(file);
-    let loaded_save_data: SaveData = bincode::deserialize_from(decoder).unwrap();
-    *save_data = loaded_save_data;
 }
