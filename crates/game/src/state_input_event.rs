@@ -23,7 +23,7 @@ pub enum StateInputEvent {
 }
 
 /// Represents the entire history of input events.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct InputEventHistory {
     input_events: Vec<Vec<StateInputEvent>>,
 }
