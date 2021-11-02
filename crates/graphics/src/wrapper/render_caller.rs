@@ -56,7 +56,7 @@ impl RenderCaller {
 
     ///
     /// You better only call this once or the world WILL explode
-    pub unsafe fn initialize_gl(&mut self, windowed_context : &ContextWrapper<PossiblyCurrent, Window>) {
+    pub unsafe fn initialize_gl(windowed_context : &ContextWrapper<PossiblyCurrent, Window>) {
         gl::load_with(|s| windowed_context.get_proc_address(s) as *const _);
 
         gl::ClearColor(0.3, 0.3, 0.5, 1.0);

@@ -56,9 +56,9 @@ impl Window {
             windowed_context.window().inner_size().width,
             windowed_context.window().inner_size().height,
         );
-        let mut render_caller = RenderCaller::new(screen_dimensions);
         info!("Loading gl!");
-        render_caller.initialize_gl(&windowed_context);
+        graphics::RenderCaller::initialize_gl(&windowed_context);
+        let render_caller = RenderCaller::new(screen_dimensions);
 
         let res = Window {
             event_loop: Some(el),
