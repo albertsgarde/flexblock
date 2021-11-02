@@ -609,19 +609,15 @@ dependencies = [
  "enum-map",
  "flate2",
  "game",
- "gl",
  "glutin",
+ "graphics",
  "konst",
  "log",
- "macros",
  "nalgebra-glm",
  "png",
  "rand",
  "rand_chacha",
- "raw-window-handle",
- "regex",
  "serde",
- "serde_json",
  "simplelog",
  "strum",
  "synth",
@@ -819,6 +815,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3da5951a1569dbab865c6f2a863efafff193a93caf05538d193e9e3816d21696"
 dependencies = [
  "gl_generator 0.14.0",
+]
+
+[[package]]
+name = "graphics"
+version = "0.1.0"
+dependencies = [
+ "gl",
+ "glutin",
+ "log",
+ "macros",
+ "nalgebra-glm",
+ "raw-window-handle",
+ "regex",
+ "serde",
+ "serde_json",
+ "strum",
+ "utils",
 ]
 
 [[package]]

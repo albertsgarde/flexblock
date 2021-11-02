@@ -1,5 +1,5 @@
 use super::TextureManager;
-use crate::graphics::{render_messages::UniformValue, UniformData};
+use crate::{render_messages::UniformValue, UniformData};
 use log::info;
 use macros::ShaderId;
 use std::{

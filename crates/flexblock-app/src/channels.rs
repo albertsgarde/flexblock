@@ -1,6 +1,6 @@
-use crate::graphics::ExternalEvent;
-use crate::graphics::RenderMessages;
-use crate::graphics::GraphicsCapabilities;
+use graphics::ExternalEvent;
+use graphics::RenderMessages;
+use graphics::GraphicsCapabilities;
 use game::GraphicsStateModel;
 use std::sync::{mpsc, Arc, Mutex};
 

@@ -1,5 +1,5 @@
-use crate::graphics::UniformData;
-use crate::graphics::{wrapper::ShaderIdentifier, RenderMessage, RenderMessages};
+use crate::UniformData;
+use crate::{wrapper::ShaderIdentifier, RenderMessage, RenderMessages};
 
 pub struct ComputePipeline {
     dispatches: Vec<ComputeDispatch>,

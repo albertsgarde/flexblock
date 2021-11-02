@@ -1,8 +1,8 @@
 use crate::{logic::{
     controls::{Control, ControlConfig},
     LogicEvent,},
-    graphics::ExternalEvent,
 };
+use graphics::ExternalEvent;
 use game::StateInputEvent;
 use glm::Vec3;
 use glutin::event::{ElementState, MouseButton, VirtualKeyCode};
@@ -55,7 +55,7 @@ impl ExternalEventHandler {
     /// Empties the channel of new events and handles them.
     pub fn handle_inputs(
         &mut self,
-        input_event_receiver: &mpsc::Receiver<crate::graphics::ExternalEvent>,
+        input_event_receiver: &mpsc::Receiver<graphics::ExternalEvent>,
     ) {
         loop {
             match input_event_receiver.try_recv() {

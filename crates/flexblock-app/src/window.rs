@@ -1,12 +1,29 @@
-use super::gui::Gui;
-use super::RenderCaller;
+use graphics::{Gui, GraphicsCapabilities, RenderCaller, ExternalEvent};
 use crate::{
     channels::{PackingToWindowReceiver, WindowToPackingSender},
-    graphics::GraphicsCapabilities,
 };
 use glutin::event::{Event, WindowEvent};
 use glutin::event_loop::ControlFlow;
 use log::info;
+
+use crate::channels::*;
+
+pub fn start_window(
+    rx: PackingToWindowReceiver,
+    tx: WindowToLogicSender,
+    packing_tx: WindowToPackingSender,
+) {
+    let window = unsafe { Window::new(rx, packing_tx) };
+
+    let eh: EventHandler = Box::new(move |event| {
+        if let Some(event) = ExternalEvent::create_from_glut_event(event) {
+            tx.channel_sender.send(event).unwrap();
+        }
+    });
+
+    unsafe { window.run(eh) };
+}
+
 
 pub struct Window {
     event_loop: Option<glutin::event_loop::EventLoop<()>>,
@@ -34,23 +51,14 @@ impl Window {
 
         let windowed_context = windowed_context.make_current().unwrap();
 
-        info!("Loading gl!");
-        gl::load_with(|s| windowed_context.get_proc_address(s) as *const _);
-
-        gl::ClearColor(0.3, 0.3, 0.5, 1.0);
-
-        //TODO: DEPTH TESTING IS OPTIONAL, NOT REQUIRED!
-        gl::Enable(gl::DEPTH_TEST);
-        gl::DepthFunc(gl::LESS);
-        gl::ClearColor(0.6, 0.6, 0.6, 1.0);
-        gl::Enable(gl::CULL_FACE);
-        gl::CullFace(gl::BACK);
 
         let screen_dimensions = (
             windowed_context.window().inner_size().width,
             windowed_context.window().inner_size().height,
         );
-        let render_caller = RenderCaller::new(screen_dimensions);
+        let mut render_caller = RenderCaller::new(screen_dimensions);
+        info!("Loading gl!");
+        render_caller.initialize_gl(&windowed_context);
 
         let res = Window {
             event_loop: Some(el),
@@ -107,8 +115,6 @@ impl Window {
         );
 
         if let Ok(mut render_messages) = render_messages {
-            gl::Enable(gl::DEPTH_TEST);
-            gl::Enable(gl::CULL_FACE); // This should not actually be done.
             if let Some(messages) = render_messages.take() {
                 for message in messages.iter() {
                     self.render_caller.read_message(message);
@@ -126,7 +132,7 @@ impl Window {
     }
 
     unsafe fn update_screen_dimensions(&mut self, screen_dimensions: (u32, u32)) {
-        gl::Viewport(0, 0, screen_dimensions.0 as i32, screen_dimensions.1 as i32);
+        //gl::Viewport(0, 0, screen_dimensions.0 as i32, screen_dimensions.1 as i32);
         self.render_caller
             .update_screen_dimensions(screen_dimensions);
         self.send_capabilities();

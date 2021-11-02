@@ -1,4 +1,4 @@
-use crate::graphics::wrapper::{FramebufferMetadata, ShaderMetadata, TextureMetadata};
+use crate::wrapper::{FramebufferMetadata, ShaderMetadata, TextureMetadata};
 use std::collections::HashMap;
 
 ///TODO
