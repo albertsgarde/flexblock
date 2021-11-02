@@ -1,4 +1,4 @@
-use multiplayer::{Client, Server};
+use multiplayer::{Client, ServerNetworking};
 use game::StateInputEvent;
 
 #[test]
@@ -6,7 +6,7 @@ use game::StateInputEvent;
 fn test() {
     const IP: &str = "localhost:15926";
     let server = std::thread::spawn(|| {
-        let mut server = Server::start(IP).unwrap();
+        let mut server = ServerNetworking::start(IP).unwrap();
         assert_eq!(server.new_events().len(), 0);
         std::thread::sleep(std::time::Duration::from_millis(2000));
         assert_eq!(server.num_clients(), 1);

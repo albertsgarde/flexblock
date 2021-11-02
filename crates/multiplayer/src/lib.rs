@@ -1,6 +1,6 @@
 mod packet;
-mod server;
-pub use server::Server;
+mod server_networking;
+pub use server_networking::ServerNetworking;
 mod client;
 pub use client::Client;
 

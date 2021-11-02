@@ -1,7 +1,4 @@
-use crate::{
-    channels::*,
-    logic::{controls, ExternalEventHandler, LogicEvent},
-};
+use crate::{channels::*, logic::{ExternalEventHandler, LatencyState, LogicEvent, SacredState, client::ClientHandle, controls, server::ServerHandle}};
 use game::{State, InputEventHistory};
 use audio::AudioMessageSender;
 use flate2::{bufread::DeflateDecoder, write::DeflateEncoder, Compression};
@@ -15,58 +12,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-#[derive(Serialize, Deserialize)]
-struct SaveData {
-    pub state: State,
-    pub event_history: InputEventHistory,
-}
-
-impl SaveData {
-
-    fn save(&self) {
-        let save_path = Path::new("saves/save.flex");
-        if let Err(error) = std::fs::create_dir_all(save_path.parent().unwrap()) {
-            error!(
-                "Save failed. Could not create directory. Error: {:?}",
-                error
-            );
-            return;
-        }
-        // Write save data to file in bincode format.
-    
-        let file = {
-            let file = match File::create(save_path) {
-                Ok(file) => file,
-                Err(error) => {
-                    error!("Could not open save file. Error: {:?}", error);
-                    return;
-                }
-            };
-            BufWriter::new(file)
-        };
-        let mut encoder = DeflateEncoder::new(file, Compression::fast());
-        if let Err(error) = bincode::serialize_into(&mut encoder, &self) {
-            error!("Save failed with error: {:?}", *error)
-        }
-    }
-    
-    fn load() -> Result<SaveData, std::io::Error> {
-        let save_path = Path::new("saves/save.flex");
-        let file = {
-            let file = match File::open(save_path) {
-                Ok(file) => file,
-                Err(error) => {
-                    error!("Could not open save file. Error: {:?}", error);
-                    return Err(error);
-                }
-            };
-            BufReader::new(file)
-        };
-        let decoder = DeflateDecoder::new(file);
-        let loaded_save_data: SaveData = bincode::deserialize_from(decoder).unwrap();
-        Ok(loaded_save_data)
-    }
-}
+use super::sacred_state;
 
 pub fn start_logic_thread(
     window_to_logic_receiver: WindowToLogicReceiver,
@@ -74,6 +20,10 @@ pub fn start_logic_thread(
     audio_message_handle: AudioMessageSender,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
+        info!("Starting server on ip 'localhost:15926'...");
+        let server_handle = ServerHandle::start("localhost:15926");
+        info!("Server started!");
+
         info!("Using chunk size={}", world::chunk::CHUNK_SIZE);
         let gsm_mutex = logic_to_packing_sender.graphics_state_model;
         let gsm_channel = logic_to_packing_sender.channel_sender;
@@ -81,11 +31,15 @@ pub fn start_logic_thread(
         let control_config_path = utils::ASSETS_PATH.join("config/controls.toml");
         let control_config = controls::load_control_config(&control_config_path);
         controls::save_control_config(&control_config_path, &control_config);
+
         let mut external_event_handler = ExternalEventHandler::new(control_config);
-        let mut save_data = SaveData {
-            state: State::new(),
-            event_history: InputEventHistory::new(),
-        };
+
+        info!("Connecting to local server on ip 'localhost:15926'...");
+        let client = ClientHandle::start("localhost:15926");
+        info!("Successfully connected to server!");
+        
+        let mut sacred_state = client.state().expect("Client should be initialized with Some state.");
+        let mut latency_state = LatencyState::from_sacred_state(&sacred_state);
 
         let mut last_tick = Instant::now();
         loop {
@@ -93,26 +47,14 @@ pub fn start_logic_thread(
             external_event_handler.handle_inputs(&window_to_logic_receiver.channel_receiver);
             // Get tick events.
             let (state_events, logic_events) = external_event_handler.tick_events();
-            handle_logic_events(&logic_events, &mut save_data);
+            handle_logic_events(&logic_events, &mut sacred_state);
 
-            let event_history = &mut save_data.event_history;
-            let state = &mut save_data.state;
-
-            // Add tick events to history.
-            event_history.receive_tick_events(state_events);
-
-            // Run tick.
-            state.tick(
-                event_history
-                    .cur_tick_events()
-                    .expect("This should not be possible"),
-                &audio_message_handle,
-            );
+            latency_state.tick(state_events, &audio_message_handle);
 
             // Update graphics state model.
             match gsm_mutex.try_lock() {
                 Ok(mut gsm) => {
-                    state.update_graphics_state_model(&mut gsm);
+                    latency_state.update_graphics_state_model(&mut gsm);
                     if let Err(error) = gsm_channel.send(Update) {
                         panic!("Packing thread has deallocated the channel. {}", error);
                     }
@@ -134,11 +76,11 @@ pub fn start_logic_thread(
     })
 }
 
-fn handle_logic_events(events: &Vec<LogicEvent>, save_data: &mut SaveData) {
+fn handle_logic_events(events: &Vec<LogicEvent>, sacred_state: &mut SacredState) {
     for event in events.iter() {
         match event {
-            LogicEvent::Save => save_data.save(),
-            LogicEvent::LoadLatest => *save_data = SaveData::load().unwrap(),
+            LogicEvent::Save => sacred_state.save(),
+            LogicEvent::LoadLatest => *sacred_state = SacredState::load().unwrap(),
         }
     }
 }

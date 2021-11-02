@@ -1,19 +1,24 @@
 use crate::AudioMessage;
 use std::{sync::mpsc::Sender, thread::JoinHandle};
 
-pub struct AudioMessageHandle {
+pub trait AudioMessageHandle {
+    fn send_message(&self, message: AudioMessage);
+}
+
+pub struct AudioMessageSender {
     audio_message_sender: Sender<AudioMessage>,
 }
 
-impl AudioMessageHandle {
-    pub fn send_message(&self, message: AudioMessage) {
-        match self.audio_message_sender.send(message) {
-            Ok(_) => {}
-            Err(_) => {
-                panic!("Cannot send message to audio as it has disconnected.")
-            }
-        }
+impl AudioMessageHandle for AudioMessageSender {
+    fn send_message(&self, message: AudioMessage) {
+        self.audio_message_sender.send(message).expect("Cannot send message to audio as it has disconnected.");
     }
+}
+
+pub struct AudioMessageIgnorer;
+
+impl AudioMessageHandle for AudioMessageIgnorer {
+    fn send_message(&self, _: AudioMessage) {}
 }
 
 pub struct AudioHandle {
@@ -35,8 +40,8 @@ impl AudioHandle {
         }
     }
 
-    pub fn audio_message_handle(&self) -> AudioMessageHandle {
-        AudioMessageHandle {
+    pub fn audio_message_handle(&self) -> AudioMessageSender {
+        AudioMessageSender {
             audio_message_sender: self.audio_message_sender.clone(),
         }
     }
