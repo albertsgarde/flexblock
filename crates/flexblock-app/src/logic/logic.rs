@@ -31,7 +31,7 @@ pub fn start_logic_thread(
         let gsm_mutex = logic_to_packing_sender.graphics_state_model;
         let gsm_channel = logic_to_packing_sender.channel_sender;
 
-        let control_config_path = utils::ASSETS_PATH.join("config/controls.toml");
+        let control_config_path = utils::ASSETS_PATH.join("../config/controls.toml");
         let control_config = controls::load_control_config(&control_config_path);
         controls::save_control_config(&control_config_path, &control_config);
         let mut external_event_handler = ExternalEventHandler::new(control_config);
