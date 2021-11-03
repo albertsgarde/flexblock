@@ -40,7 +40,7 @@ pub struct ArrayBuffer<T: Vertex> {
 
 ///TODO: MAKE TYPE SAFE
 impl<T: Vertex> ArrayBuffer<T> {
-    pub unsafe fn new(_: T) -> Result<ArrayBuffer<T>, String> {
+    pub unsafe fn new() -> Result<ArrayBuffer<T>, String> {
         let mut vbo = 0;
         gl::GenBuffers(1, &mut vbo);
 

@@ -29,7 +29,7 @@ impl RenderCaller {
     ///
     /// Marked as unsafe because it calls GL code
     pub unsafe fn new(screen_dimensions: (u32, u32)) -> RenderCaller {
-        let vertex_array = VertexArray::new(Vertex3D::default()).unwrap();
+        let vertex_array = VertexArray::new().unwrap();
 
         let shader_manager = super::loader::load_shaders();
         let texture_manager = super::loader::load_textures(screen_dimensions);

@@ -14,7 +14,7 @@ pub struct VertexArray<T: Vertex> {
 //TODO: WHAT TO DO WHEN MULTIPLE VERTREX ARRAYS TRY TO BIND SAME LOCATION AT THE SAME TIME??
 impl<T: Vertex> VertexArray<T> {
     //TODO: validate inputs
-    pub unsafe fn new(dummy: T) -> Result<VertexArray<T>, String> {
+    pub unsafe fn new() -> Result<VertexArray<T>, String> {
         let attributes = Vertex3D::attribute_pointers();
 
         let mut vbos: Vec<ArrayBuffer<T>> = Vec::new();
@@ -25,7 +25,7 @@ impl<T: Vertex> VertexArray<T> {
         gl::BindVertexArray(id);
         for _ in 0..100 {
             let ebo = ElementBuffer::new().unwrap();
-            let vbo = ArrayBuffer::new(dummy).unwrap();
+            let vbo = ArrayBuffer::<T>::new().unwrap();
 
             vbo.bind();
             for i in 0..attributes.len() {
