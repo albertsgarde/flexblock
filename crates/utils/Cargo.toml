@@ -1,0 +1,18 @@
+[package]
+name = "utils"
+version = "0.0.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+nalgebra-glm = { version = "0.11.*", features = ["serde-serialize"] }
+serde = { version = "1.0.*", features = ["derive"] }
+gl = "0.10.*"
+byteorder = "*"
+lazy_static = "1.4.*"
+
+log = "0.4.*"
+png = "0.16.*"
+bytepack = "0.4.*"
+bytepack_derive = "0.2.*"
