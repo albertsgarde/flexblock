@@ -1,6 +1,6 @@
 use super::RenderState;
-use crate::graphics::{
-    wrapper::{BufferTarget, ShaderMetadata},
+use graphics::{
+    BufferTarget, ShaderMetadata,
     GraphicsCapabilities, RenderMessage, RenderMessages, UniformData,
 };
 use log::debug;
@@ -462,6 +462,9 @@ impl RenderMessageValidator {
                     RenderMessage::SwitchTo2D {} => {
                         // TODO: IS THERE ANY CONTEXT WHERE SWITCHING TO 2D IS ILLEGAL
                     }
+                    RenderMessage::SwitchTo3D {} => {
+                        // TODO: IS THERE ANY CONTEXT WHERE SWITCHING TO 3D IS ILLEGAL
+                    }
                 }
             }
 
@@ -531,11 +534,11 @@ impl RenderMessageValidator {
 #[cfg(test)]
 mod tests {
     use super::{RenderMessageValidator, RenderState};
-    use crate::graphics::wrapper::{
+    use graphics::{
         BufferTarget, ProgramType, ShaderIdentifier, ShaderMetadata, TextureMetadata,
     };
-    use crate::graphics::{wrapper::InternalFormat, GraphicsCapabilities};
-    use crate::graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
+    use graphics::{InternalFormat, GraphicsCapabilities};
+    use graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
     use std::collections::HashMap;
     use utils::ColorFormat;
 
@@ -601,7 +604,7 @@ mod tests {
 
         // Back face
         let (mut vadd, mut eadd) =
-            super::super::cube_faces::back(z0, x0, y0, x1, y1, 1., 0., 0., 0);
+            graphics::pack::cube_faces::back(z0, x0, y0, x1, y1, 1., 0., 0., 0);
         vertices.append(&mut vadd);
         elements.append(&mut eadd);
         let vertex_pack = VertexPack::new(vertices, Some(elements));

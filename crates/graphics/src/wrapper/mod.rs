@@ -13,11 +13,8 @@ use shader::{Shader, ShaderManager};
 mod vertex_array;
 use vertex_array::VertexArray;
 
-mod window;
-pub use window::{EventHandler, Window};
-
 mod render_caller;
-use render_caller::RenderCaller;
+pub use render_caller::RenderCaller;
 
 mod texture;
 pub use texture::{InternalFormat, TextureMetadata};

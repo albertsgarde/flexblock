@@ -1,8 +1,8 @@
 
-use crate::graphics::wrapper::BufferTarget;
-use crate::graphics::VertexPack;
-use crate::graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
-use crate::graphics::wrapper::ShaderIdentifier;
+use graphics::BufferTarget;
+use graphics::VertexPack;
+use graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
+use graphics::ShaderIdentifier;
 use utils::mesh_iterator::MeshIterator;
 use world::{self, Chunk, Terrain};
 use game::{GraphicsStateModel, View};
@@ -27,42 +27,42 @@ fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
         if voxel.0 == 1 {
             // Back face
             let (mut vadd, mut eadd) =
-                super::cube_faces::back(z0, x0, y0, x1, y1, 1., 0., 0., index);
+                graphics::pack::cube_faces::back(z0, x0, y0, x1, y1, 1., 0., 0., index);
             index += vadd.len() as u32;
             vertices.append(&mut vadd);
             elements.append(&mut eadd);
 
             //Front face
             let (mut vadd, mut eadd) =
-                super::cube_faces::front(z1, x0, y0, x1, y1, 0., 1., 0., index);
+                graphics::pack::cube_faces::front(z1, x0, y0, x1, y1, 0., 1., 0., index);
             index += vadd.len() as u32;
             vertices.append(&mut vadd);
             elements.append(&mut eadd);
 
             //Left face
             let (mut vadd, mut eadd) =
-                super::cube_faces::left(x0, y0, z0, y1, z1, 0., 0., 1., index);
+                graphics::pack::cube_faces::left(x0, y0, z0, y1, z1, 0., 0., 1., index);
             index += vadd.len() as u32;
             vertices.append(&mut vadd);
             elements.append(&mut eadd);
 
             //Right face
             let (mut vadd, mut eadd) =
-                super::cube_faces::right(x1, y0, z0, y1, z1, 1., 1., 0., index);
+                graphics::pack::cube_faces::right(x1, y0, z0, y1, z1, 1., 1., 0., index);
             index += vadd.len() as u32;
             vertices.append(&mut vadd);
             elements.append(&mut eadd);
 
             //Bottom face
             let (mut vadd, mut eadd) =
-                super::cube_faces::bottom(y0, x0, z0, x1, z1, 1., 0., 1., index);
+                graphics::pack::cube_faces::bottom(y0, x0, z0, x1, z1, 1., 0., 1., index);
             index += vadd.len() as u32;
             vertices.append(&mut vadd);
             elements.append(&mut eadd);
 
             //Top face
             let (mut vadd, mut eadd) =
-                super::cube_faces::top(y1, x0, z0, x1, z1, 0., 1., 1., index);
+                graphics::pack::cube_faces::top(y1, x0, z0, x1, z1, 0., 1., 1., index);
             index += vadd.len() as u32;
             vertices.append(&mut vadd);
             elements.append(&mut eadd);

@@ -3,15 +3,17 @@
 //! Flexiblock aims to be a messy, overengineered, feature-creeped, and generally super cool Minecraft clone.
 mod channels;
 mod logic;
-mod graphics;
+mod packing;
+mod window;
 mod logging;
-
-use std::sync::{mpsc, Arc, Mutex};
+mod pack;
 
 extern crate nalgebra_glm as glm;
 
+use std::sync::{mpsc, Arc, Mutex};
+
 use game::GraphicsStateModel;
-use crate::graphics::RenderMessages;
+use graphics::RenderMessages;
 
 fn main() {
     logging::log_init();
@@ -62,14 +64,14 @@ fn main() {
         logic_to_packing_sender,
         logic_audio_message_handle,
     );
-    let packing_thread = graphics::start_packing_thread(
+    let packing_thread = pack::start_packing_thread(
         logic_to_packing_receiver,
         packing_to_window_sender,
         window_to_packing_receiver,
     );
 
     // We unfortunately cannot catch panics from the window thread :(
-    graphics::start_window(
+    window::start_window(
         packing_to_window_receiver,
         window_to_logic_sender,
         window_to_packing_sender,

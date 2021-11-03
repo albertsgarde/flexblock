@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::graphics::{RenderMessage, RenderMessages, UniformData};
+use crate::{RenderMessage, RenderMessages, UniformData};
 
 use super::ShaderIdentifier;
 
@@ -156,7 +156,7 @@ impl Gui {
 }
 
 mod widgets {
-    use crate::graphics::{wrapper::BufferTarget, VertexPack};
+    use crate::{wrapper::BufferTarget, VertexPack};
     use utils::Vertex3D;
 
     use super::*;

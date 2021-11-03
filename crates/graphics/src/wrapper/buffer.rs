@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, marker::PhantomData};
 
 use utils::vertex::Vertex;
 
@@ -35,12 +35,12 @@ pub struct ArrayBuffer<T: Vertex> {
     id: u32,
     size: usize,
     stride: usize,
-    dummy: T,
+    vertex_type: PhantomData<T>,
 }
 
 ///TODO: MAKE TYPE SAFE
 impl<T: Vertex> ArrayBuffer<T> {
-    pub unsafe fn new(dummy: T) -> Result<ArrayBuffer<T>, String> {
+    pub unsafe fn new() -> Result<ArrayBuffer<T>, String> {
         let mut vbo = 0;
         gl::GenBuffers(1, &mut vbo);
 
@@ -48,7 +48,7 @@ impl<T: Vertex> ArrayBuffer<T> {
             id: vbo,
             size: 0,
             stride: std::mem::size_of::<T>(),
-            dummy,
+            vertex_type: PhantomData,
         })
     }
 

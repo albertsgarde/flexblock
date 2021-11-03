@@ -4,8 +4,8 @@ pub use uniform_data::{UniformData, UniformValue};
 mod vertex_pack;
 pub use vertex_pack::VertexPack;
 
-use crate::graphics::wrapper::BufferTarget;
-use crate::graphics::wrapper::{FramebufferIdentifier, ShaderIdentifier};
+use crate::wrapper::BufferTarget;
+use crate::wrapper::{FramebufferIdentifier, ShaderIdentifier};
 use std::slice::Iter;
 
 #[derive(Debug)]
@@ -109,6 +109,7 @@ pub enum RenderMessage {
     },
     /// Switches the rendering to a 2D context.
     SwitchTo2D {},
+    SwitchTo3D {},
 }
 
 impl RenderMessage {
@@ -132,6 +133,7 @@ impl RenderMessage {
                 dimensions: _,
             } => false,
             RenderMessage::SwitchTo2D {} => false,
+            RenderMessage::SwitchTo3D {} => false
         }
     }
 }

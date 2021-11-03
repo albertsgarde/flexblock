@@ -2,7 +2,8 @@ use super::{
     BufferTarget, FramebufferIdentifier, FramebufferManager, ShaderIdentifier, ShaderManager,
     TextureManager, VertexArray,
 };
-use crate::graphics::{RenderMessage, UniformData, VertexPack};
+use crate::{RenderMessage, UniformData, VertexPack};
+use glutin::{ContextWrapper, PossiblyCurrent, window::Window};
 use log::{debug, error};
 use utils::Vertex3D;
 
@@ -28,7 +29,7 @@ impl RenderCaller {
     ///
     /// Marked as unsafe because it calls GL code
     pub unsafe fn new(screen_dimensions: (u32, u32)) -> RenderCaller {
-        let vertex_array = VertexArray::new(Vertex3D::default()).unwrap();
+        let vertex_array = VertexArray::new().unwrap();
 
         let shader_manager = super::loader::load_shaders();
         let texture_manager = super::loader::load_textures(screen_dimensions);
@@ -45,12 +46,29 @@ impl RenderCaller {
     }
 
     pub unsafe fn update_screen_dimensions(&mut self, screen_dimensions: (u32, u32)) {
+        gl::Viewport(0, 0, screen_dimensions.0 as i32, screen_dimensions.1 as i32);
         self.screen_dimensions = screen_dimensions;
         self.texture_manager
             .update_screen_dimensions(screen_dimensions);
         self.framebuffer_manager
             .update_screen_dimensions(&self.texture_manager, screen_dimensions);
     }
+
+    ///
+    /// You better only call this once or the world WILL explode
+    pub unsafe fn initialize_gl(windowed_context : &ContextWrapper<PossiblyCurrent, Window>) {
+        gl::load_with(|s| windowed_context.get_proc_address(s) as *const _);
+
+        gl::ClearColor(0.3, 0.3, 0.5, 1.0);
+
+        //TODO: DEPTH TESTING IS OPTIONAL, NOT REQUIRED!
+        gl::Enable(gl::DEPTH_TEST);
+        gl::DepthFunc(gl::LESS);
+        gl::ClearColor(0.6, 0.6, 0.6, 1.0);
+        gl::Enable(gl::CULL_FACE);
+        gl::CullFace(gl::BACK);
+    }
+
 
     ///
     /// This is supposed to turn a packed render into something that can then be rendered directly. So
@@ -116,6 +134,11 @@ impl RenderCaller {
                                     // SHADER HAS TO BE HANDLED BY THE RENDERER
                                     // gl::Disable(gl::DEPTH_TEST);
     }
+    
+    unsafe fn switch_to_3d(&mut self) {
+        gl::Enable(gl::DEPTH_TEST);
+        gl::Enable(gl::CULL_FACE);
+    }
 
     pub unsafe fn read_message(&mut self, message: &RenderMessage) {
         match message {
@@ -137,6 +160,9 @@ impl RenderCaller {
             } => self.dispatch_compute(output_texture, dimensions),
             RenderMessage::SwitchTo2D {} => {
                 self.switch_to_2d();
+            },
+            RenderMessage::SwitchTo3D {} => {
+                self.switch_to_3d();
             }
         }
     }
