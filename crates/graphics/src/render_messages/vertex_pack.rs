@@ -1,5 +1,7 @@
 use std::fmt;
 use utils::Vertex3D;
+
+#[derive(Clone)]
 pub struct VertexPack {
     pub vertices: Vec<Vertex3D>,
     pub elements: Vec<u32>,

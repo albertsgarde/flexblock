@@ -1,6 +1,7 @@
 
 use graphics::BufferTarget;
 use graphics::VertexPack;
+use graphics::model::{ModelManager, PlacedModel};
 use graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
 use graphics::ShaderIdentifier;
 use utils::mesh_iterator::MeshIterator;
@@ -95,6 +96,12 @@ pub fn get_vp_matrix(view: &View, screen_dimensions: (u32, u32)) -> glm::Mat4 {
     ); //TODO: CORRECT FOV, WIDTH, AND HEIGHT
 
     p * v
+}
+
+/// Returns a model matrix.
+/// TODO: ROTATION
+pub fn get_model_matrix(offset : &glm::Vec3) -> glm::Mat4 {
+    glm::translation(offset)
 }
 
 /// Breadth first search
@@ -218,7 +225,7 @@ impl RenderState {
             let pack = create_chunk_pack(chunk);
             if !pack.vertices.is_empty() {
                 messages.add_message(RenderMessage::Pack {
-                    buffer: BufferTarget::NormalBuffer(buffer),
+                    buffer: BufferTarget::WorldBuffer(buffer),
                     pack: create_chunk_pack(chunk),
                 });
                 self.register_packed_chunk(location, buffer);
@@ -236,7 +243,7 @@ impl RenderState {
             return Err(String::from("Unpacking an unpacked buffer!"));
         }
         messages.add_message(RenderMessage::ClearArray {
-            buffer: BufferTarget::NormalBuffer(buffer),
+            buffer: BufferTarget::WorldBuffer(buffer),
         });
 
         self.unregister_packed_chunk(buffer);
@@ -260,7 +267,7 @@ impl RenderState {
                 if *chunk == location {
                     self.unregister_packed_chunk(counter);
                     messages.add_message(RenderMessage::ClearArray {
-                        buffer: BufferTarget::NormalBuffer(counter),
+                        buffer: BufferTarget::WorldBuffer(counter),
                     });
                     break;
                 }
@@ -316,7 +323,7 @@ impl RenderState {
                 });
 
                 render_messages.add_message(RenderMessage::Draw {
-                    buffer: BufferTarget::NormalBuffer(counter),
+                    buffer: BufferTarget::WorldBuffer(counter),
                 });
             }
         }
@@ -355,6 +362,7 @@ impl RenderState {
     pub fn create_render_messages(
         &mut self,
         data: &MutexGuard<GraphicsStateModel>,
+        model_manager : &ModelManager,
     ) -> RenderMessages {
         // What should happen:
         // 1. Clear color and depth buffer
@@ -414,6 +422,19 @@ impl RenderState {
 
         let vp = get_vp_matrix(&data.view, (width, height));
         self.render_packed_chunks(&mut messages, &vp);
+
+        let k = glm::vec3(2.0,3.0,1.0);
+        let models = vec![("test", k)]; // TODO: USE INFO FROM THE GRAPHICS STATE HERE
+
+        let models = models.into_iter().map(
+            |(model_name, location)| {
+                PlacedModel::new(model_name.into(), location, glm::vec3(5.0,5.0,5.0))
+            }
+        );
+
+        messages.merge_current(model_manager.draw_models(models.collect(), &get_vp_matrix(&data.view, (width, height))));
+
+
         messages
     }
 }
