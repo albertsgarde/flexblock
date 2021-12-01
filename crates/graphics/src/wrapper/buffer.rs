@@ -2,18 +2,29 @@ use std::{fmt::Display, marker::PhantomData};
 
 use utils::vertex::Vertex;
 
+use super::vertex_buffer_metadata::VertexBufferMetadata;
+
 #[derive(Debug, Clone, Copy)]
 pub enum BufferTarget {
     //TODO: RENAME TO VERTEXBUFFERTARGET
     GuiBuffer,
-    NormalBuffer(usize),
+    WorldBuffer(usize),
+    ModelBuffer(usize)
 }
 
 impl BufferTarget {
-    pub fn get_target_id(&self) -> usize {
+    pub fn get_target_id(&self, vertex_buffer_metadata : & VertexBufferMetadata) -> usize {
+        if !vertex_buffer_metadata.valid_target(&self) {
+            panic!("Trying to bind an invalid vertex buffer target!");
+        }
         match &self {
             BufferTarget::GuiBuffer => 0,
-            BufferTarget::NormalBuffer(i) => i + 1,
+            BufferTarget::WorldBuffer(i) => {
+                i + vertex_buffer_metadata.world_buffer_start()
+            },
+            BufferTarget::ModelBuffer(i) => {
+                i + vertex_buffer_metadata.model_buffer_start()
+            },
         }
     }
 }
@@ -22,9 +33,12 @@ impl Display for BufferTarget {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
             BufferTarget::GuiBuffer => f.write_fmt(format_args!("BufferTarget::GuiBuffer")),
-            BufferTarget::NormalBuffer(i) => {
-                f.write_fmt(format_args!("BufferTarget::NormalBuffer({})", i))
+            BufferTarget::WorldBuffer(i) => {
+                f.write_fmt(format_args!("BufferTarget::WorldBuffer({})", i))
             }
+            BufferTarget::ModelBuffer(i) => {
+                f.write_fmt(format_args!("BufferTarget::ModelBuffer({})", i))
+            },
         }
     }
 }

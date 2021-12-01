@@ -3,6 +3,7 @@ use graphics::{
     BufferTarget, ShaderMetadata,
     GraphicsCapabilities, RenderMessage, RenderMessages, UniformData,
 };
+use graphics::VERTEX_BUFFER_METADATA;
 use log::debug;
 use std::fmt;
 
@@ -20,7 +21,7 @@ pub enum ValidationErrorType {
     WrongTriangleCount,
     EmptyVertexPack,
     InvalidTexture { texture: String },
-    UnwantedUniform { uniform: String },
+    UnwantedUniform { uniform: String, shader : String },
     UnfilledUniform { uniforms: Vec<String> },
     NoGraphicsCapabilities,
     NonComputeShader { shader: String },
@@ -55,7 +56,7 @@ impl<'a> fmt::Debug for ValidationError<'a> {
             ValidationErrorType::PackFullVBO {vbo}=> format!("Trying to pack VBO {}, which is already full!", vbo),
             ValidationErrorType::InvalidFramebuffer {framebuffer} => format!("Trying to bind framebuffer {}, which does not exist", framebuffer),
             ValidationErrorType::InvalidTexture {texture} => format!("Trying to pass texture {} as shader uniform, but texture does not exist in the graphics capabilities object!", texture),
-            ValidationErrorType::UnwantedUniform {uniform} => format!("Trying to pass uniform {} to a shader that does not want it! (This is non-critical, should maybe be a warning instead)", uniform),
+            ValidationErrorType::UnwantedUniform {uniform, shader} => format!("Trying to pass uniform \"{}\" to shader \"{}\" that does not want it! (This is non-critical, should maybe be a warning instead)", uniform, shader),
             ValidationErrorType::NoGraphicsCapabilities => ("Trying to send RenderMessages with no graphics capabilities!").to_string(),
             ValidationErrorType::NonComputeShader {shader}=> format!("Trying to run a compute dispatch with graphics shader {}!", shader),
             ValidationErrorType::NonGraphicsShader {shader}=> format!("Trying to render with compute shader {}!", shader),
@@ -84,7 +85,7 @@ pub struct RenderMessageValidator {
 impl RenderMessageValidator {
     pub fn new() -> RenderMessageValidator {
         RenderMessageValidator {
-            packed_vbos: Vec::new(),
+            packed_vbos: vec![false; VERTEX_BUFFER_METADATA.max_buffer_id()]
         }
     }
 
@@ -112,12 +113,6 @@ impl RenderMessageValidator {
         messages: &'a RenderMessages,
     ) -> Result<(), ValidationError<'a>> {
         let verbose = false;
-        if self.packed_vbos.len() < state.packed_chunks.len() {
-            self.packed_vbos.append(&mut vec![
-                false;
-                state.packed_chunks.len() - self.packed_vbos.len()
-            ]);
-        }
 
         if verbose {
             debug!(
@@ -147,7 +142,7 @@ impl RenderMessageValidator {
                         }
                     }
                     RenderMessage::ClearArray { buffer } => {
-                        if buffer.get_target_id() >= capabilities.vbo_count {
+                        if buffer.get_target_id(&VERTEX_BUFFER_METADATA) >= capabilities.vbo_count {
                             return Err(ValidationError {
                                 error_type: ValidationErrorType::VBOOutOfBounds { vbo: *buffer },
                                 context: self.capture_context(
@@ -162,7 +157,7 @@ impl RenderMessageValidator {
                         }
 
                         if message_index >= messages.old_new_split_index() {
-                            if !self.packed_vbos[buffer.get_target_id()] {
+                            if !self.packed_vbos[buffer.get_target_id(&VERTEX_BUFFER_METADATA)] {
                                 return Err(ValidationError {
                                     error_type: ValidationErrorType::ClearEmptyVBO { vbo: *buffer },
                                     context: self.capture_context(
@@ -175,7 +170,7 @@ impl RenderMessageValidator {
                                     ),
                                 });
                             }
-                            self.packed_vbos[buffer.get_target_id()] = false;
+                            self.packed_vbos[buffer.get_target_id(&VERTEX_BUFFER_METADATA)] = false;
                         }
 
                         if verbose {
@@ -275,7 +270,7 @@ impl RenderMessageValidator {
 
                         // This one doesn't need to check whether it is above the old/new split, since draw is not a persistent render message.
                         // So it will always be in the new part.
-                        if !self.packed_vbos[buffer.get_target_id()] {
+                        if !self.packed_vbos[buffer.get_target_id(&VERTEX_BUFFER_METADATA)] {
                             return Err(ValidationError {
                                 error_type: ValidationErrorType::DrawEmptyVBO { vbo: *buffer },
                                 context: self.capture_context(
@@ -294,7 +289,7 @@ impl RenderMessageValidator {
                         }
                     }
                     RenderMessage::Pack { buffer, pack } => {
-                        if buffer.get_target_id() >= capabilities.vbo_count {
+                        if buffer.get_target_id(&VERTEX_BUFFER_METADATA) >= capabilities.vbo_count {
                             return Err(ValidationError {
                                 error_type: ValidationErrorType::VBOOutOfBounds { vbo: *buffer },
                                 context: self.capture_context(
@@ -339,7 +334,7 @@ impl RenderMessageValidator {
                         }
 
                         if message_index >= messages.old_new_split_index() {
-                            if self.packed_vbos[buffer.get_target_id()] {
+                            if self.packed_vbos[buffer.get_target_id(&VERTEX_BUFFER_METADATA)] {
                                 return Err(ValidationError {
                                     error_type: ValidationErrorType::PackFullVBO { vbo: *buffer },
                                     context: self.capture_context(
@@ -352,7 +347,7 @@ impl RenderMessageValidator {
                                     ),
                                 });
                             }
-                            self.packed_vbos[buffer.get_target_id()] = true;
+                            self.packed_vbos[buffer.get_target_id(&VERTEX_BUFFER_METADATA)] = true;
                         }
 
                         if verbose {
@@ -516,6 +511,7 @@ impl RenderMessageValidator {
                 if !contained {
                     return Err(ValidationErrorType::UnwantedUniform {
                         uniform: String::from(uniform),
+                        shader : String::from(s.identifier.name())
                     });
                 }
 
@@ -628,7 +624,7 @@ mod tests {
             uniforms: Box::new(ud),
         });
         render_messages.add_message(RenderMessage::Pack {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
             pack: create_quad_pack(),
         });
 
@@ -651,7 +647,7 @@ mod tests {
             uniforms: Box::new(ud),
         });
         render_messages.add_message(RenderMessage::Pack {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
             pack: create_quad_pack(),
         });
 
@@ -670,7 +666,7 @@ mod tests {
             uniforms: Box::new(ud),
         });
         render_messages.add_message(RenderMessage::Pack {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
             pack: create_quad_pack(),
         });
 
@@ -691,7 +687,7 @@ mod tests {
             uniforms: Box::new(ud),
         });
         render_messages.add_message(RenderMessage::Pack {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
             pack: create_quad_pack(),
         });
 
@@ -712,12 +708,12 @@ mod tests {
             shader: ShaderIdentifier::Default,
         });
         render_messages.add_message(RenderMessage::Pack {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
             pack: create_quad_pack(),
         });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         render_messages.add_message(RenderMessage::Draw {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
         });
 
         assert!(
@@ -731,7 +727,7 @@ mod tests {
             shader: ShaderIdentifier::Default,
         });
         render_messages.add_message(RenderMessage::Pack {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
             pack: create_quad_pack(),
         });
         let mut ud = UniformData::new();
@@ -741,7 +737,7 @@ mod tests {
         });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         render_messages.add_message(RenderMessage::Draw {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
         });
 
         assert!(
@@ -755,7 +751,7 @@ mod tests {
             shader: ShaderIdentifier::Default,
         });
         render_messages.add_message(RenderMessage::Pack {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
             pack: create_quad_pack(),
         });
         let mut ud = UniformData::new();
@@ -766,7 +762,7 @@ mod tests {
         });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         render_messages.add_message(RenderMessage::Draw {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
         });
         assert!(
             validator.validate(&mut rs, &render_messages).is_ok(),
@@ -779,7 +775,7 @@ mod tests {
             shader: ShaderIdentifier::Default,
         });
         render_messages.add_message(RenderMessage::Pack {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
             pack: create_quad_pack(),
         });
         let mut ud = UniformData::new();
@@ -793,7 +789,7 @@ mod tests {
         });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         render_messages.add_message(RenderMessage::Draw {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
         });
 
         assert!(
@@ -807,7 +803,7 @@ mod tests {
             shader: ShaderIdentifier::Default,
         });
         render_messages.add_message(RenderMessage::Pack {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
             pack: create_quad_pack(),
         });
         let mut ud = UniformData::new();
@@ -832,7 +828,7 @@ mod tests {
         });
         render_messages.add_message(RenderMessage::ChooseFramebuffer { framebuffer: None });
         render_messages.add_message(RenderMessage::Draw {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
         });
 
         assert!(
@@ -856,11 +852,11 @@ mod tests {
             uniforms: Box::new(ud),
         });
         render_messages.add_message(RenderMessage::Pack {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
             pack: create_quad_pack(),
         });
         render_messages.add_message(RenderMessage::Draw {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
         });
 
         assert!(
@@ -880,11 +876,11 @@ mod tests {
             uniforms: Box::new(ud),
         });
         render_messages.add_message(RenderMessage::Pack {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
             pack: create_quad_pack(),
         });
         render_messages.add_message(RenderMessage::Draw {
-            buffer: BufferTarget::NormalBuffer(0),
+            buffer: BufferTarget::WorldBuffer(0),
         });
 
         let res = validator.validate(&mut rs, &render_messages);

@@ -1,3 +1,5 @@
+use crate::VERTEX_BUFFER_METADATA;
+
 //TODO: THIS IS ALL WRONG; ONE VERTEX ARRAY HOLDS A GROUP OF BUFFERS
 use super::ArrayBuffer;
 use super::ElementBuffer;
@@ -23,7 +25,7 @@ impl<T: Vertex> VertexArray<T> {
         let mut id = 0;
         gl::GenVertexArrays(1, &mut id);
         gl::BindVertexArray(id);
-        for _ in 0..100 {
+        for _ in 0..(VERTEX_BUFFER_METADATA.max_buffer_id()) {
             let ebo = ElementBuffer::new().unwrap();
             let vbo = ArrayBuffer::<T>::new().unwrap();
 
