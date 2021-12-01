@@ -1,7 +1,4 @@
-use super::{
-    BufferTarget, FramebufferIdentifier, FramebufferManager, ShaderIdentifier, ShaderManager,
-    TextureManager, VertexArray,
-};
+use super::{BufferTarget, FramebufferIdentifier, FramebufferManager, ShaderIdentifier, ShaderManager, TextureManager, VertexArray, vertex_buffer_metadata::VERTEX_BUFFER_METADATA};
 use crate::{RenderMessage, UniformData, VertexPack};
 use glutin::{ContextWrapper, PossiblyCurrent, window::Window};
 use log::{debug, error};
@@ -22,8 +19,9 @@ pub struct RenderCaller {
     pub shader_manager: ShaderManager,
     texture_manager: TextureManager,
     framebuffer_manager: FramebufferManager,
-    screen_dimensions: (u32, u32),
+    screen_dimensions: (u32, u32)
 }
+
 
 impl RenderCaller {
     ///
@@ -35,6 +33,7 @@ impl RenderCaller {
         let texture_manager = super::loader::load_textures(screen_dimensions);
         let framebuffer_manager =
             super::loader::load_framebuffers(&texture_manager, screen_dimensions);
+
 
         RenderCaller {
             vertex_array,
@@ -75,7 +74,7 @@ impl RenderCaller {
     /// this has access to OpenGL calls.
     /// TODO: Enforce requirements on RenderPack<T> to make this safe.
     unsafe fn pack(&mut self, buffer: &BufferTarget, pack: &VertexPack) {
-        let target_id = buffer.get_target_id();
+        let target_id = buffer.get_target_id(&VERTEX_BUFFER_METADATA);
         if target_id >= self.vertex_array.get_vbo_count() {
             panic!(
                 "Trying to clear {}, but there's only {} normal buffers ",
@@ -91,7 +90,7 @@ impl RenderCaller {
     }
 
     unsafe fn clear(&mut self, buffer: &BufferTarget) {
-        let target_id = buffer.get_target_id();
+        let target_id = buffer.get_target_id(&VERTEX_BUFFER_METADATA);
         if target_id >= self.vertex_array.get_vbo_count() {
             panic!(
                 "Trying to clear {}, but there's only {} normal buffers ",
@@ -175,7 +174,7 @@ impl RenderCaller {
     }
 
     pub unsafe fn render(&mut self, buffer: &BufferTarget) {
-        let target_id = buffer.get_target_id();
+        let target_id = buffer.get_target_id(&VERTEX_BUFFER_METADATA);
         debug_assert!(
             self.vertex_array.get_size(target_id) > 0,
             "A render call was made on an empty vertex array!"

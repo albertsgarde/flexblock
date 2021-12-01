@@ -3,7 +3,6 @@
 //! Flexiblock aims to be a messy, overengineered, feature-creeped, and generally super cool Minecraft clone.
 mod channels;
 mod logic;
-mod packing;
 mod window;
 mod logging;
 mod pack;

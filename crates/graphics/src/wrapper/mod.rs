@@ -22,3 +22,6 @@ use texture::{Texture, TextureManager};
 
 pub mod gui;
 mod loader;
+
+mod vertex_buffer_metadata;
+pub use vertex_buffer_metadata::VERTEX_BUFFER_METADATA;

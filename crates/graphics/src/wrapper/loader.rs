@@ -45,8 +45,7 @@ pub unsafe fn load_shaders() -> ShaderManager {
         let shader = match Shader::new(identifier) {
             Ok(s) => s,
             Err(s) => {
-                error!("Loading shader {:?} failed! Error: {}", identifier, s);
-                continue;
+                panic!("Loading shader {:?} failed! Error: {}", identifier, s);
             }
         };
         if identifier.is_compute() {

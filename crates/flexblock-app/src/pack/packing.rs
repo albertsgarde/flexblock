@@ -6,6 +6,7 @@ use graphics::ShaderIdentifier;
 use graphics::{RenderMessage, RenderMessages, VertexPack};
 use crate::channels::*;
 use graphics::BufferTarget;
+use std::collections::HashSet;
 use std::thread::{self, JoinHandle};
 use utils::Vertex3D;
 use crate::pack::{RenderState, RenderMessageValidator};
@@ -98,6 +99,20 @@ fn get_reticle_pack() -> VertexPack {
     )
 }
 
+#[cfg(not(debug_assertions))]
+fn validate(validator : &mut RenderMessageValidator, state : &RenderState, messages : &RenderMessages) { }
+
+#[cfg(debug_assertions)]
+fn validate(validator : &mut RenderMessageValidator, state : &RenderState, messages : &RenderMessages) {
+    match validator.validate(&state, &messages) {
+        Ok(()) => {},
+        Err(e) => {
+            println!("Validation error: {:?}", e);
+            panic!();
+        }
+    }
+}
+
 pub fn start_packing_thread(
     logic_rx: LogicToPackingReceiver,
     tx: PackingToWindowSender,
@@ -107,6 +122,11 @@ pub fn start_packing_thread(
     // Only used by debug validation
     // Keeps all state needed for running validation.
     let mut validator = RenderMessageValidator::new();
+
+    
+    let mut model_manager = graphics::model::ModelManager::load_models();
+    let mut models_to_pack : Option<HashSet<String>> = Some(model_manager.get_model_names().map(|x| x.to_string()).collect());
+    
 
     thread::spawn(move || {
         for _ in logic_rx.channel_receiver.iter() {
@@ -118,12 +138,17 @@ pub fn start_packing_thread(
             let mut messages = RenderMessages::new();
 
             if state.is_render_ready() {
+
+                if let Some(pack_models) = models_to_pack.take() {
+                    messages.merge_current(model_manager.pack_models(pack_models));
+                }
+
                 messages.add_message(RenderMessage::ChooseFramebuffer {
                     framebuffer: Some(FramebufferIdentifier::FirstPass),
                 });
 
                 messages.add_message(RenderMessage::SwitchTo3D{});
-                messages.merge_current(state.create_render_messages(&data));
+                messages.merge_current(state.create_render_messages(&data, &model_manager));
                 
 
                 {
@@ -172,7 +197,7 @@ pub fn start_packing_thread(
                     depth_buffer: true,
                 });
                 messages.add_message(RenderMessage::Pack {
-                    buffer: BufferTarget::NormalBuffer(80),
+                    buffer: BufferTarget::WorldBuffer(80),
                     pack: VertexPack::new(
                         vec![
                             Vertex3D {
@@ -220,10 +245,10 @@ pub fn start_packing_thread(
                     ),
                 });
                 messages.add_message(RenderMessage::Draw {
-                    buffer: BufferTarget::NormalBuffer(80),
+                    buffer: BufferTarget::WorldBuffer(80),
                 });
                 messages.add_message(RenderMessage::ClearArray {
-                    buffer: BufferTarget::NormalBuffer(80),
+                    buffer: BufferTarget::WorldBuffer(80),
                 });
                 messages.add_message(RenderMessage::ChooseShader {
                     shader: ShaderIdentifier::Color,
@@ -233,14 +258,14 @@ pub fn start_packing_thread(
                     depth_buffer: true,
                 });
                 messages.add_message(RenderMessage::Pack {
-                    buffer: BufferTarget::NormalBuffer(80),
+                    buffer: BufferTarget::WorldBuffer(80),
                     pack: get_reticle_pack(),
                 });
                 messages.add_message(RenderMessage::Draw {
-                    buffer: BufferTarget::NormalBuffer(80),
+                    buffer: BufferTarget::WorldBuffer(80),
                 });
                 messages.add_message(RenderMessage::ClearArray {
-                    buffer: BufferTarget::NormalBuffer(80),
+                    buffer: BufferTarget::WorldBuffer(80),
                 });
             }
 
@@ -252,8 +277,8 @@ pub fn start_packing_thread(
             } else {
             }
 
-            // Validate render messages.
-            debug_assert!(validator.validate(&state, &messages).is_ok());
+            // Validate render messages. Doesn't run in release builds.
+            validate(&mut validator, &state, &messages);
 
             *message_mutex = Some(messages);
         }
