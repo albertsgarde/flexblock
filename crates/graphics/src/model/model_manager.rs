@@ -77,7 +77,7 @@ impl ModelManager {
     pub fn load_models() -> Self {
         let mut model_manager = ModelManager::new();
 
-        model_manager.add_model("test".into(), Model::new()).unwrap();
+        model_manager.add_model("test".into(), Model::default()).unwrap();
 
         model_manager
     }
@@ -90,7 +90,7 @@ mod tests {
     #[test]
     fn test_basic() {
         let mut model_manager = ModelManager::new();
-        model_manager.add_model("bob".into(), Model::new()).unwrap();
+        model_manager.add_model("bob".into(), Model::default()).unwrap();
 
         let models = ["bob"];
         model_manager.pack_models(models.iter().map(|x| x.to_string()).collect());
@@ -105,7 +105,7 @@ mod tests {
     #[should_panic]
     fn test_no_model() {
         let mut model_manager = ModelManager::new();
-        model_manager.add_model("bob1".into(), Model::new()).unwrap();
+        model_manager.add_model("bob1".into(), Model::default()).unwrap();
 
         let models = ["bob"];
         model_manager.pack_models(models.iter().map(|x| x.to_string()).collect());
@@ -121,7 +121,7 @@ mod tests {
     #[should_panic]
     fn test_not_packed() {
         let mut model_manager = ModelManager::new();
-        model_manager.add_model("bob".into(), Model::new()).unwrap();
+        model_manager.add_model("bob".into(), Model::default()).unwrap();
 
         let mut drawn_models = Vec::new();
         drawn_models.push(PlacedModel::new("bob".into(), glm::vec3(0.0,0.0,0.0), glm::vec3(1.0,1.0,1.0)));
@@ -134,8 +134,8 @@ mod tests {
     #[should_panic]
     fn test_pack_unpack_fail() {
         let mut model_manager = ModelManager::new();
-        model_manager.add_model("bob".into(), Model::new()).unwrap();
-        model_manager.add_model("david".into(), Model::new()).unwrap();
+        model_manager.add_model("bob".into(), Model::default()).unwrap();
+        model_manager.add_model("david".into(), Model::default()).unwrap();
 
         let models = ["bob"];
         model_manager.pack_models(models.iter().map(|x| x.to_string()).collect());
@@ -156,8 +156,8 @@ mod tests {
     #[test]
     fn test_pack_unpack() {
         let mut model_manager = ModelManager::new();
-        model_manager.add_model("bob".into(), Model::new()).unwrap();
-        model_manager.add_model("david".into(), Model::new()).unwrap();
+        model_manager.add_model("bob".into(), Model::default()).unwrap();
+        model_manager.add_model("david".into(), Model::default()).unwrap();
 
         let models = ["bob"];
         model_manager.pack_models(models.iter().map(|x| x.to_string()).collect());
