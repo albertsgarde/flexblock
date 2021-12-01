@@ -424,11 +424,11 @@ impl RenderState {
         self.render_packed_chunks(&mut messages, &vp);
 
         let k = glm::vec3(2.0,3.0,1.0);
-        let models = vec![("test", k)]; // TODO: USE INFO FROM THE GRAPHICS STATE HERE
+        let models = vec![("/test.obj", k)]; // TODO: USE INFO FROM THE GRAPHICS STATE HERE
 
         let models = models.into_iter().map(
             |(model_name, location)| {
-                PlacedModel::new(model_name.into(), location, glm::vec3(5.0,5.0,5.0))
+                PlacedModel::new(model_name.into(), location, glm::vec3(1.0,1.0,1.0))
             }
         );
 

@@ -75,10 +75,16 @@ impl ModelManager {
     }
 
     pub fn load_models() -> Self {
+        let entries = utils::dir_entries(&utils::ASSETS_PATH.join("graphics/models"), "").unwrap();
         let mut model_manager = ModelManager::new();
-
-        model_manager.add_model("test".into(), Model::default()).unwrap();
-
+    
+        for (file, name) in entries {
+            let model_string = std::fs::read_to_string(file.path()).unwrap();
+    
+            model_manager.add_model(name.clone(), Model::from_str(&model_string)).unwrap();
+            println!("Loaded model {} from file {:?}!", name, file);
+        }
+    
         model_manager
     }
 }

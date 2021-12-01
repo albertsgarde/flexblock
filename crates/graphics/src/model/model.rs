@@ -59,7 +59,7 @@ impl Model {
                 panic!("Model string contains line {} that contains illegal model code", line);
             }
         }
-
+        
         Self { vertex_pack : VertexPack::new(vertices, Some(elements)), bound_target : None}
     }
 
