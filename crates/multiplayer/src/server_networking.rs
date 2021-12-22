@@ -191,7 +191,7 @@ impl ServerNetworking {
     /// Gives a list of the newest events from clients in the order received and clears the internal list.
     pub fn new_events(&mut self) -> Vec<StateInputEvent> {
         self.handle_messages();
-        std::mem::replace(&mut self.new_client_events, Vec::new())
+        std::mem::take(&mut self.new_client_events)
     }
 
     pub fn start_shut_down(&mut self) {
