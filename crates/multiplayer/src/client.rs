@@ -13,7 +13,8 @@ async fn handle_server_connection(
     tick_events_to_client: mpsc::UnboundedSender<Vec<StateInputEvent>>,
     mut from_client: mpsc::UnboundedReceiver<InternalFromClientMessage>,
 ) {
-    let server_stream = TcpStream::from_std(server_stream).expect("Error converting to Tokio TCP stream.");
+    let server_stream =
+        TcpStream::from_std(server_stream).expect("Error converting to Tokio TCP stream.");
     let (receiver, sender) = server_stream.into_split();
     let mut sender = Transmitter::new(sender);
     let mut receiver = Receiver::new(receiver);
@@ -59,22 +60,20 @@ pub struct Client {
 
 impl Client {
     pub fn start(ip: &str) -> Result<Client> {
-        let (tick_events_to_client, tick_events_from_server) =
-            mpsc::unbounded_channel();
-        let (events_to_server, events_from_client) =
-            mpsc::unbounded_channel();
+        let (tick_events_to_client, tick_events_from_server) = mpsc::unbounded_channel();
+        let (events_to_server, events_from_client) = mpsc::unbounded_channel();
         let server_stream = std::net::TcpStream::connect(ip)?;
         server_stream.set_nonblocking(true)?;
         let runtime = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()?;
-        let join_handle = std::thread::spawn(move || {
+        let join_handle = std::thread::Builder::new().name("client".to_owned()).spawn(move || {
             runtime.block_on(handle_server_connection(
                 server_stream,
                 tick_events_to_client,
                 events_from_client,
             ));
-        });
+        }).unwrap();
         Ok(Self {
             tick_events: tick_events_from_server,
             events_to_server,

@@ -1,5 +1,5 @@
-use multiplayer::{Client, ServerNetworking};
 use game::StateInputEvent;
+use multiplayer::{Client, ServerNetworking};
 
 #[test]
 #[ignore]

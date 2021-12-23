@@ -55,7 +55,8 @@ async fn listen(
     client_listener: std::net::TcpListener,
     to_server: std::sync::mpsc::Sender<InternalToServerMessage>,
 ) {
-    let client_listener = TcpListener::from_std(client_listener).expect("Error converting to Tokio tcp listener.");
+    let client_listener =
+        TcpListener::from_std(client_listener).expect("Error converting to Tokio tcp listener.");
     let mut next_client_id = 0u32;
     loop {
         let (socket, _address) = client_listener
@@ -110,10 +111,7 @@ pub struct ServerNetworking {
 }
 
 impl ServerNetworking {
-    fn new(
-        runtime: Runtime,
-        messages: std::sync::mpsc::Receiver<InternalToServerMessage>,
-    ) -> Self {
+    fn new(runtime: Runtime, messages: std::sync::mpsc::Receiver<InternalToServerMessage>) -> Self {
         ServerNetworking {
             runtime,
             client_connections: HashMap::new(),
