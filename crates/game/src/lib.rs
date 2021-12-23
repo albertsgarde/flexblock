@@ -1,5 +1,3 @@
-
-
 mod state_input_event;
 pub use state_input_event::InputEventHistory;
 pub use state_input_event::StateInputEvent;

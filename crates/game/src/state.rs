@@ -1,9 +1,9 @@
-use crate::{GraphicsStateModel, Player, StateInputEvent}
-;
+use crate::{GraphicsStateModel, Player, StateInputEvent};
 use audio::{AudioMessage, AudioMessageHandle, Listener};
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
 use world::{self, Location, Terrain, VoxelType};
+use log::debug;
 
 /// Holds the entire world state.
 /// Everything that is part of the game is held within.
@@ -11,7 +11,7 @@ use world::{self, Location, Terrain, VoxelType};
 pub struct State {
     terrain: Terrain,
     player: Player,
-    cur_tick: u64,
+    cur_tick: usize,
 }
 
 impl State {
@@ -40,25 +40,30 @@ impl State {
         &self.terrain
     }
 
+    pub fn cur_tick(&self) -> usize {
+        self.cur_tick
+    }
+
     /// Runs one game tick reacting to the given input events.
     pub fn tick<A>(&mut self, events: &[StateInputEvent], audio_message_handle: &A)
-        where A: AudioMessageHandle,
+    where
+        A: AudioMessageHandle,
     {
         self.cur_tick += 1;
         self.handle_events(events, audio_message_handle);
 
         self.player.tick(&self.terrain);
 
-        audio_message_handle
-            .send_message(AudioMessage::Listener(Listener::new(self.player.view().location(), self.player.view().right())));
+        audio_message_handle.send_message(AudioMessage::Listener(Listener::new(
+            self.player.view().location(),
+            self.player.view().right(),
+        )));
     }
 
-    fn handle_events<A>(
-        &mut self,
-        events: &[StateInputEvent],
-        audio_message_handle: &A,
-    )
-    where A: AudioMessageHandle, {
+    fn handle_events<A>(&mut self, events: &[StateInputEvent], audio_message_handle: &A)
+    where
+        A: AudioMessageHandle,
+    {
         for event in events {
             match *event {
                 StateInputEvent::RotateView { delta } => self.player.turn(delta),
@@ -71,6 +76,7 @@ impl State {
                         self.player.view().view_direction(),
                     );
                     if let Some(target) = point_at {
+                        debug!("Removed voxel!");
                         self.terrain.set_voxel_type(target, VoxelType(0));
                     }
                 }
