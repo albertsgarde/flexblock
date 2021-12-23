@@ -15,6 +15,8 @@ use crate::{
     ClientId, ClientMessage, ServerMessage,
 };
 
+/// Handles all messages to and from a client.
+/// Works as an interface between the client and the server.
 async fn handle_client_connection(
     socket: TcpStream,
     to_server: std::sync::mpsc::Sender<InternalToServerMessage>,
@@ -51,6 +53,7 @@ async fn handle_client_connection(
     }
 }
 
+/// Listens for new client connections and sets up a new client handler when one appears.
 async fn listen(
     client_listener: std::net::TcpListener,
     to_server: std::sync::mpsc::Sender<InternalToServerMessage>,
@@ -81,6 +84,7 @@ async fn listen(
     }
 }
 
+/// Internal messages sent from client handlers to the server.
 #[derive(Debug)]
 enum InternalToServerMessage {
     NewClient(ClientConnection),
@@ -88,18 +92,22 @@ enum InternalToServerMessage {
     ClientDisconnected(ClientId, Box<dyn std::error::Error + Send>),
 }
 
+/// Internal messages sent from the server to the client handlers.
 #[derive(Clone, Debug)]
 enum InternalFromServerMessage {
     Disconnect,
     ServerMessage(ServerMessage),
 }
 
+/// Represents a connection to a client in the server.
+/// Used to send messages to the client handler.
 #[derive(Debug)]
 struct ClientConnection {
     client_id: ClientId,
     to_client: mpsc::UnboundedSender<InternalFromServerMessage>,
 }
 
+/// The core of the server.
 pub struct ServerNetworking {
     runtime: Runtime,
     client_connections: HashMap<ClientId, ClientConnection>,
