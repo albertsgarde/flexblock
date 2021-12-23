@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 fn log_file_path(index: u32) -> PathBuf {
     let mut result = PathBuf::new();
-    result.push(Path::new(&format!("../target/logs/log{}.log", index)));
+    result.push(Path::new(&format!("target/logs/log{}.log", index)));
     result
 }
 
@@ -33,6 +33,7 @@ pub fn log_init() {
 
     let log_file_path = log_file_path(log_index());
 
+    let config = ConfigBuilder::new().set_thread_mode(ThreadLogMode::Names).build();
     CombinedLogger::init(vec![
         // Write to terminal.
         TermLogger::new(
@@ -40,16 +41,18 @@ pub fn log_init() {
             // This can be changed here.
             // Could be set so debug messages are printed only in debug mode.
             LevelFilter::Info,
-            Config::default(),
+            config.clone(),
             TerminalMode::Mixed,
             ColorChoice::Auto,
         ),
         // Write to file.
         WriteLogger::new(
             LevelFilter::Debug,
-            Config::default(),
-            fs::File::create(log_file_path).expect("Could not create log file"),
+            config,
+            fs::File::create(&log_file_path).expect("Could not create log file"),
         ),
     ])
     .unwrap();
+
+    println!("Logging to {:?}", &log_file_path.canonicalize());
 }
