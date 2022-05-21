@@ -7,7 +7,7 @@ use log::debug;
 
 /// Holds the entire world state.
 /// Everything that is part of the game is held within.
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct State {
     terrain: Terrain,
     player: Player,

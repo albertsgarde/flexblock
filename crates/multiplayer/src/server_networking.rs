@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::{Arc, Mutex}};
 
 use game::StateInputEvent;
 use log::{error, info};
@@ -12,7 +12,7 @@ use tokio::{
 
 use crate::{
     packet::{Receiver, Transmitter},
-    ClientId, ClientMessage, ServerMessage,
+    ClientId, ClientMessage, ServerMessage, SacredState,
 };
 
 /// Handles all messages to and from a client.
@@ -80,7 +80,7 @@ async fn listen(
         next_client_id += 1;
         to_server
             .send(InternalToServerMessage::NewClient(client_connection))
-            .expect("New client channel unexpectedly closed.");
+            .expect("Channel for new client connections unexpectedly closed.");
     }
 }
 
@@ -114,22 +114,24 @@ pub struct ServerNetworking {
     messages: std::sync::mpsc::Receiver<InternalToServerMessage>,
 
     new_client_events: Vec<StateInputEvent>,
+    state: Arc<Mutex<SacredState>>,
 
     shutting_down: bool,
 }
 
 impl ServerNetworking {
-    fn new(runtime: Runtime, messages: std::sync::mpsc::Receiver<InternalToServerMessage>) -> Self {
+    fn new(runtime: Runtime, messages: std::sync::mpsc::Receiver<InternalToServerMessage>, state: Arc<Mutex<SacredState>>) -> Self {
         ServerNetworking {
             runtime,
             client_connections: HashMap::new(),
             messages,
             new_client_events: Vec::new(),
             shutting_down: false,
+            state
         }
     }
 
-    pub fn start(ip: &str) -> Result<Self> {
+    pub fn start(ip: &str, state: Arc<Mutex<SacredState>>) -> Result<Self> {
         let runtime = tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()?;
@@ -137,7 +139,7 @@ impl ServerNetworking {
         client_listener.set_nonblocking(true)?;
         let (to_server, from_clients) = std::sync::mpsc::channel();
         runtime.spawn(listen(client_listener, to_server));
-        Ok(Self::new(runtime, from_clients))
+        Ok(Self::new(runtime, from_clients, state))
     }
 
     fn send_message(&self, message: ServerMessage) {
@@ -166,6 +168,9 @@ impl ServerNetworking {
                         panic!("Already have client connection for that ID.");
                     }
                     info!("New client with ID {}.", client_connection.client_id);
+                    info!("Sending state to client {}.", client_connection.client_id);
+                    client_connection.to_client.send(InternalFromServerMessage::ServerMessage(ServerMessage::SacredState(self.state.lock().unwrap().clone()))).unwrap();
+                    info!("State sent.");
                     self.client_connections
                         .insert(client_connection.client_id, client_connection);
                 }

@@ -27,7 +27,7 @@ impl Iterator for VoxelTypeBoxIterator<'_> {
 }
 
 /// Struct that stores all voxels in the world.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Terrain {
     chunks: HashMap<IVec3, Chunk>,
 }

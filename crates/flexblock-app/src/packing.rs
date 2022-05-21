@@ -1,14 +1,14 @@
 use graphics::FramebufferIdentifier;
 
-use graphics::UniformData;
-use graphics::pack::*;
-use graphics::ShaderIdentifier;
-use graphics::{RenderMessage, RenderMessages, VertexPack};
 use crate::channels::*;
+use crate::pack::{RenderMessageValidator, RenderState};
+use graphics::pack::*;
 use graphics::BufferTarget;
+use graphics::ShaderIdentifier;
+use graphics::UniformData;
+use graphics::{RenderMessage, RenderMessages, VertexPack};
 use std::thread::{self, JoinHandle};
 use utils::Vertex3D;
-use crate::pack::{RenderState, RenderMessageValidator};
 
 fn get_reticle_pack() -> VertexPack {
     VertexPack::new(

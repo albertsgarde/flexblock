@@ -1,7 +1,6 @@
 use super::RenderState;
 use graphics::{
-    BufferTarget, ShaderMetadata,
-    GraphicsCapabilities, RenderMessage, RenderMessages, UniformData,
+    BufferTarget, GraphicsCapabilities, RenderMessage, RenderMessages, ShaderMetadata, UniformData,
 };
 use log::debug;
 use std::fmt;
@@ -534,10 +533,8 @@ impl RenderMessageValidator {
 #[cfg(test)]
 mod tests {
     use super::{RenderMessageValidator, RenderState};
-    use graphics::{
-        BufferTarget, ProgramType, ShaderIdentifier, ShaderMetadata, TextureMetadata,
-    };
-    use graphics::{InternalFormat, GraphicsCapabilities};
+    use graphics::{BufferTarget, ProgramType, ShaderIdentifier, ShaderMetadata, TextureMetadata};
+    use graphics::{GraphicsCapabilities, InternalFormat};
     use graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
     use std::collections::HashMap;
     use utils::ColorFormat;
@@ -632,7 +629,7 @@ mod tests {
             pack: create_quad_pack(),
         });
 
-        assert!(validator.validate(&mut rs, &render_messages).unwrap() == ());
+        validator.validate(&mut rs, &render_messages).unwrap();
     }
 
     #[test]

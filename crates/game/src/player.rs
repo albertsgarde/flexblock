@@ -20,7 +20,7 @@ macro_rules! PLAYER_VIEW_LOC {
     };
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Player {
     physics_body: PhysicsBody,
     view: View,

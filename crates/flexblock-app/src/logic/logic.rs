@@ -1,9 +1,18 @@
-use crate::{channels::*, logic::{ExternalEventHandler, LatencyState, LogicEvent, SacredState, client::ClientHandle, controls, server::ServerHandle}};
-use game::{State, InputEventHistory};
+use crate::{
+    channels::*,
+    logic::{
+        controls, ExternalEventHandler,
+        LogicEvent,
+    },
+    
+};
+use multiplayer::{ClientHandle, ServerHandle, LatencyState, SacredState};
 use audio::AudioMessageSender;
-use flate2::{bufread::DeflateDecoder, write::DeflateEncoder, Compression};
+
+use game::{InputEventHistory, State, TPS, SECONDS_PER_TICK};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
+use utils::Tick;
 use std::{
     fs::File,
     io::{BufReader, BufWriter},
@@ -12,17 +21,20 @@ use std::{
     time::{Duration, Instant},
 };
 
-use super::sacred_state;
+pub fn start_server(ip: String) -> ServerHandle {
+    info!("Starting server on ip '{}'...", ip);
+    let server_handle = ServerHandle::start(&ip);
+    info!("Server started!");
+    server_handle
+}
 
 pub fn start_logic_thread(
     window_to_logic_receiver: WindowToLogicReceiver,
     logic_to_packing_sender: LogicToPackingSender,
     audio_message_handle: AudioMessageSender,
+    ip: String,
 ) -> JoinHandle<()> {
-    thread::spawn(move || {
-        info!("Starting server on ip 'localhost:15926'...");
-        let server_handle = ServerHandle::start("localhost:15926");
-        info!("Server started!");
+    thread::Builder::new().name("logic".to_owned()).spawn(move || {
 
         info!("Using chunk size={}", world::chunk::CHUNK_SIZE);
         let gsm_mutex = logic_to_packing_sender.graphics_state_model;
@@ -34,14 +46,16 @@ pub fn start_logic_thread(
 
         let mut external_event_handler = ExternalEventHandler::new(control_config);
 
-        info!("Connecting to local server on ip 'localhost:15926'...");
-        let client = ClientHandle::start("localhost:15926");
+        info!("Connecting to server on ip '{}'...", ip);
+        let client = ClientHandle::start(&ip);
         info!("Successfully connected to server!");
-        
-        let mut sacred_state = client.state().expect("Client should be initialized with Some state.");
+
+        let mut sacred_state = client
+            .state()
+            .expect("Client should be initialized with Some state.");
         let mut latency_state = LatencyState::from_sacred_state(&sacred_state);
 
-        let mut last_tick = Instant::now();
+        let mut tick = Tick::start(game::TPS);
         loop {
             // Handle external events.
             external_event_handler.handle_inputs(&window_to_logic_receiver.channel_receiver);
@@ -49,6 +63,14 @@ pub fn start_logic_thread(
             let (state_events, logic_events) = external_event_handler.tick_events();
             handle_logic_events(&logic_events, &mut sacred_state);
 
+            client.send_events(state_events.clone());
+
+            if let Some(state) = client.state() {
+                sacred_state = state;
+                latency_state.update_state(&sacred_state);
+            }
+
+            // Update latency state with newest events.
             latency_state.tick(state_events, &audio_message_handle);
 
             // Update graphics state model.
@@ -66,17 +88,12 @@ pub fn start_logic_thread(
             }
 
             // Wait for next tick if necessary.
-            if last_tick.elapsed().as_secs_f32() < game::SECONDS_PER_TICK {
-                thread::sleep(Duration::from_secs_f32(
-                    game::SECONDS_PER_TICK - last_tick.elapsed().as_secs_f32(),
-                ));
-            }
-            last_tick = Instant::now();
+            tick.sync_next_tick();
         }
-    })
+    }).unwrap()
 }
 
-fn handle_logic_events(events: &Vec<LogicEvent>, sacred_state: &mut SacredState) {
+fn handle_logic_events(events: &[LogicEvent], sacred_state: &mut SacredState) {
     for event in events.iter() {
         match event {
             LogicEvent::Save => sacred_state.save(),

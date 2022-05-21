@@ -4,7 +4,7 @@ use std::mem::swap;
 use world::{raytrace, Location, Terrain, VoxelType};
 
 /// Represents a physical body that can collide with terrain and other physical bodies.
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Aabb {
     location: Location,
     size: Vec3,

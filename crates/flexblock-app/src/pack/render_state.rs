@@ -1,15 +1,14 @@
-
+use game::{GraphicsStateModel, View};
 use graphics::BufferTarget;
+use graphics::ShaderIdentifier;
 use graphics::VertexPack;
 use graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
-use graphics::ShaderIdentifier;
-use utils::mesh_iterator::MeshIterator;
-use world::{self, Chunk, Terrain};
-use game::{GraphicsStateModel, View};
 use konst::{option::unwrap_or, primitive::parse_u32, result::unwrap_ctx};
 use log::error;
 use std::collections::VecDeque;
 use std::sync::MutexGuard;
+use utils::mesh_iterator::MeshIterator;
+use world::{self, Chunk, Terrain};
 
 /// This creates the vertex pack for a specific chunk. It just goes through all the voxels and adds their faces.
 fn create_chunk_pack(chunk: &Chunk) -> VertexPack {

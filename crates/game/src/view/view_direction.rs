@@ -1,8 +1,9 @@
 use dyn_clone::DynClone;
 use glm::Vec3;
+use std::fmt::Debug;
 
 #[typetag::serde(tag = "type")]
-pub trait ViewDirection: DynClone + Send {
+pub trait ViewDirection: DynClone + Send + Sync + Debug {
     fn forward(&self) -> Vec3;
 
     fn up(&self) -> Vec3;

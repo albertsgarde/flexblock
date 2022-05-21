@@ -6,7 +6,7 @@ use world::{Location, Terrain};
 /// Downwards acceleration in voxels per second squared.
 const GRAVITY: f32 = 1.8;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PhysicsBody {
     aabb: Aabb,
     velocity: Vec3,

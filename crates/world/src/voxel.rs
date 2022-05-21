@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 
 /// Represents a type of voxel.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -8,7 +9,7 @@ pub const DEFAULT_TYPE: VoxelType = VoxelType(0);
 
 /// Defines functionality and extra information for a voxel.
 #[typetag::serde(tag = "type")]
-pub trait Voxel: VoxelClone + Send {}
+pub trait Voxel: VoxelClone + Send + Sync + Debug {}
 
 pub trait VoxelClone {
     fn clone_box(&self) -> Box<dyn Voxel>;

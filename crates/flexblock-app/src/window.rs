@@ -1,9 +1,7 @@
-use graphics::{Gui, GraphicsCapabilities, RenderCaller, ExternalEvent};
-use crate::{
-    channels::{PackingToWindowReceiver, WindowToPackingSender},
-};
+use crate::channels::{PackingToWindowReceiver, WindowToPackingSender};
 use glutin::event::{Event, WindowEvent};
 use glutin::event_loop::ControlFlow;
+use graphics::{ExternalEvent, GraphicsCapabilities, Gui, RenderCaller};
 use log::info;
 
 use crate::channels::*;
@@ -23,7 +21,6 @@ pub fn start_window(
 
     unsafe { window.run(eh) };
 }
-
 
 pub struct Window {
     event_loop: Option<glutin::event_loop::EventLoop<()>>,
@@ -50,7 +47,6 @@ impl Window {
             .unwrap();
 
         let windowed_context = windowed_context.make_current().unwrap();
-
 
         let screen_dimensions = (
             windowed_context.window().inner_size().width,

@@ -1,29 +1,31 @@
-#![allow(dead_code)]
+#![allow(dead_code, clippy::module_inception)]
 #![warn(missing_docs)]
-//! Flexiblock aims to be a messy, overengineered, feature-creeped, and generally super cool Minecraft clone.
+//! Flexblock aims to be a messy, overengineered, feature-creeped, and generally super cool Minecraft clone.
 mod channels;
+mod logging;
 mod logic;
+mod pack;
 mod packing;
 mod window;
-mod logging;
-mod pack;
+mod cli;
 
 extern crate nalgebra_glm as glm;
 
-use std::sync::{mpsc, Arc, Mutex};
+use std::{sync::{mpsc, Arc, Mutex}, thread};
 
+use channels::*;
+use clap::Parser;
 use game::GraphicsStateModel;
 use graphics::RenderMessages;
+use log::info;
 
-fn main() {
-    logging::log_init();
-
+fn setup_channels() -> Channels {
     // Create game input event channel.
     let (game_event_sender, game_event_receiver) = mpsc::channel();
-    let window_to_logic_sender = channels::WindowToLogicSender {
+    let window_to_logic_sender = WindowToLogicSender {
         channel_sender: game_event_sender,
     };
-    let window_to_logic_receiver = channels::WindowToLogicReceiver {
+    let window_to_logic_receiver = WindowToLogicReceiver {
         channel_receiver: game_event_receiver,
     };
 
@@ -54,15 +56,52 @@ fn main() {
     };
     let packing_to_window_receiver = channels::PackingToWindowReceiver { render_pack };
 
+    Channels {
+        window_to_logic_sender,
+        window_to_logic_receiver,
+        logic_to_packing_sender,
+        logic_to_packing_receiver,
+        packing_to_window_sender,
+        packing_to_window_receiver,
+        window_to_packing_sender,
+        window_to_packing_receiver,
+    }
+}
+
+fn main() {
+    logging::log_init();
+    
+    let cli = cli::Args::parse();
+
+
+
+    let Channels {window_to_logic_sender,
+        window_to_logic_receiver,
+        logic_to_packing_sender,
+        logic_to_packing_receiver,
+        packing_to_window_sender,
+        packing_to_window_receiver,
+        window_to_packing_sender,
+        window_to_packing_receiver,} = setup_channels();
+
     // Create audio thread.
     let audio_handle = audio::setup_audio(game::TPS);
     let logic_audio_message_handle = audio_handle.audio_message_handle();
 
+    // Start server and ip if needed.
+    let (ip, mut server_handle) = if let Some(ip) = cli.ip {
+        (ip + ":" + &cli.port, None)
+    } else {
+        let ip = "localhost:".to_owned() + &cli.port;
+        let server_handle = logic::start_server(ip.to_owned());
+        (ip, Some(server_handle))
+    };
     // Start threads.
     let logic_thread = logic::start_logic_thread(
         window_to_logic_receiver,
         logic_to_packing_sender,
         logic_audio_message_handle,
+        ip
     );
     let packing_thread = pack::start_packing_thread(
         logic_to_packing_receiver,
@@ -79,5 +118,8 @@ fn main() {
     audio_handle.stop_audio();
 
     packing_thread.join().expect("Panic in packing thread");
+    if let Some(handle) = server_handle.take() {
+        handle.stop()
+    }
     logic_thread.join().expect("Panic in logic thread");
 }

@@ -3,7 +3,7 @@ use glm::Vec3;
 use serde::{Deserialize, Serialize};
 use std::f32::consts::*;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct PrincipalAxes {
     yaw: f32,
     pitch: f32,

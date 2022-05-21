@@ -1,14 +1,18 @@
-use std::{fs::File, io::{BufReader, BufWriter}, path::Path};
+use std::{
+    fs::File,
+    io::{BufReader, BufWriter},
+    path::Path,
+};
 
-use game::{InputEventHistory, State, StateInputEvent};
 use audio::AudioMessageIgnorer;
+use game::{InputEventHistory, State, StateInputEvent};
 
-use serde::{Serialize, Deserialize};
 use log::error;
+use serde::{Deserialize, Serialize};
 
 use flate2::{bufread::DeflateDecoder, write::DeflateEncoder, Compression};
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct SacredState {
     state: State,
     input_event_history: InputEventHistory,
@@ -16,7 +20,10 @@ pub struct SacredState {
 
 impl SacredState {
     pub fn new() -> SacredState {
-        SacredState {state: State::new(), input_event_history: InputEventHistory::new() }
+        SacredState {
+            state: State::new(),
+            input_event_history: InputEventHistory::new(),
+        }
     }
 
     pub fn tick(&mut self, events: Vec<StateInputEvent>) {
@@ -43,7 +50,7 @@ impl SacredState {
             return;
         }
         // Write save data to file in bincode format.
-    
+
         let file = {
             let file = match File::create(save_path) {
                 Ok(file) => file,
@@ -59,7 +66,7 @@ impl SacredState {
             error!("Save failed with error: {:?}", *error)
         }
     }
-    
+
     pub fn load() -> Result<SacredState, std::io::Error> {
         let save_path = Path::new("saves/save.flex");
         let file = {

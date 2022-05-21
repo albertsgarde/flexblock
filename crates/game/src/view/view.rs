@@ -6,7 +6,7 @@ use world::Location;
 use super::principal_axes::PrincipalAxes;
 
 /// Represents a view point in the world.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct View {
     location: Location,
     view_direction: Box<dyn ViewDirection>,

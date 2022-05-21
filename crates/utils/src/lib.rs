@@ -17,6 +17,9 @@ mod csv_reader;
 pub mod ply;
 pub use csv_reader::{read_csv, CsvGrid};
 
+mod tick;
+pub use tick::Tick;
+
 extern crate nalgebra_glm as glm;
 
 #[macro_use]
