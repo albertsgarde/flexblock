@@ -1,11 +1,11 @@
-use crate::{logic::{
+use crate::logic::{
     controls::{Control, ControlConfig},
-    LogicEvent,},
+    LogicEvent,
 };
-use graphics::ExternalEvent;
 use game::StateInputEvent;
 use glm::Vec3;
 use glutin::event::{ElementState, MouseButton, VirtualKeyCode};
+use graphics::ExternalEvent;
 use std::{collections::HashMap, sync::mpsc};
 
 /// Handles external events and produces state input events.
@@ -100,17 +100,17 @@ impl ExternalEventHandler {
         if control == self.control_config.jump {
             self.tick_state_events.push(StateInputEvent::Jump)
         }
-        if control == self.control_config.save {
-            if self.key_state(VirtualKeyCode::LControl) || self.key_state(VirtualKeyCode::RControl)
-            {
-                self.tick_logic_events.push(LogicEvent::Save)
-            }
+        if control == self.control_config.save
+            && (self.key_state(VirtualKeyCode::LControl)
+                || self.key_state(VirtualKeyCode::RControl))
+        {
+            self.tick_logic_events.push(LogicEvent::Save)
         }
-        if control == self.control_config.load {
-            if self.key_state(VirtualKeyCode::LControl) || self.key_state(VirtualKeyCode::RControl)
-            {
-                self.tick_logic_events.push(LogicEvent::LoadLatest)
-            }
+        if control == self.control_config.load
+            && (self.key_state(VirtualKeyCode::LControl)
+                || self.key_state(VirtualKeyCode::RControl))
+        {
+            self.tick_logic_events.push(LogicEvent::LoadLatest)
         }
         if control == self.control_config.player_interact_1 {
             self.tick_state_events
@@ -124,7 +124,7 @@ impl ExternalEventHandler {
 
     /// Returns and clears the current event buffer.
     pub fn tick_events(&mut self) -> (Vec<StateInputEvent>, Vec<LogicEvent>) {
-        let mut state_result = std::mem::replace(&mut self.tick_state_events, Vec::new());
+        let mut state_result = std::mem::take(&mut self.tick_state_events);
         let mut move_vector = Vec3::new(0., 0., 0.);
         if self.control_state(self.control_config.move_forward) {
             move_vector += Vec3::new(0., 0., -1.);
@@ -141,7 +141,7 @@ impl ExternalEventHandler {
         if move_vector != Vec3::new(0., 0., 0.) {
             state_result.push(StateInputEvent::MovePlayerRelative { delta: move_vector });
         }
-        let logic_result = std::mem::replace(&mut self.tick_logic_events, Vec::new());
+        let logic_result = std::mem::take(&mut self.tick_logic_events);
         (state_result, logic_result)
     }
 }

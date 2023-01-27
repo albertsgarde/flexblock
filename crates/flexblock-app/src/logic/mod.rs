@@ -6,5 +6,5 @@ pub use external_event_handler::ExternalEventHandler;
 mod logic_event;
 use logic_event::LogicEvent;
 
-mod logic;
-pub use logic::start_logic_thread;
+mod run;
+pub use run::start_logic_thread;

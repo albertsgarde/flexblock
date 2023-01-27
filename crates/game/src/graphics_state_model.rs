@@ -13,3 +13,9 @@ impl GraphicsStateModel {
         }
     }
 }
+
+impl Default for GraphicsStateModel {
+    fn default() -> Self {
+        Self::new()
+    }
+}

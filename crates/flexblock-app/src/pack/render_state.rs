@@ -1,16 +1,15 @@
-
-use graphics::BufferTarget;
-use graphics::VertexPack;
-use graphics::model::{ModelManager, PlacedModel};
-use graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
-use graphics::ShaderIdentifier;
-use utils::mesh_iterator::MeshIterator;
-use world::{self, Chunk, Terrain};
 use game::{GraphicsStateModel, View};
+use graphics::model::{ModelManager, PlacedModel};
+use graphics::BufferTarget;
+use graphics::ShaderIdentifier;
+use graphics::VertexPack;
+use graphics::{GraphicsCapabilities, RenderMessage, RenderMessages, UniformData};
 use konst::{option::unwrap_or, primitive::parse_u32, result::unwrap_ctx};
 use log::error;
 use std::collections::VecDeque;
 use std::sync::MutexGuard;
+use utils::mesh_iterator::MeshIterator;
+use world::{self, Chunk, Terrain};
 
 /// This creates the vertex pack for a specific chunk. It just goes through all the voxels and adds their faces.
 fn create_chunk_pack(chunk: &Chunk) -> VertexPack {
@@ -100,7 +99,7 @@ pub fn get_vp_matrix(view: &View, screen_dimensions: (u32, u32)) -> glm::Mat4 {
 
 /// Returns a model matrix.
 /// TODO: ROTATION
-pub fn get_model_matrix(offset : &glm::Vec3) -> glm::Mat4 {
+pub fn get_model_matrix(offset: &glm::Vec3) -> glm::Mat4 {
     glm::translation(offset)
 }
 
@@ -275,11 +274,8 @@ impl RenderState {
         }
 
         if let Some(chunk) = terrain.chunk(location) {
-            match self.pack_chunk(chunk, location, messages) {
-                Err(s) => {
-                    error!("{}", s)
-                }
-                Ok(()) => {}
+            if let Err(s) = self.pack_chunk(chunk, location, messages) {
+                error!("{}", s);
             }
         }
     }
@@ -362,7 +358,7 @@ impl RenderState {
     pub fn create_render_messages(
         &mut self,
         data: &MutexGuard<GraphicsStateModel>,
-        model_manager : &ModelManager,
+        model_manager: &ModelManager,
     ) -> RenderMessages {
         // What should happen:
         // 1. Clear color and depth buffer
@@ -423,17 +419,17 @@ impl RenderState {
         let vp = get_vp_matrix(&data.view, (width, height));
         self.render_packed_chunks(&mut messages, &vp);
 
-        let k = glm::vec3(2.0,3.0,1.0);
+        let k = glm::vec3(2.0, 3.0, 1.0);
         let models = vec![("/test.obj", k)]; // TODO: USE INFO FROM THE GRAPHICS STATE HERE
 
-        let models = models.into_iter().map(
-            |(model_name, location)| {
-                PlacedModel::new(model_name.into(), location, glm::vec3(1.0,1.0,1.0))
-            }
-        );
+        let models = models.into_iter().map(|(model_name, location)| {
+            PlacedModel::new(model_name.into(), location, glm::vec3(1.0, 1.0, 1.0))
+        });
 
-        messages.merge_current(model_manager.draw_models(models.collect(), &get_vp_matrix(&data.view, (width, height))));
-
+        messages.merge_current(model_manager.draw_models(
+            models.collect(),
+            &get_vp_matrix(&data.view, (width, height)),
+        ));
 
         messages
     }
