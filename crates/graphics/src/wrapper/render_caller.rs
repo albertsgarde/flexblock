@@ -1,3 +1,6 @@
+// Should be removed ASAP.
+#![allow(clippy::missing_safety_doc)]
+
 use super::{
     vertex_buffer_metadata::VERTEX_BUFFER_METADATA, BufferTarget, FramebufferIdentifier,
     FramebufferManager, ShaderIdentifier, ShaderManager, TextureManager, VertexArray,
@@ -151,7 +154,7 @@ impl RenderCaller {
                 depth_buffer,
             } => self.clear_buffers(color_buffer, depth_buffer),
             RenderMessage::ChooseFramebuffer { framebuffer } => {
-                self.choose_framebuffer(&framebuffer)
+                self.choose_framebuffer(framebuffer)
             }
             RenderMessage::Compute {
                 output_texture,
@@ -167,7 +170,7 @@ impl RenderCaller {
     }
 
     pub unsafe fn choose_framebuffer(&mut self, framebuffer: &Option<FramebufferIdentifier>) {
-        self.framebuffer_manager.bind_framebuffer(&framebuffer);
+        self.framebuffer_manager.bind_framebuffer(framebuffer);
         if VERBOSE {
             debug!("Choosing framebuffer {:?}", framebuffer);
         }
