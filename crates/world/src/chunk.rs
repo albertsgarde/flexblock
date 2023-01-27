@@ -97,7 +97,7 @@ impl Chunk {
     /// # Arguments
     ///
     /// * `loc` - Will find the type of the voxel at this location in the chunk.
-    pub unsafe fn voxel_type_unchecked(&self, loc: ChunkLocation) -> VoxelType {
+    pub fn voxel_type_unchecked(&self, loc: ChunkLocation) -> VoxelType {
         debug_assert!(loc.index < CHUNK_LENGTH);
         match self {
             Chunk::SingleType(voxel_type) => *voxel_type,
@@ -130,7 +130,7 @@ impl Chunk {
     /// # Arguments
     ///
     /// * `loc` - Will find the type of the voxel at this location in the chunk.
-    pub unsafe fn voxel_unchecked(&self, loc: ChunkLocation) -> (VoxelType, Option<&dyn Voxel>) {
+    pub fn voxel_unchecked(&self, loc: ChunkLocation) -> (VoxelType, Option<&dyn Voxel>) {
         debug_assert!(loc.index < CHUNK_LENGTH);
         match self {
             Chunk::SingleType(voxel_type) => (*voxel_type, None),
@@ -173,7 +173,7 @@ impl Chunk {
         }
     }
 
-    pub unsafe fn ignore_voxel(&self, voxel: ChunkLocation) -> bool {
+    pub fn ignore_voxel(&self, voxel: ChunkLocation) -> bool {
         raytrace::ignore_voxel_type(self.voxel_type_unchecked(voxel))
     }
 
@@ -196,7 +196,7 @@ impl Chunk {
             let (mut t, mut voxel) =
                 raytrace::voxel_exit(origin, direction, raytrace::round(origin), 1.).unwrap();
             while Chunk::within_chunk(voxel) {
-                if !unsafe { self.ignore_voxel(voxel.into()) } {
+                if !self.ignore_voxel(voxel.into()) {
                     return Some((t, voxel));
                 }
                 let temp = raytrace::voxel_exit(origin, direction, voxel, 1.).unwrap();
@@ -207,8 +207,14 @@ impl Chunk {
         }
     }
 
-    pub fn iter<'a>(&'a self) -> ChunkIterator<'a> {
+    pub fn iter(&self) -> ChunkIterator<'_> {
         self.into_iter()
+    }
+}
+
+impl Default for Chunk {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
