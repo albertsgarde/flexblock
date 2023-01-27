@@ -54,17 +54,15 @@ pub fn read_csv<T: AsRef<Path>, F: FromStr>(path: T) -> std::io::Result<CsvGrid<
     }
     let width = line1.chars().filter(|x| *x == ',').count() + 1;
     let mut height = 1;
-    for line in iter {
-        if let Ok(line) = line {
-            height += 1;
-            for number in line.split(',') {
-                match number.parse::<F>() {
-                    Ok(d) => {
-                        data.push(d);
-                    }
-                    Err(_) => {
-                        panic!("Failed to load CSV due to a parsing error!")
-                    }
+    for line in iter.flatten() {
+        height += 1;
+        for number in line.split(',') {
+            match number.parse::<F>() {
+                Ok(d) => {
+                    data.push(d);
+                }
+                Err(_) => {
+                    panic!("Failed to load CSV due to a parsing error!")
                 }
             }
         }

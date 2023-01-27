@@ -39,14 +39,12 @@ lazy_static! {
             } else {
                 panic!("No assets directory at project root.");
             }
+        } else if path.join("../assets").is_dir() {
+            path.join("../assets")
+        } else if path.join("assets").is_dir() {
+            path.join("assets")
         } else {
-            if path.join("../assets").is_dir() {
-                path.join("../assets")
-            } else if path.join("assets").is_dir() {
-                path.join("assets")
-            } else {
-                panic!("Either the assets directory is missing or it is inaccessable.")
-            }
+            panic!("Either the assets directory is missing or it is inaccessable.")
         };
         result.into_boxed_path()
     };
