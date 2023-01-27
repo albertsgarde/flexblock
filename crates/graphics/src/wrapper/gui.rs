@@ -12,6 +12,7 @@ pub struct Gui {
     settings: GuiSettings,
 }
 
+#[allow(dead_code)]
 struct GuiSettings {
     canvas_width: f32,
     canvas_height: f32,
@@ -20,6 +21,7 @@ struct GuiSettings {
     font_settings: FontSettings,
 }
 
+#[allow(dead_code)]
 struct Letter {
     u0: f32,
     v0: f32,
@@ -295,9 +297,11 @@ mod widgets {
                     u,
                     v: v + 1.0 / 16.0,
                 });
+                #[allow(clippy::identity_op)]
                 indices.push(idx + 0);
                 indices.push(idx + 1);
                 indices.push(idx + 2);
+                #[allow(clippy::identity_op)]
                 indices.push(idx + 0);
                 indices.push(idx + 2);
                 indices.push(idx + 3);

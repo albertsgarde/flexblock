@@ -110,6 +110,12 @@ macro_rules! create_uniform_data {
 
         }
 
+        impl Default for UniformData {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
+
         pub struct Uniform<'a> {
             pub value : UniformValue<'a>,
             pub location : &'a String

@@ -56,12 +56,15 @@ pub fn read_png(path: &Path) -> Result<PngData, PngLoadError> {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
     #[test]
     #[ignore]
     fn read_png() {
         use std::fs::File;
 
-        let decoder = png::Decoder::new(File::open("textures/atlas.png").unwrap());
+        let decoder =
+            png::Decoder::new(File::open("../../assets/graphics/textures/atlas.png").unwrap());
         let (info, mut reader) = decoder.read_info().unwrap();
         // Allocate the output buffer.
         let mut buf = vec![0; info.buffer_size()];
@@ -77,9 +80,9 @@ mod tests {
         use std::io::BufWriter;
         use std::path::Path;
 
-        let path = Path::new(r"textures/write.png");
+        let path = Path::new(r"../../assets/graphics/textures/write.png");
         let file = File::create(path).unwrap();
-        let ref mut w = BufWriter::new(file);
+        let w = &mut BufWriter::new(file);
 
         let mut encoder = png::Encoder::new(w, 2, 1); // Width is 2 pixels and height is 1.
         encoder.set_color(png::ColorType::RGBA);
@@ -88,5 +91,6 @@ mod tests {
 
         let data = [255, 0, 0, 255, 0, 0, 0, 255]; // An array containing a RGBA sequence. First pixel is red and second pixel is black.
         writer.write_image_data(&data).unwrap(); // Save
+        fs::remove_file(path).unwrap();
     }
 }

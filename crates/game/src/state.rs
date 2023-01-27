@@ -1,5 +1,4 @@
-use crate::{GraphicsStateModel, Player, StateInputEvent}
-;
+use crate::{GraphicsStateModel, Player, StateInputEvent};
 use audio::{AudioMessage, AudioMessageHandle, Listener};
 use glm::Vec3;
 use serde::{Deserialize, Serialize};
@@ -51,8 +50,10 @@ impl State {
 
         self.player.tick(&self.terrain);
 
-        audio_message_handle
-            .send_message(AudioMessage::Listener(Listener::new(self.player.view().location(), self.player.view().right())));
+        audio_message_handle.send_message(AudioMessage::Listener(Listener::new(
+            self.player.view().location(),
+            self.player.view().right(),
+        )));
     }
 
     fn handle_events(
@@ -104,5 +105,11 @@ impl State {
     pub fn update_graphics_state_model(&self, graphics_state_model: &mut GraphicsStateModel) {
         graphics_state_model.terrain = self.terrain.clone();
         graphics_state_model.view = self.player.view();
+    }
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self::new()
     }
 }

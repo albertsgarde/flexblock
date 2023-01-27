@@ -1,15 +1,15 @@
 use graphics::FramebufferIdentifier;
 
-use graphics::UniformData;
-use graphics::pack::*;
-use graphics::ShaderIdentifier;
-use graphics::{RenderMessage, RenderMessages, VertexPack};
 use crate::channels::*;
+use crate::pack::{RenderMessageValidator, RenderState};
+use graphics::pack::*;
 use graphics::BufferTarget;
+use graphics::ShaderIdentifier;
+use graphics::UniformData;
+use graphics::{RenderMessage, RenderMessages, VertexPack};
 use std::collections::HashSet;
 use std::thread::{self, JoinHandle};
 use utils::Vertex3D;
-use crate::pack::{RenderState, RenderMessageValidator};
 
 fn get_reticle_pack() -> VertexPack {
     VertexPack::new(
@@ -100,12 +100,21 @@ fn get_reticle_pack() -> VertexPack {
 }
 
 #[cfg(not(debug_assertions))]
-fn validate(validator : &mut RenderMessageValidator, state : &RenderState, messages : &RenderMessages) { }
+fn validate(
+    validator: &mut RenderMessageValidator,
+    state: &RenderState,
+    messages: &RenderMessages,
+) {
+}
 
 #[cfg(debug_assertions)]
-fn validate(validator : &mut RenderMessageValidator, state : &RenderState, messages : &RenderMessages) {
-    match validator.validate(&state, &messages) {
-        Ok(()) => {},
+fn validate(
+    validator: &mut RenderMessageValidator,
+    state: &RenderState,
+    messages: &RenderMessages,
+) {
+    match validator.validate(state, messages) {
+        Ok(()) => {}
         Err(e) => {
             println!("Validation error: {:?}", e);
             panic!();
@@ -123,10 +132,13 @@ pub fn start_packing_thread(
     // Keeps all state needed for running validation.
     let mut validator = RenderMessageValidator::new();
 
-    
     let mut model_manager = graphics::model::ModelManager::load_models();
-    let mut models_to_pack : Option<HashSet<String>> = Some(model_manager.get_model_names().map(|x| x.to_string()).collect());
-    
+    let mut models_to_pack: Option<HashSet<String>> = Some(
+        model_manager
+            .get_model_names()
+            .map(|x| x.to_string())
+            .collect(),
+    );
 
     thread::spawn(move || {
         for _ in logic_rx.channel_receiver.iter() {
@@ -138,7 +150,6 @@ pub fn start_packing_thread(
             let mut messages = RenderMessages::new();
 
             if state.is_render_ready() {
-
                 if let Some(pack_models) = models_to_pack.take() {
                     messages.merge_current(model_manager.pack_models(pack_models));
                 }
@@ -147,9 +158,8 @@ pub fn start_packing_thread(
                     framebuffer: Some(FramebufferIdentifier::FirstPass),
                 });
 
-                messages.add_message(RenderMessage::SwitchTo3D{});
+                messages.add_message(RenderMessage::SwitchTo3D {});
                 messages.merge_current(state.create_render_messages(&data, &model_manager));
-                
 
                 {
                     let cx = state.render_capabilities().as_ref().unwrap();

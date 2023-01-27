@@ -225,6 +225,12 @@ impl TextureManager {
     }
 }
 
+impl Default for TextureManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::InternalFormat;
@@ -232,6 +238,7 @@ mod tests {
     use log::debug;
     use utils::ColorFormat;
 
+    #[test] // Should this be a test?
     fn serialize_texture_metadata() {
         let metadata = TextureMetadata {
             format: ColorFormat::RGB,

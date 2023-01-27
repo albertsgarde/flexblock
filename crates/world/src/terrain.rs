@@ -53,7 +53,7 @@ impl Terrain {
     /// * `loc` - Will find the type of the voxel at this location.
     pub fn voxel_type(&self, loc: Location) -> VoxelType {
         match self.chunks.get(&loc.chunk) {
-            Some(chunk) => unsafe { chunk.voxel_type_unchecked(loc.position.into()) },
+            Some(chunk) => chunk.voxel_type_unchecked(loc.position.into()),
             _ => voxel::DEFAULT_TYPE,
         }
     }
@@ -81,7 +81,7 @@ impl Terrain {
     /// * `loc` - Will find the type and object of the voxel at this location.
     pub fn voxel(&self, loc: Location) -> (VoxelType, Option<&dyn Voxel>) {
         match self.chunks.get(&loc.chunk) {
-            Some(chunk) => unsafe { chunk.voxel_unchecked(loc.position.into()) },
+            Some(chunk) => chunk.voxel_unchecked(loc.position.into()),
             _ => (voxel::DEFAULT_TYPE, None),
         }
     }
@@ -123,7 +123,7 @@ impl Terrain {
         while chunks < 100 {
             loc.coerce();
             if let Some(chunk) = self.chunks.get(&loc.chunk) {
-                if t > 0. && !unsafe { chunk.ignore_voxel(loc.position.into()) } {
+                if t > 0. && !chunk.ignore_voxel(loc.position.into()) {
                     return Some((t, loc.round()));
                 }
                 let new_origin = loc.position;
@@ -177,8 +177,14 @@ impl Terrain {
         VoxelTypeBoxIterator {
             lower_bound: vec1,
             mesh_iterator: MeshIterator::create(vec2 - vec1),
-            terrain: &self,
+            terrain: self,
         }
+    }
+}
+
+impl Default for Terrain {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

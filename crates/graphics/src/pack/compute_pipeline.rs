@@ -33,6 +33,12 @@ impl ComputePipeline {
     }
 }
 
+impl Default for ComputePipeline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ComputeDispatch {
     pub fn new<T: Into<String>>(
         shader: ShaderIdentifier,

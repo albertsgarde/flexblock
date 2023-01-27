@@ -123,6 +123,11 @@ impl AttributePointerList {
         self.attribute_pointers.len()
     }
 
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.attribute_pointers.is_empty()
+    }
+
     pub fn get_stride(&self) -> usize {
         self.stride
     }

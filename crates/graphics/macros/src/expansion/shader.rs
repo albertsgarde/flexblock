@@ -11,48 +11,42 @@ pub fn expand_shader_id(input: DeriveInput) -> TokenStream {
     let mut extensionless_paths = Vec::new();
     let mut are_compute = Vec::new();
     let mut variants = Vec::new();
-    match input.data {
-        Data::Enum(data_enum) => {
-            for variant in data_enum.variants.into_iter() {
-                variants.push(variant.ident);
-                let attrs = variant.attrs;
-                let mut has_name = false;
-                let mut has_exp = false;
-                let mut has_comp = false;
-                for attr in attrs {
-                    match &attr.path.get_ident().unwrap().to_string()[..] {
-                        "name" => {
-                            if has_name {
-                                panic!("A shader identifier has been given two names!");
-                            }
-                            names.push(attr.tokens);
-                            has_name = true;
+    if let Data::Enum(data_enum) = input.data {
+        for variant in data_enum.variants.into_iter() {
+            variants.push(variant.ident);
+            let attrs = variant.attrs;
+            let mut has_name = false;
+            let mut has_exp = false;
+            let mut has_comp = false;
+            for attr in attrs {
+                match &attr.path.get_ident().unwrap().to_string()[..] {
+                    "name" => {
+                        if has_name {
+                            panic!("A shader identifier has been given two names!");
                         }
-                        "extensionless_path" => {
-                            if has_exp {
-                                panic!(
-                                    "A shader identifier has been given two extensionless paths!"
-                                );
-                            }
-                            extensionless_paths.push(attr.tokens);
-                            has_exp = true;
-                        }
-                        "is_compute" => {
-                            if has_comp {
-                                panic!(
-                                    "A shader identifier has been given two is_compute settings!"
-                                );
-                            }
-                            are_compute.push(attr.tokens);
-                            has_comp = true;
-                        }
-                        _ => {}
+                        names.push(attr.tokens);
+                        has_name = true;
                     }
+                    "extensionless_path" => {
+                        if has_exp {
+                            panic!("A shader identifier has been given two extensionless paths!");
+                        }
+                        extensionless_paths.push(attr.tokens);
+                        has_exp = true;
+                    }
+                    "is_compute" => {
+                        if has_comp {
+                            panic!("A shader identifier has been given two is_compute settings!");
+                        }
+                        are_compute.push(attr.tokens);
+                        has_comp = true;
+                    }
+                    _ => {}
                 }
             }
         }
-        _ => (),
     }
+
     if variants.len() > names.len() {
         panic!("Not all shader identifiers have been given names!");
     }
@@ -91,16 +85,19 @@ pub fn expand_shader_id(input: DeriveInput) -> TokenStream {
     let k = quote! {
         #[automatically_derived]
         impl #name {
+            #[allow(unused_parens)]
             pub fn extensionless_path(&self) -> &'static str {
                 match self {
                     #(#exp)*
                 }
             }
+            #[allow(unused_parens)]
             pub fn name(&self) -> &'static str {
                 match self {
                     #(#nms)*
                 }
             }
+            #[allow(unused_parens)]
             pub fn is_compute(&self) -> bool {
                 match self {
                     #(#cmps)*

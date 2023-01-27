@@ -61,3 +61,9 @@ impl InputEventHistory {
         self.input_events.len()
     }
 }
+
+impl Default for InputEventHistory {
+    fn default() -> Self {
+        Self::new()
+    }
+}

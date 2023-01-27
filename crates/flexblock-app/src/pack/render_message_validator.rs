@@ -1,9 +1,8 @@
 use super::RenderState;
-use graphics::{
-    BufferTarget, ShaderMetadata,
-    GraphicsCapabilities, RenderMessage, RenderMessages, UniformData,
-};
 use graphics::VERTEX_BUFFER_METADATA;
+use graphics::{
+    BufferTarget, GraphicsCapabilities, RenderMessage, RenderMessages, ShaderMetadata, UniformData,
+};
 use log::debug;
 use std::fmt;
 
@@ -21,7 +20,7 @@ pub enum ValidationErrorType {
     WrongTriangleCount,
     EmptyVertexPack,
     InvalidTexture { texture: String },
-    UnwantedUniform { uniform: String, shader : String },
+    UnwantedUniform { uniform: String, shader: String },
     UnfilledUniform { uniforms: Vec<String> },
     NoGraphicsCapabilities,
     NonComputeShader { shader: String },
@@ -85,7 +84,7 @@ pub struct RenderMessageValidator {
 impl RenderMessageValidator {
     pub fn new() -> RenderMessageValidator {
         RenderMessageValidator {
-            packed_vbos: vec![false; VERTEX_BUFFER_METADATA.max_buffer_id()]
+            packed_vbos: vec![false; VERTEX_BUFFER_METADATA.max_buffer_id()],
         }
     }
 
@@ -237,10 +236,11 @@ impl RenderMessageValidator {
                                 if !bound_uniforms.contains(&uniform.0) {
                                     return Err(ValidationError {
                                         error_type: ValidationErrorType::UnfilledUniform {
-                                            uniforms: (&s.required_uniforms)
+                                            uniforms: s
+                                                .required_uniforms
                                                 .iter()
                                                 .map(|x| String::from(&x.0))
-                                                .filter(|x| !bound_uniforms.contains(&x))
+                                                .filter(|x| !bound_uniforms.contains(x))
                                                 .collect::<Vec<String>>(),
                                         },
                                         context: self.capture_context(
@@ -435,10 +435,11 @@ impl RenderMessageValidator {
                                 if !bound_uniforms.contains(&uniform.0) {
                                     return Err(ValidationError {
                                         error_type: ValidationErrorType::UnfilledUniform {
-                                            uniforms: (&s.required_uniforms)
+                                            uniforms: s
+                                                .required_uniforms
                                                 .iter()
                                                 .map(|x| String::from(&x.0))
-                                                .filter(|x| !bound_uniforms.contains(&x))
+                                                .filter(|x| !bound_uniforms.contains(x))
                                                 .collect::<Vec<String>>(),
                                         },
                                         context: self.capture_context(
@@ -511,11 +512,11 @@ impl RenderMessageValidator {
                 if !contained {
                     return Err(ValidationErrorType::UnwantedUniform {
                         uniform: String::from(uniform),
-                        shader : String::from(s.identifier.name())
+                        shader: String::from(s.identifier.name()),
                     });
                 }
 
-                if !bound_uniforms.contains(&uniform) {
+                if !bound_uniforms.contains(uniform) {
                     bound_uniforms.push(String::from(uniform));
                 }
             }
@@ -530,10 +531,8 @@ impl RenderMessageValidator {
 #[cfg(test)]
 mod tests {
     use super::{RenderMessageValidator, RenderState};
-    use graphics::{
-        BufferTarget, ProgramType, ShaderIdentifier, ShaderMetadata, TextureMetadata,
-    };
-    use graphics::{InternalFormat, GraphicsCapabilities};
+    use graphics::{BufferTarget, ProgramType, ShaderIdentifier, ShaderMetadata, TextureMetadata};
+    use graphics::{GraphicsCapabilities, InternalFormat};
     use graphics::{RenderMessage, RenderMessages, UniformData, VertexPack};
     use std::collections::HashMap;
     use utils::ColorFormat;
@@ -603,14 +602,13 @@ mod tests {
             graphics::pack::cube_faces::back(z0, x0, y0, x1, y1, 1., 0., 0., 0);
         vertices.append(&mut vadd);
         elements.append(&mut eadd);
-        let vertex_pack = VertexPack::new(vertices, Some(elements));
-        vertex_pack
+        VertexPack::new(vertices, Some(elements))
     }
 
     #[test]
     fn basic_validation() {
         // Does extremely basic validation
-        let mut rs = create_render_state(false);
+        let rs = create_render_state(false);
 
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
@@ -628,13 +626,15 @@ mod tests {
             pack: create_quad_pack(),
         });
 
-        assert!(validator.validate(&mut rs, &render_messages).unwrap() == ());
+        validator
+            .validate(&rs, &render_messages)
+            .expect("Failed to validate.");
     }
 
     #[test]
     fn texture_name_validation() {
         // Ensures that we can only use textures that exist in the graphics capabilities object
-        let mut rs = create_render_state(false);
+        let rs = create_render_state(false);
 
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
@@ -652,7 +652,7 @@ mod tests {
         });
 
         assert!(
-            validator.validate(&mut rs, &render_messages).is_err(),
+            validator.validate(&rs, &render_messages).is_err(),
             "Validate wrongfully accepts non-existent uniform name!"
         );
         let mut render_messages = RenderMessages::new();
@@ -670,7 +670,7 @@ mod tests {
             pack: create_quad_pack(),
         });
 
-        let res = validator.validate(&mut rs, &render_messages);
+        let res = validator.validate(&rs, &render_messages);
         assert!(
             res.is_err(),
             "Validate wrongfully accepts non-existent texture name!"
@@ -692,7 +692,7 @@ mod tests {
         });
 
         assert!(
-            validator.validate(&mut rs, &render_messages).is_ok(),
+            validator.validate(&rs, &render_messages).is_ok(),
             "Validate wrongfully doesn't accept correct texture and uniform name!"
         );
     }
@@ -700,7 +700,7 @@ mod tests {
     #[test]
     fn uniform_validation() {
         // Ensures that the uniform validation method works correctly
-        let mut rs = create_render_state(true);
+        let rs = create_render_state(true);
 
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
@@ -717,7 +717,7 @@ mod tests {
         });
 
         assert!(
-            validator.validate(&mut rs, &render_messages).is_err(),
+            validator.validate(&rs, &render_messages).is_err(),
             "Validate wrongfully accepts non-filled uniforms!"
         );
 
@@ -741,7 +741,7 @@ mod tests {
         });
 
         assert!(
-            validator.validate(&mut rs, &render_messages).is_err(),
+            validator.validate(&rs, &render_messages).is_err(),
             "Validate wrongfully accepts non-filled uniforms!"
         );
 
@@ -765,7 +765,7 @@ mod tests {
             buffer: BufferTarget::WorldBuffer(0),
         });
         assert!(
-            validator.validate(&mut rs, &render_messages).is_ok(),
+            validator.validate(&rs, &render_messages).is_ok(),
             "Validate doesn't accept filled out uniforms!"
         );
 
@@ -793,7 +793,7 @@ mod tests {
         });
 
         assert!(
-            validator.validate(&mut rs, &render_messages).is_err(),
+            validator.validate(&rs, &render_messages).is_err(),
             "Validate wrongfully accepts non-filled uniforms after shader swap!"
         );
 
@@ -832,14 +832,14 @@ mod tests {
         });
 
         assert!(
-            validator.validate(&mut rs, &render_messages).is_ok(),
+            validator.validate(&rs, &render_messages).is_ok(),
             "Validate doesn't accept filled out uniforms after shader swap!"
         );
     }
 
     #[test]
     fn framebuffer_validation() {
-        let mut rs = create_render_state(false);
+        let rs = create_render_state(false);
 
         let mut render_messages = RenderMessages::new();
         let mut validator = RenderMessageValidator::new();
@@ -860,7 +860,7 @@ mod tests {
         });
 
         assert!(
-            validator.validate(&mut rs, &render_messages).is_err(),
+            validator.validate(&rs, &render_messages).is_err(),
             "Validate wrongfully accepts no render target!"
         );
 
@@ -883,7 +883,7 @@ mod tests {
             buffer: BufferTarget::WorldBuffer(0),
         });
 
-        let res = validator.validate(&mut rs, &render_messages);
+        let res = validator.validate(&rs, &render_messages);
         assert!(
             res.is_ok(),
             "Validate wrongfully doesn't accept a render target! {:?}",

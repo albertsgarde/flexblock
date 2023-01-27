@@ -2,9 +2,9 @@ use crate::{
     channels::*,
     logic::{controls, ExternalEventHandler, LogicEvent},
 };
-use game::{State, InputEventHistory};
 use audio::AudioMessageHandle;
 use flate2::{bufread::DeflateDecoder, write::DeflateEncoder, Compression};
+use game::{InputEventHistory, State};
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -87,7 +87,7 @@ pub fn start_logic_thread(
     })
 }
 
-fn handle_logic_events(events: &Vec<LogicEvent>, save_data: &mut SaveData) {
+fn handle_logic_events(events: &[LogicEvent], save_data: &mut SaveData) {
     for event in events.iter() {
         match event {
             LogicEvent::Save => save(save_data),

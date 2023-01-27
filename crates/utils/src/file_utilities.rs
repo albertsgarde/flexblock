@@ -48,7 +48,7 @@ mod tests {
     use std::path::Path;
     #[test]
     fn simple_test() {
-        let vector = dir_entries(&Path::new("./src"), "").unwrap();
+        let vector = dir_entries(Path::new("./src"), "").unwrap();
 
         for entry in vector {
             println!("{}", entry.1);

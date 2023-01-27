@@ -229,28 +229,3 @@ impl FramebufferManager {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::{FramebufferIdentifier, FramebufferMetadata};
-    fn serialize_framebuffer_metadata() {
-        let metadata = FramebufferMetadata {
-            identifier: FramebufferIdentifier::FirstPass,
-            width: 800,
-            height: 800,
-        };
-        let j = serde_json::to_string(&metadata).unwrap();
-
-        println!("{}", j);
-    }
-
-    fn deserialize_framebuffer_metadata() {
-        let j = r#"[
-            {"name":"test","has_depth":false,"width":800,"height":800,"color_texture":"a good name","depth_texture":null},
-            {"name":"test","has_depth":false,"width":800,"height":800,"color_texture":"a good name","depth_texture":null}
-        ]"#;
-        let metadata: Vec<FramebufferMetadata> = serde_json::from_str(j).unwrap();
-
-        println!("{:?}", metadata);
-    }
-}
