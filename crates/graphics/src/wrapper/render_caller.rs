@@ -1,6 +1,9 @@
-use super::{BufferTarget, FramebufferIdentifier, FramebufferManager, ShaderIdentifier, ShaderManager, TextureManager, VertexArray, vertex_buffer_metadata::VERTEX_BUFFER_METADATA};
+use super::{
+    vertex_buffer_metadata::VERTEX_BUFFER_METADATA, BufferTarget, FramebufferIdentifier,
+    FramebufferManager, ShaderIdentifier, ShaderManager, TextureManager, VertexArray,
+};
 use crate::{RenderMessage, UniformData, VertexPack};
-use glutin::{ContextWrapper, PossiblyCurrent, window::Window};
+use glutin::{window::Window, ContextWrapper, PossiblyCurrent};
 use log::{debug, error};
 use utils::Vertex3D;
 
@@ -19,9 +22,8 @@ pub struct RenderCaller {
     pub shader_manager: ShaderManager,
     texture_manager: TextureManager,
     framebuffer_manager: FramebufferManager,
-    screen_dimensions: (u32, u32)
+    screen_dimensions: (u32, u32),
 }
-
 
 impl RenderCaller {
     ///
@@ -33,7 +35,6 @@ impl RenderCaller {
         let texture_manager = super::loader::load_textures(screen_dimensions);
         let framebuffer_manager =
             super::loader::load_framebuffers(&texture_manager, screen_dimensions);
-
 
         RenderCaller {
             vertex_array,
@@ -55,7 +56,7 @@ impl RenderCaller {
 
     ///
     /// You better only call this once or the world WILL explode
-    pub unsafe fn initialize_gl(windowed_context : &ContextWrapper<PossiblyCurrent, Window>) {
+    pub unsafe fn initialize_gl(windowed_context: &ContextWrapper<PossiblyCurrent, Window>) {
         gl::load_with(|s| windowed_context.get_proc_address(s) as *const _);
 
         gl::ClearColor(0.3, 0.3, 0.5, 1.0);
@@ -67,7 +68,6 @@ impl RenderCaller {
         gl::Enable(gl::CULL_FACE);
         gl::CullFace(gl::BACK);
     }
-
 
     ///
     /// This is supposed to turn a packed render into something that can then be rendered directly. So
@@ -133,7 +133,7 @@ impl RenderCaller {
                                     // SHADER HAS TO BE HANDLED BY THE RENDERER
                                     // gl::Disable(gl::DEPTH_TEST);
     }
-    
+
     unsafe fn switch_to_3d(&mut self) {
         gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::CULL_FACE);
@@ -159,7 +159,7 @@ impl RenderCaller {
             } => self.dispatch_compute(output_texture, dimensions),
             RenderMessage::SwitchTo2D {} => {
                 self.switch_to_2d();
-            },
+            }
             RenderMessage::SwitchTo3D {} => {
                 self.switch_to_3d();
             }

@@ -7,7 +7,7 @@ use strum::IntoEnumIterator;
 use utils::read_png;
 
 pub unsafe fn load_shaders() -> ShaderManager {
-    let folder = utils::ASSETS_PATH.join("graphics/shaders").to_owned();
+    let folder = utils::ASSETS_PATH.join("graphics/shaders");
     debug!("{}", folder.to_str().unwrap());
     debug!("{}", folder.canonicalize().unwrap().to_str().unwrap());
 

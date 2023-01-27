@@ -9,5 +9,5 @@ mod expansion;
 pub fn derive_shader_id(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
-    return expansion::expand_shader_id(input);
+    expansion::expand_shader_id(input)
 }

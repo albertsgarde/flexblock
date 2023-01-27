@@ -114,7 +114,7 @@ impl Shader {
         let shader_source = shader_source + "\0";
 
         let id = match Self::compile_shader(
-            &CStr::from_bytes_with_nul(shader_source.as_bytes()).unwrap(),
+            CStr::from_bytes_with_nul(shader_source.as_bytes()).unwrap(),
             shader_type,
         ) {
             Ok(vsid) => vsid,
@@ -360,7 +360,7 @@ pub struct ShaderManager {
     bound_shader: Option<ShaderIdentifier>,
 }
 
-impl<'a> ShaderManager {
+impl ShaderManager {
     pub fn new(shaders: Vec<Shader>) -> ShaderManager {
         let mut count = 0;
         for shader in &shaders {
@@ -389,7 +389,7 @@ impl<'a> ShaderManager {
         self.shaders[shader as usize].bind(); //TODO: MAKE NO SHADER MESSAGE
         self.bound_shader = Some(shader);
 
-        Ok(format!(""))
+        Ok(String::new())
     }
 
     pub unsafe fn uniforms(
@@ -513,7 +513,7 @@ mod tests {
                 program_id: 0,
                 uniform_locations: HashMap::new(),
                 metadata: ShaderMetadata {
-                    identifier: identifier,
+                    identifier,
                     required_uniforms: Vec::new(),
                     shader_type: if identifier.is_compute() {
                         ProgramType::Compute
@@ -535,7 +535,7 @@ mod tests {
                 program_id: 0,
                 uniform_locations: HashMap::new(),
                 metadata: ShaderMetadata {
-                    identifier: identifier,
+                    identifier,
                     required_uniforms: Vec::new(),
                     shader_type: if identifier.is_compute() {
                         ProgramType::Compute

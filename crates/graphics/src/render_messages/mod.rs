@@ -69,6 +69,12 @@ impl RenderMessages {
     }
 }
 
+impl Default for RenderMessages {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// One render message to the graphics thread.
 /// TODO: Documentation & contract checking
 #[derive(Debug)]
@@ -133,7 +139,7 @@ impl RenderMessage {
                 dimensions: _,
             } => false,
             RenderMessage::SwitchTo2D {} => false,
-            RenderMessage::SwitchTo3D {} => false
+            RenderMessage::SwitchTo3D {} => false,
         }
     }
 }

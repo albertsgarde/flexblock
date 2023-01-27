@@ -9,22 +9,18 @@ pub enum BufferTarget {
     //TODO: RENAME TO VERTEXBUFFERTARGET
     GuiBuffer,
     WorldBuffer(usize),
-    ModelBuffer(usize)
+    ModelBuffer(usize),
 }
 
 impl BufferTarget {
-    pub fn get_target_id(&self, vertex_buffer_metadata : & VertexBufferMetadata) -> usize {
-        if !vertex_buffer_metadata.valid_target(&self) {
+    pub fn get_target_id(&self, vertex_buffer_metadata: &VertexBufferMetadata) -> usize {
+        if !vertex_buffer_metadata.valid_target(self) {
             panic!("Trying to bind an invalid vertex buffer target!");
         }
         match &self {
             BufferTarget::GuiBuffer => 0,
-            BufferTarget::WorldBuffer(i) => {
-                i + vertex_buffer_metadata.world_buffer_start()
-            },
-            BufferTarget::ModelBuffer(i) => {
-                i + vertex_buffer_metadata.model_buffer_start()
-            },
+            BufferTarget::WorldBuffer(i) => i + vertex_buffer_metadata.world_buffer_start(),
+            BufferTarget::ModelBuffer(i) => i + vertex_buffer_metadata.model_buffer_start(),
         }
     }
 }
@@ -38,7 +34,7 @@ impl Display for BufferTarget {
             }
             BufferTarget::ModelBuffer(i) => {
                 f.write_fmt(format_args!("BufferTarget::ModelBuffer({})", i))
-            },
+            }
         }
     }
 }
@@ -80,10 +76,6 @@ impl<T: Vertex> ArrayBuffer<T> {
             gl::STATIC_DRAW,
         );
         self.size = data.len();
-    }
-
-    pub fn get_stride(&self) -> usize {
-        self.stride
     }
 
     pub fn get_size(&self) -> usize {

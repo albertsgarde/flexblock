@@ -1,3 +1,4 @@
+#[allow(clippy::module_inception)]
 mod model;
 pub use model::{Model, PlacedModel};
 mod model_manager;

@@ -20,11 +20,12 @@ impl ExternalEvent {
             // TODO: Should different devices be handled differently?
             Event::DeviceEvent {
                 device_id: _,
-                event,
-            } => match event {
-                DeviceEvent::MouseMotion { delta } => Some(ExternalEvent::MouseMotion { delta }),
-                _ => None,
-            },
+                event: DeviceEvent::MouseMotion { delta },
+            } => Some(ExternalEvent::MouseMotion { delta }),
+            Event::DeviceEvent {
+                device_id: _,
+                event: _,
+            } => None,
             Event::WindowEvent {
                 window_id: _,
                 event,
@@ -42,7 +43,7 @@ impl ExternalEvent {
                         input
                             .virtual_keycode
                             .map(|key_code| ExternalEvent::KeyboardInput {
-                                key_code: key_code,
+                                key_code,
                                 state: input.state,
                             })
                     }

@@ -1,6 +1,7 @@
 use utils::Vertex3D;
 
 /// TODO: FIX ORIENTATION OF CUBE FACE
+#[allow(clippy::too_many_arguments)]
 pub fn left(
     x: f32,
     y0: f32,
@@ -67,6 +68,7 @@ pub fn left(
     (vertices, elements)
 }
 /// TODO: FIX ORIENTATION OF CUBE FACE
+#[allow(clippy::too_many_arguments)]
 pub fn right(
     x: f32,
     y0: f32,
@@ -133,6 +135,7 @@ pub fn right(
 }
 
 /// TODO: FIX ORIENTATION OF CUBE FACE
+#[allow(clippy::too_many_arguments)]
 pub fn top(
     y: f32,
     x0: f32,
@@ -200,6 +203,7 @@ pub fn top(
 }
 
 /// TODO: FIX ORIENTATION OF CUBE FACE
+#[allow(clippy::too_many_arguments)]
 pub fn bottom(
     y: f32,
     x0: f32,
@@ -267,6 +271,7 @@ pub fn bottom(
 }
 
 /// TODO: FIX ORIENTATION OF CUBE FACE
+#[allow(clippy::too_many_arguments)]
 pub fn front(
     z: f32,
     x0: f32,
@@ -334,6 +339,7 @@ pub fn front(
 }
 
 /// TODO: FIX ORIENTATION OF CUBE FACE
+#[allow(clippy::too_many_arguments)]
 pub fn back(
     z: f32,
     x0: f32,
