@@ -43,6 +43,13 @@ impl<T: Clone + Copy> RotatingArray<T> {
             .copied()
     }
 
+    pub fn set<F>(&mut self, index: usize, f: F) 
+    where
+    F: FnOnce(T) -> T,{
+        let index = (self.cur_start + index) % self.array.len();
+        *self.array.get_mut(index).unwrap() = f(self.array[index]);
+    }
+
     /// Adds a new element to the begin of the array and removes one from the end.
     /// This increases the index of all elements by one.
     ///
